@@ -712,7 +712,7 @@ function renderStats() {
           </div>
         ` : `
           <div class="settings-row">
-            <span>Time-boxed</span>
+            <span>Time</span>
             <span class="settings-actions">
               <button class="small-btn" data-session-min="5">5 min</button>
               <button class="small-btn" data-session-min="15">15 min</button>
@@ -720,12 +720,12 @@ function renderStats() {
             </span>
           </div>
           <div class="settings-row">
-            <span>Card-count (micro-goal)</span>
+            <span>Card count</span>
             <span class="settings-actions">
-              <button class="small-btn" data-session-cards="1">1 card</button>
-              <button class="small-btn" data-session-cards="3">3 cards</button>
-              <button class="small-btn" data-session-cards="5">5 cards</button>
-              <button class="small-btn" data-session-cards="10">10 cards</button>
+              <button class="small-btn" data-session-cards="1">1</button>
+              <button class="small-btn" data-session-cards="3">3</button>
+              <button class="small-btn" data-session-cards="5">5</button>
+              <button class="small-btn" data-session-cards="10">10</button>
             </span>
           </div>
         `}
@@ -775,7 +775,7 @@ function renderStats() {
           <input type="checkbox" id="shake-toggle" data-pref="shake" data-on="on" data-off="off" ${pref('shake')==='on'?'checked':''}>
         </label>
         <div class="settings-row">
-          <span>Focus sound (white-noise generator)</span>
+          <span>Focus sound</span>
           <span class="seg-control" data-pref="sound">
             <button data-val="off" class="${pref('sound')==='off'?'active':''}">Off</button>
             <button data-val="white" class="${pref('sound')==='white'?'active':''}">White</button>
