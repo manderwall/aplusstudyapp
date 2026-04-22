@@ -10,12 +10,62 @@ const state = {
   currentIndex: 0,
   revealed: false,
   editing: false,  // when true, render the edit form instead of the question card
+  focus: false,    // Focus Mode: hides filter/meta chrome to show just the card
   history: [],     // stack of previous currentIndex values for Prev nav
   shuffle: false,
   _shuffleCache: null,  // { key, list }
-  progress: {},    // { questionId: { status, seen, correct, lastSeen, ease, interval, due } }
+  progress: {},    // { questionId: { status, seen, correct, lastSeen, ease, interval, due, updated_at } }
   overrides: {},   // { questionId: { options?, image?, images? } } — user-added content
+  // Active study session (Pomodoro-style)
+  session: null,   // { endsAt, startCards, ratedIds: Set<string>, length }
+  _sessionTick: null,  // setInterval id for HUD refresh
+  _autoSyncTimer: null,  // debounce handle for cloud push
 };
+
+// Accessibility / preference keys (persisted in localStorage via pref()/setPref())
+const PREF_DEFAULTS = {
+  'haptics': 'on',            // on | off
+  'motion':  'full',           // full | reduced
+  'contrast':'normal',         // normal | high
+  'size':    'medium',         // small | medium | large | xlarge
+  'font':    'system',         // system | atkinson | opendyslexic
+  'autosync':'off',            // on | off
+};
+
+function pref(key) {
+  return localStorage.getItem(`pref.${key}`) || PREF_DEFAULTS[key];
+}
+
+function setPref(key, value) {
+  if (value === PREF_DEFAULTS[key]) localStorage.removeItem(`pref.${key}`);
+  else localStorage.setItem(`pref.${key}`, value);
+  applyPrefs();
+}
+
+function applyPrefs() {
+  const html = document.documentElement;
+  for (const k of Object.keys(PREF_DEFAULTS)) {
+    html.setAttribute(`data-${k}`, pref(k));
+  }
+  ensureFontLoaded(pref('font'));
+}
+
+// Load dyslexia-friendly fonts lazily so the default path has no external requests
+const FONT_URLS = {
+  atkinson: 'https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap',
+  opendyslexic: 'https://fonts.cdnfonts.com/css/opendyslexic',
+};
+function ensureFontLoaded(font) {
+  const href = FONT_URLS[font];
+  if (!href) return;
+  const id = `font-${font}`;
+  if (document.getElementById(id)) return;
+  const link = document.createElement('link');
+  link.id = id;
+  link.rel = 'stylesheet';
+  link.href = href;
+  document.head.appendChild(link);
+}
 
 const MIN = 60 * 1000;
 const DAY = 24 * 60 * 60 * 1000;
@@ -66,7 +116,111 @@ function isDue(q) {
 }
 
 function haptic(pattern = 10) {
+  if (pref('haptics') === 'off') return;
   if (navigator.vibrate) navigator.vibrate(pattern);
+}
+
+//─── SESSION (Pomodoro) ──────────────────────────────────────
+function startSession(minutes) {
+  const startCards = cardsRatedToday();
+  state.session = {
+    endsAt: Date.now() + minutes * MIN,
+    startCards,
+    ratedIds: new Set(),
+    length: minutes,
+  };
+  if (state._sessionTick) clearInterval(state._sessionTick);
+  state._sessionTick = setInterval(() => {
+    if (!state.session) return;
+    if (Date.now() >= state.session.endsAt) endSession(true);
+    else updateHUD();
+  }, 1000);
+  updateHUD();
+}
+
+function endSession(triggerSummary) {
+  if (state._sessionTick) { clearInterval(state._sessionTick); state._sessionTick = null; }
+  const sess = state.session;
+  state.session = null;
+  updateHUD();
+  if (triggerSummary && sess) {
+    const reviewed = sess.ratedIds.size;
+    const msg = reviewed === 0
+      ? `Session done. No cards rated this time — that's OK, sometimes just showing up is the win.`
+      : `Session done. ${reviewed} card${reviewed === 1 ? '' : 's'} reviewed over ${sess.length} minute${sess.length === 1 ? '' : 's'}. 🎉`;
+    haptic([80, 60, 80]);
+    alert(msg);
+  }
+}
+
+function onCardRated(qid) {
+  if (state.session) state.session.ratedIds.add(qid);
+  bumpStreak();
+  scheduleAutoSync();
+}
+
+//─── DAILY STREAK ────────────────────────────────────────────
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function bumpStreak() {
+  const today = todayKey();
+  const last = localStorage.getItem('streak.lastDay');
+  if (last === today) {
+    const n = Number(localStorage.getItem('streak.todayCards') || '0') + 1;
+    localStorage.setItem('streak.todayCards', String(n));
+    return;
+  }
+  // New day: check if yesterday → increment, else reset to 1
+  let count = Number(localStorage.getItem('streak.count') || '0');
+  if (last) {
+    const [ly, lm, ld] = last.split('-').map(Number);
+    const lastDate = new Date(ly, lm - 1, ld);
+    const now = new Date();
+    const y = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const diffDays = Math.round((y - lastDate) / (24*60*60*1000));
+    count = diffDays === 1 ? count + 1 : 1;
+  } else {
+    count = 1;
+  }
+  localStorage.setItem('streak.lastDay', today);
+  localStorage.setItem('streak.count', String(count));
+  localStorage.setItem('streak.todayCards', '1');
+}
+
+function getStreak() {
+  const last = localStorage.getItem('streak.lastDay');
+  const count = Number(localStorage.getItem('streak.count') || '0');
+  const today = todayKey();
+  // If last day wasn't yesterday or today, streak is effectively 0 now
+  if (!last) return { count: 0, today: 0 };
+  const [ly, lm, ld] = last.split('-').map(Number);
+  const lastDate = new Date(ly, lm - 1, ld);
+  const now = new Date();
+  const y = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffDays = Math.round((y - lastDate) / (24*60*60*1000));
+  const active = diffDays <= 1;
+  return {
+    count: active ? count : 0,
+    today: last === today ? Number(localStorage.getItem('streak.todayCards') || '0') : 0,
+  };
+}
+
+function cardsRatedToday() {
+  return getStreak().today;
+}
+
+//─── AUTO-SYNC ───────────────────────────────────────────────
+function scheduleAutoSync() {
+  if (pref('autosync') !== 'on') return;
+  const cfg = getCloudCfg();
+  if (!cfg.url || !cfg.key || !cfg.syncKey) return;
+  clearTimeout(state._autoSyncTimer);
+  state._autoSyncTimer = setTimeout(() => {
+    cloudPush().catch(err => console.warn('Auto-sync push failed', err));
+  }, 5000);
 }
 
 //─── INDEXEDDB (progress + overrides persistence) ────────────
@@ -206,13 +360,28 @@ function dueCount() {
   return state.questions.filter(isDue).length;
 }
 
+function formatRemaining(ms) {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
 function updateHUD() {
-  const qs = filteredQuestions();
-  const total = qs.length;
-  const idx = state.currentIndex + 1;
-  const parts = total > 0 ? [`${Math.min(idx, total)} / ${total}`] : [`0 / 0`];
-  if (!state.filter.due) parts.push(`${dueCount()} due`);
-  $('#progress-hud').textContent = parts.join(' · ');
+  const hud = $('#progress-hud');
+  if (!hud) return;
+  const parts = [];
+  if (state.session) {
+    parts.push(`⏱ ${formatRemaining(state.session.endsAt - Date.now())}`);
+  }
+  if (state.mode === 'study' || state.mode === 'quiz') {
+    const qs = filteredQuestions();
+    const total = qs.length;
+    const idx = state.currentIndex + 1;
+    parts.push(total > 0 ? `${Math.min(idx, total)} / ${total}` : `0 / 0`);
+    if (!state.filter.due) parts.push(`${dueCount()} due`);
+  }
+  hud.textContent = parts.join(' · ');
 }
 
 //─── MODE: STUDY (flashcards with self-rating) ──────────────
@@ -302,10 +471,12 @@ function recordRating(qid, rate) {
   const p = state.progress[qid];
   p.seen++;
   p.lastSeen = Date.now();
+  p.updated_at = p.lastSeen;
   if (rate === 'good' || rate === 'easy') p.correct++;
   schedule(p, rate);
   haptic(10);
   saveProgress();
+  onCardRated(qid);
 }
 
 function nextQuestion() {
@@ -407,10 +578,12 @@ function renderQuiz() {
     const p = state.progress[q.id];
     p.seen++;
     p.lastSeen = Date.now();
+    p.updated_at = p.lastSeen;
     if (right) p.correct++;
     schedule(p, right ? 'good' : 'again');
     haptic(10);
     saveProgress();
+    onCardRated(q.id);
     nextQuizQuestion();
   }));
   attachScratchpadEvents();
@@ -483,6 +656,7 @@ function renderStats() {
     return { obj, total: objQs.length, seen: objSeen, accuracy: objAcc, mastered: objMastered };
   });
 
+  const streak = getStreak();
   $('#main').innerHTML = `
     <div class="stats-wrap">
       <div class="stats-row">
@@ -502,6 +676,75 @@ function renderStats() {
           <div class="number">${acc}%</div>
           <div class="label">Accuracy</div>
         </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="number">🔥 ${streak.count}</div>
+          <div class="label">Day streak</div>
+        </div>
+        <div class="stat-card">
+          <div class="number">${streak.today}</div>
+          <div class="label">Today</div>
+        </div>
+      </div>
+
+      <h3 class="stats-h">Focus session</h3>
+      <div class="settings-panel">
+        ${state.session ? `
+          <div class="settings-row">
+            <span>⏱ Session running — ${formatRemaining(state.session.endsAt - Date.now())} left</span>
+            <button class="small-btn" id="session-end">End now</button>
+          </div>
+        ` : `
+          <div class="settings-row">
+            <span>Short, time-boxed session. No scrolling off into forever.</span>
+          </div>
+          <div class="settings-row">
+            <span>Start a session</span>
+            <span class="settings-actions">
+              <button class="small-btn" data-session="5">5 min</button>
+              <button class="small-btn" data-session="15">15 min</button>
+              <button class="small-btn" data-session="25">25 min</button>
+            </span>
+          </div>
+        `}
+      </div>
+
+      <h3 class="stats-h">Accessibility</h3>
+      <div class="settings-panel">
+        <div class="settings-row">
+          <span>Text size</span>
+          <span class="seg-control" data-pref="size">
+            <button data-val="small" class="${pref('size')==='small'?'active':''}">S</button>
+            <button data-val="medium" class="${pref('size')==='medium'?'active':''}">M</button>
+            <button data-val="large" class="${pref('size')==='large'?'active':''}">L</button>
+            <button data-val="xlarge" class="${pref('size')==='xlarge'?'active':''}">XL</button>
+          </span>
+        </div>
+        <div class="settings-row">
+          <span>Font</span>
+          <span class="seg-control" data-pref="font">
+            <button data-val="system" class="${pref('font')==='system'?'active':''}">System</button>
+            <button data-val="atkinson" class="${pref('font')==='atkinson'?'active':''}">Atkinson</button>
+            <button data-val="opendyslexic" class="${pref('font')==='opendyslexic'?'active':''}">OpenDyslexic</button>
+          </span>
+        </div>
+        <label class="settings-row">
+          <span>High contrast</span>
+          <input type="checkbox" data-pref="contrast" data-on="high" data-off="normal" ${pref('contrast')==='high'?'checked':''}>
+        </label>
+        <label class="settings-row">
+          <span>Reduce motion</span>
+          <input type="checkbox" data-pref="motion" data-on="reduced" data-off="full" ${pref('motion')==='reduced'?'checked':''}>
+        </label>
+        <label class="settings-row">
+          <span>Haptic feedback</span>
+          <input type="checkbox" data-pref="haptics" data-on="on" data-off="off" ${pref('haptics')==='on'?'checked':''}>
+        </label>
+        <label class="settings-row">
+          <span>Auto-sync to cloud (every 5s after save)</span>
+          <input type="checkbox" data-pref="autosync" data-on="on" data-off="off" ${pref('autosync')==='on'?'checked':''}>
+        </label>
       </div>
 
       <h3 class="stats-h">Mastery by Objective</h3>
@@ -591,6 +834,27 @@ function renderStats() {
     localStorage.setItem('shuffle', state.shuffle ? 'true' : 'false');
     state._shuffleCache = null;
   });
+
+  // Accessibility: segmented controls (size / font)
+  $$('.seg-control').forEach(group => {
+    const key = group.dataset.pref;
+    group.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => {
+      setPref(key, btn.dataset.val);
+      renderStats();
+    }));
+  });
+  // Accessibility: checkboxes (contrast / motion / haptics / autosync)
+  $$('input[type="checkbox"][data-pref]').forEach(input => {
+    input.addEventListener('change', (e) => {
+      setPref(input.dataset.pref, e.target.checked ? input.dataset.on : input.dataset.off);
+    });
+  });
+  // Focus session buttons
+  $$('button[data-session]').forEach(btn => btn.addEventListener('click', () => {
+    startSession(Number(btn.dataset.session));
+    renderStats();
+  }));
+  $('#session-end')?.addEventListener('click', () => { endSession(false); renderStats(); });
 
   $('#cloud-save')?.addEventListener('click', () => {
     saveCloudCfg($('#cloud-url').value.trim(), $('#cloud-key').value.trim(), $('#cloud-sync').value.trim());
@@ -949,6 +1213,15 @@ function setMode(mode) {
   else if (mode === 'stats') renderStats();
 }
 
+//─── FOCUS MODE ──────────────────────────────────────────────
+function toggleFocus() {
+  state.focus = !state.focus;
+  document.documentElement.toggleAttribute('data-focus', state.focus);
+  haptic(5);
+  const btn = $('#focus-btn');
+  if (btn) btn.textContent = state.focus ? '🔓' : '🔒';
+}
+
 //─── THEME (auto / light / dark) ─────────────────────────────
 function setTheme(theme) {
   // theme: 'auto' | 'light' | 'dark'
@@ -1088,7 +1361,7 @@ async function cloudPush() {
   localStorage.setItem('supabase.lastSync', new Date().toISOString());
 }
 
-async function cloudPull() {
+async function cloudPull({ merge = true } = {}) {
   const { url, key, syncKey } = getCloudCfg();
   if (!url || !key || !syncKey) throw new Error('Set Supabase URL, anon key, and sync key first');
   const res = await fetch(`${url}/rest/v1/progress?sync_key=eq.${encodeURIComponent(syncKey)}&select=data,updated_at`, {
@@ -1098,9 +1371,31 @@ async function cloudPull() {
   const rows = await res.json();
   if (!rows.length) throw new Error(`No row found for sync key "${syncKey}"`);
   const data = rows[0].data || {};
-  if (data.progress) state.progress = data.progress;
-  if (data.overrides) state.overrides = data.overrides;
-  // Re-apply migrations so missing fields don't break the UI
+  const cloudProgress = data.progress || {};
+  const cloudOverrides = data.overrides || {};
+
+  if (merge) {
+    // Per-card last-write-wins: keep whichever side has a newer updated_at
+    for (const [id, cloudP] of Object.entries(cloudProgress)) {
+      const localP = state.progress[id];
+      if (!localP) { state.progress[id] = cloudP; continue; }
+      const cTime = cloudP.updated_at || cloudP.lastSeen || 0;
+      const lTime = localP.updated_at || localP.lastSeen || 0;
+      if (cTime > lTime) state.progress[id] = cloudP;
+    }
+    // Overrides: prefer whichever has more fields (naive — rare to edit same card in two places concurrently)
+    for (const [id, cloudO] of Object.entries(cloudOverrides)) {
+      const localO = state.overrides[id];
+      if (!localO || Object.keys(cloudO).length > Object.keys(localO).length) {
+        state.overrides[id] = cloudO;
+      }
+    }
+  } else {
+    state.progress = cloudProgress;
+    state.overrides = cloudOverrides;
+  }
+
+  // Re-apply defaults/migrations for any card the cloud didn't cover
   for (const q of state.questions) {
     if (!state.progress[q.id]) state.progress[q.id] = defaultProgress();
     else migrateProgress(state.progress[q.id]);
@@ -1119,8 +1414,10 @@ function installKeyboard() {
 
     const key = e.key.toLowerCase();
 
-    // Global: theme toggle
+    // Global shortcuts
     if (key === 't') { e.preventDefault(); cycleTheme(); return; }
+    if (key === 'f') { e.preventDefault(); toggleFocus(); return; }
+    if (key === 'escape' && state.focus) { e.preventDefault(); toggleFocus(); return; }
 
     // Study / Quiz navigation
     if (state.mode === 'study' || state.mode === 'quiz') {
@@ -1149,9 +1446,9 @@ function installKeyboard() {
               nextQuestion();
             } else {
               const p = state.progress[q.id];
-              p.seen++; p.lastSeen = Date.now(); p.correct++;
+              p.seen++; p.lastSeen = Date.now(); p.updated_at = p.lastSeen; p.correct++;
               schedule(p, 'good');
-              haptic(10); saveProgress();
+              haptic(10); saveProgress(); onCardRated(q.id);
               nextQuizQuestion();
             }
           }
@@ -1201,11 +1498,13 @@ function installSwipe() {
 
 //─── INIT ────────────────────────────────────────────────────
 async function init() {
-  // Theme + shuffle prefs load before any render so first paint is correct
+  // Prefs / theme / shuffle all load before any render so first paint is correct
+  applyPrefs();
   setTheme(localStorage.getItem('theme') || 'auto');
   state.shuffle = localStorage.getItem('shuffle') === 'true';
 
   $('#theme-btn')?.addEventListener('click', cycleTheme);
+  $('#focus-btn')?.addEventListener('click', toggleFocus);
 
   try {
     await loadData();

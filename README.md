@@ -27,6 +27,31 @@ A Progressive Web App (PWA) for Amanda. CompTIA A+ Core 1 (220-1201) study tool 
 | `→` / `K` / `N` | Next question |
 | `←` / `J` / `P` | Previous question |
 | `T` | Cycle theme (auto / light / dark) |
+| `F` | Toggle Focus Mode (hides chrome) — `Esc` also exits |
+
+## AuDHD-friendly features
+
+Built to be flexible, because sensory needs flip between *understimulated* (ADHD-side: needs visual engagement) and *overstimulated* (autism-side: needs calm, minimal UI). Everything here is togglable from **Stats → Accessibility**, **Stats → Focus session**, and the 🔒 / 🌓 header buttons.
+
+- **Focus Mode** (🔒 button or `F`) — hides the tab bar, filter chips, search box, progress HUD, and card meta tags. Just the question. Great when scrolling chrome becomes noise.
+- **Focus Sessions** (Stats → Focus session → 5 / 15 / 25 min) — a visible ⏱ countdown in the header makes time tangible (helpful for time-blindness). At zero, a summary shows cards reviewed. "End now" exits early without guilt.
+- **Text size** — S / M / L / XL. Scales the whole app.
+- **Font** — System default, **Atkinson Hyperlegible** (open-source, designed for low vision, loaded from Google Fonts), or **OpenDyslexic** (weighted letter bottoms to resist letter-swapping).
+- **High contrast** — pure-black background + brighter text/borders. Reduces visual clutter.
+- **Reduce motion** — kills transitions and animations. The OS-level `prefers-reduced-motion` setting is also respected automatically.
+- **Haptic feedback** — on by default (a tiny tap on every rate). Toggle off if vibrations are distracting.
+- **Daily streak + Today counter** in Stats — dopamine-friendly "I did a thing" signal without a full leaderboard grind.
+- **Scratch pad** — doubles as a drawing / fidget space on iPad while you think. Hidden on iPhone portrait to cut clutter.
+- **Auto-sync** — if you've set up Supabase, flip "Auto-sync" on and every rated card quietly syncs 5s later. No "did I forget to push?" worry.
+
+Design principles that shaped this:
+
+1. **Everything is a toggle, nothing is a mandate.** Today you might want haptics + motion + high-contrast; tomorrow you might not. Preferences persist per device.
+2. **Reduce decision load.** The "default next action" (Reveal, Skip, a rating button) is always visually primary, always in the same spot.
+3. **Time is visible.** Session countdown + card progress + due count are all numeric — no guessing "how long have I been at this?"
+4. **Low-stakes sessions.** You can start a 5-minute session. You can end it early. Rating one card counts as "showing up."
+
+None of this is medical advice — it's just options that map to patterns in the neurodivergent design literature. Use what helps, ignore what doesn't.
 
 ## Installing to home screen (iPad or iPhone)
 
