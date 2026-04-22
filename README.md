@@ -76,9 +76,24 @@ Progress is stored per-device. If you install to both iPad and iPhone, they don'
 - Tap **Reveal answer** → rate how you did → next question. Progress saves automatically.
 - Come back later and tap the green **Due** chip to drill only cards scheduled for review.
 
-## Data schema (for adding options + PBQ images)
+## Adding multiple-choice options + PBQ images
 
-Each question in `data/questions.json` is an object:
+Two ways to fill in the data the original extraction missed:
+
+### Option A — In-app editor (no source files needed)
+
+Every Study/Quiz card now has a small **✏️ Edit** button in its meta row. Tap it to open a form where you can:
+
+- Paste the four MC options (one per line)
+- Add an image URL (`images/p1q36.png`, or any HTTPS URL)
+
+Saves are stored in IndexedDB as **overrides** — they don't touch `data/questions.json`. An "✏️ Edited" tag appears on cards you've edited so you can see your work. Stats → **Question edits → Export** dumps your overrides as JSON; **Import** loads them back. They sync via cloud too (see below).
+
+This is the fastest path: open a card, type the four options from your pretest screenshot, save, move on.
+
+### Option B — Edit `data/questions.json` directly (permanent, ships in the repo)
+
+If you want the options/images committed for everyone (or you have many to add at once), edit `data/questions.json`. Each entry is an object:
 
 ```jsonc
 {
@@ -102,7 +117,52 @@ Each question in `data/questions.json` is an object:
 - **`options`** — an array of strings. When present, they're rendered as a lettered list (A, B, C, D) above the Reveal button. Absent = the old behavior (think-then-reveal). The app doesn't score clicks on options; you still self-rate.
 - **`image` / `images`** — paths relative to the project root. Drop PNG/JPG into an `images/` folder and reference it here. PBQs without an image show a yellow "image not available" banner so you can still read the explanation.
 
-To backfill options and PBQ figures, you'll need to re-extract from the source pretest docs (the current `questions.json` was extracted from plaintext where options weren't captured). Add them question-by-question or re-run the extraction script with an updated parser.
+In-app edits (Option A above) live in IndexedDB and are merged onto the base question at render time, so an in-app edit overrides the JSON for that question.
+
+## Cloud sync (Supabase)
+
+Optional. Lets iPad + iPhone share progress and edits without exporting JSON manually.
+
+### One-time Supabase setup
+
+1. Create a free Supabase project at https://supabase.com.
+2. In the SQL editor, run:
+
+```sql
+create table if not exists progress (
+  sync_key text primary key,
+  data jsonb not null,
+  updated_at timestamptz default now()
+);
+
+-- Allow the anon key to read/write rows (anyone with the URL + sync_key can sync,
+-- which is fine for a personal study app — keep your sync_key secret-ish).
+alter table progress enable row level security;
+create policy "anon read"  on progress for select using (true);
+create policy "anon write" on progress for insert with check (true);
+create policy "anon update" on progress for update using (true);
+```
+
+3. In **Settings → API**, copy:
+   - **Project URL** (`https://xxxx.supabase.co`)
+   - **anon / public key** (the long `eyJ…` JWT)
+
+### Configure on each device
+
+1. Open the app → **Stats** → **Cloud sync (Supabase)**
+2. Paste the URL, the anon key, and pick a **Sync key** — any string you want, must be the same on every device (e.g. `amanda-aplus-2026`).
+3. Tap **Save**.
+
+### Use it
+
+- **⬆ Push** — write your local progress + question edits to the cloud, replacing whatever was there for your sync_key.
+- **⬇ Pull** — overwrite local progress + edits with what's in the cloud.
+
+Workflow: study on iPad → Push. Open iPhone → Pull. Study on iPhone → Push. Last write wins; there's no auto-merge.
+
+### Privacy
+
+Your sync_key is the only "auth" — anyone who knows your project URL, anon key, and sync_key can read/write your row. The anon key is meant to be embedded in clients, but it's still worth not committing it to a public repo and using a non-obvious sync_key.
 
 ## Vibe-coding additions
 
@@ -132,7 +192,7 @@ studyapp/
 - **Search:** Add a search box that filters on question text.
 - **Export to Anki:** Convert `questions.json` → Anki `.apkg` via `genanki` Python library.
 - **Drawing save:** Extend the scratchpad to save the canvas PNG per question to IndexedDB.
-- **Cross-device sync:** Add Supabase free tier — write progress to a remote table, read on launch.
+- **Auto-sync:** the current Supabase integration is manual push/pull. Could call `cloudPush()` on every save (debounced) for true auto-sync.
 - **Tune the SRS:** defaults live in `schedule()` in `app.js` — cap is 30 days so exam-prep doesn't schedule past the exam. Change `MAX_INTERVAL_DAYS` if you want longer intervals after the test.
 
 ### Things to know about iOS PWAs
@@ -148,7 +208,7 @@ studyapp/
 - **PBQ images aren't in the default dataset.** Same reason — PBQs reference motherboard diagrams, router dashboards, etc. that weren't captured. The app shows a clear yellow banner for PBQs without images and tells you where to drop the file. 10 of 119 questions are PBQs.
 - **No pretest-6 import flow in the UI.** When you take more pretests, run `extract-text pretest_N.docx` and re-run the extraction script — or ask Claude Code to do it.
 - **Scratch pad drawings don't persist.** Per-question saving is a future feature.
-- **No automatic cross-device sync.** iPhone and iPad keep separate progress (IndexedDB is origin+device scoped). Use Stats → **Export / Import** to move progress manually, or add the Supabase sync extension below.
+- **Cross-device sync is manual.** iPhone and iPad keep separate progress unless you wire up Supabase (see "Cloud sync" below) and tap Push/Pull. Stats → Export/Import works as a no-backend alternative.
 
 ## The path I'd take this week
 
