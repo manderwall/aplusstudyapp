@@ -6,10 +6,12 @@ const state = {
   questions: [],
   conceptFixes: {},
   mode: 'study',
-  filter: { obj: null, due: false },
+  filter: { obj: null, due: false, search: '' },
   currentIndex: 0,
   revealed: false,
-  reviewSet: [],
+  history: [],     // stack of previous currentIndex values for Prev nav
+  shuffle: false,
+  _shuffleCache: null,  // { key, list }
   progress: {},    // { questionId: { status, seen, correct, lastSeen, ease, interval, due } }
 };
 
@@ -154,6 +156,25 @@ function filteredQuestions() {
   let qs = state.questions.slice();
   if (state.filter.obj) qs = qs.filter(q => q.obj === state.filter.obj);
   if (state.filter.due) qs = qs.filter(isDue);
+  if (state.filter.search) {
+    const q = state.filter.search.toLowerCase();
+    qs = qs.filter(x =>
+      x.question.toLowerCase().includes(q) ||
+      (x.explanation || '').toLowerCase().includes(q)
+    );
+  }
+  if (state.shuffle) {
+    const key = `${state.filter.obj}|${state.filter.due}|${state.filter.search}|${qs.length}|${qs.map(x=>x.id).join(',').slice(0,40)}`;
+    if (!state._shuffleCache || state._shuffleCache.key !== key) {
+      const shuffled = qs.slice();
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      state._shuffleCache = { key, list: shuffled };
+    }
+    return state._shuffleCache.list;
+  }
   return qs;
 }
 
@@ -202,7 +223,7 @@ function renderStudy() {
         </div>
         <div class="card-section right">
           <div class="label">Correct answer & explanation</div>
-          <p>${formatExplanation(q.explanation)}</p>
+          ${formatExplanation(q.explanation)}
         </div>
         <div class="btn-row">
           <button class="action bad" data-rate="again">Again</button>
@@ -212,6 +233,7 @@ function renderStudy() {
         </div>
       ` : `
         <div class="btn-row">
+          <button class="action" id="prev-btn" aria-label="Previous">← Prev</button>
           <button class="action primary" id="reveal-btn">Reveal answer</button>
           <button class="action" id="skip-btn">Skip →</button>
         </div>
@@ -230,6 +252,8 @@ function attachStudyEvents(q) {
   if (reveal) reveal.addEventListener('click', () => { state.revealed = true; renderStudy(); });
   const skip = $('#skip-btn');
   if (skip) skip.addEventListener('click', () => { nextQuestion(); });
+  const prev = $('#prev-btn');
+  if (prev) prev.addEventListener('click', () => { prevQuestion(); });
   $$('[data-rate]').forEach(btn => btn.addEventListener('click', () => {
     const rate = btn.dataset.rate;
     recordRating(q.id, rate);
@@ -251,7 +275,21 @@ function nextQuestion() {
   const qs = filteredQuestions();
   state.revealed = false;
   if (qs.length === 0) { renderStudy(); return; }
+  state.history.push(state.currentIndex);
+  if (state.history.length > 50) state.history.shift();
   state.currentIndex = (state.currentIndex + 1) % qs.length;
+  renderStudy();
+}
+
+function prevQuestion() {
+  const qs = filteredQuestions();
+  state.revealed = false;
+  if (qs.length === 0) { renderStudy(); return; }
+  if (state.history.length > 0) {
+    state.currentIndex = state.history.pop();
+  } else {
+    state.currentIndex = state.currentIndex === 0 ? qs.length - 1 : state.currentIndex - 1;
+  }
   renderStudy();
 }
 
@@ -287,7 +325,7 @@ function renderQuiz() {
         </div>
         <div class="card-section right">
           <div class="label">Correct answer & explanation</div>
-          <p>${formatExplanation(q.explanation)}</p>
+          ${formatExplanation(q.explanation)}
         </div>
         <div class="btn-row">
           <button class="action bad" data-qa="wrong">I got it wrong</button>
@@ -298,6 +336,7 @@ function renderQuiz() {
           Think of your answer, then tap reveal.
         </p>
         <div class="btn-row">
+          <button class="action" id="prev-btn" aria-label="Previous">← Prev</button>
           <button class="action primary" id="reveal-btn">Reveal</button>
           <button class="action" id="skip-btn">Skip →</button>
         </div>
@@ -311,6 +350,8 @@ function renderQuiz() {
   if (reveal) reveal.addEventListener('click', () => { state.revealed = true; renderQuiz(); });
   const skip = $('#skip-btn');
   if (skip) skip.addEventListener('click', () => { nextQuizQuestion(); });
+  const prev = $('#prev-btn');
+  if (prev) prev.addEventListener('click', () => { prevQuizQuestion(); });
   $$('[data-qa]').forEach(btn => btn.addEventListener('click', () => {
     const right = btn.dataset.qa === 'right';
     const p = state.progress[q.id];
@@ -329,7 +370,21 @@ function nextQuizQuestion() {
   const qs = filteredQuestions();
   state.revealed = false;
   if (qs.length === 0) { renderQuiz(); return; }
+  state.history.push(state.currentIndex);
+  if (state.history.length > 50) state.history.shift();
   state.currentIndex = (state.currentIndex + 1) % qs.length;
+  renderQuiz();
+}
+
+function prevQuizQuestion() {
+  const qs = filteredQuestions();
+  state.revealed = false;
+  if (qs.length === 0) { renderQuiz(); return; }
+  if (state.history.length > 0) {
+    state.currentIndex = state.history.pop();
+  } else {
+    state.currentIndex = state.currentIndex === 0 ? qs.length - 1 : state.currentIndex - 1;
+  }
   renderQuiz();
 }
 
@@ -399,7 +454,7 @@ function renderStats() {
         </div>
       </div>
 
-      <h3 style="margin: 20px 0 12px; font-size: 16px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">Mastery by Objective</h3>
+      <h3 class="stats-h">Mastery by Objective</h3>
       <div class="obj-bar-list">
         ${objStats.map(s => `
           <div class="obj-bar">
@@ -412,6 +467,21 @@ function renderStats() {
         `).join('')}
       </div>
 
+      <h3 class="stats-h">Options</h3>
+      <div class="settings-panel">
+        <label class="settings-row">
+          <span>🔀 Shuffle questions</span>
+          <input type="checkbox" id="shuffle-toggle" ${state.shuffle ? 'checked' : ''}>
+        </label>
+        <div class="settings-row">
+          <span>💾 Progress</span>
+          <span class="settings-actions">
+            <button class="small-btn" id="export-btn">Export</button>
+            <button class="small-btn" id="import-btn">Import</button>
+          </span>
+        </div>
+      </div>
+
       <button class="reset-btn" id="reset-btn">Reset all progress</button>
     </div>
   `;
@@ -419,10 +489,18 @@ function renderStats() {
     if (confirm('Reset all study progress? This cannot be undone.')) {
       await clearProgress();
       for (const q of state.questions) {
-        state.progress[q.id] = { status: 'new', seen: 0, correct: 0, lastSeen: 0 };
+        state.progress[q.id] = defaultProgress();
       }
+      await saveProgress();
       renderStats();
     }
+  });
+  $('#export-btn')?.addEventListener('click', exportProgress);
+  $('#import-btn')?.addEventListener('click', importProgress);
+  $('#shuffle-toggle')?.addEventListener('change', (e) => {
+    state.shuffle = e.target.checked;
+    localStorage.setItem('shuffle', state.shuffle ? 'true' : 'false');
+    state._shuffleCache = null;
   });
 }
 
@@ -432,6 +510,10 @@ function filterBarHTML() {
   const counts = {};
   for (const o of objs) counts[o] = state.questions.filter(q => q.obj === o).length;
   return `
+    <div class="search-row">
+      <input id="search-input" type="search" placeholder="Search question text…" value="${escape(state.filter.search)}" autocomplete="off">
+      ${state.filter.search ? '<button id="search-clear" class="small-btn" aria-label="Clear search">✕</button>' : ''}
+    </div>
     <div class="filter-bar">
       <button class="due-chip ${state.filter.due ? 'active' : ''}" data-filter="due">
         ${state.filter.due ? '✓ ' : ''}Due (${dueCount()})
@@ -454,9 +536,45 @@ function renderFilterBar() {
     else state.filter.obj = f;
     state.currentIndex = 0;
     state.revealed = false;
+    state.history = [];
+    state._shuffleCache = null;
     if (state.mode === 'study') renderStudy();
     else if (state.mode === 'quiz') renderQuiz();
   }));
+
+  const searchInput = $('#search-input');
+  if (searchInput) {
+    // Re-apply so caret isn't lost when the filter bar rerenders
+    let debounce;
+    searchInput.addEventListener('input', (e) => {
+      clearTimeout(debounce);
+      const val = e.target.value;
+      debounce = setTimeout(() => {
+        state.filter.search = val;
+        state.currentIndex = 0;
+        state.revealed = false;
+        state.history = [];
+        state._shuffleCache = null;
+        if (state.mode === 'study') renderStudy();
+        else if (state.mode === 'quiz') renderQuiz();
+        // Restore focus + caret after rerender
+        const again = $('#search-input');
+        if (again) { again.focus(); again.setSelectionRange(val.length, val.length); }
+      }, 200);
+    });
+  }
+  const searchClear = $('#search-clear');
+  if (searchClear) {
+    searchClear.addEventListener('click', () => {
+      state.filter.search = '';
+      state.currentIndex = 0;
+      state.revealed = false;
+      state.history = [];
+      state._shuffleCache = null;
+      if (state.mode === 'study') renderStudy();
+      else if (state.mode === 'quiz') renderQuiz();
+    });
+  }
 }
 
 //─── SCRATCH PAD (Apple Pencil) ──────────────────────────────
@@ -585,15 +703,45 @@ function escape(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+// Format a raw explanation blob into a scannable layout:
+// - Strip redundant "OBJ X.X:" prefix (already shown as a tag)
+// - Break into paragraphs (every 2 sentences) so it's not a wall of text
+// - Pull "For the exam..." into its own callout at the bottom
+// - Give the first paragraph a lead style so the answer stands out
 function formatExplanation(text) {
   if (!text) return '';
-  // Let **bold** and simple markdown through
-  let html = escape(text);
-  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  // Line breaks
-  html = html.replace(/\n\n/g, '</p><p>');
-  html = html.replace(/\n/g, '<br>');
-  return `<p>${html}</p>`;
+  text = text.replace(/^OBJ \d+\.\d+:\s*/i, '').trim();
+
+  let tip = '';
+  const tipIdx = text.search(/For the exam[,:]?/i);
+  if (tipIdx !== -1) {
+    tip = text.slice(tipIdx).replace(/^For the exam[,:]?\s*/i, '').trim();
+    text = text.slice(0, tipIdx).trim();
+  }
+
+  const mdBold = (s) => escape(s).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  // Split only at a space between a sentence-ending punctuation mark and the
+  // next sentence's capital letter. Avoids breaking numbers like "2.4 GHz" or
+  // "802.11g" — those decimals aren't followed by a capital letter.
+  const sentences = text.split(/(?<=[.!?])\s+(?=[A-Z])/);
+
+  let body;
+  if (sentences.length < 3) {
+    body = `<p class="expl-lead">${mdBold(text)}</p>`;
+  } else {
+    const paras = [];
+    for (let i = 0; i < sentences.length; i += 2) {
+      paras.push(sentences.slice(i, i + 2).join(' ').trim());
+    }
+    body = paras.map((p, i) =>
+      `<p class="${i === 0 ? 'expl-lead' : 'expl-para'}">${mdBold(p)}</p>`
+    ).join('');
+  }
+
+  if (tip) {
+    body += `<div class="expl-tip"><strong>💡 For the exam</strong><p>${mdBold(tip)}</p></div>`;
+  }
+  return body;
 }
 
 function emptyHTML(title, sub) {
@@ -609,11 +757,138 @@ function setMode(mode) {
   state.mode = mode;
   state.currentIndex = 0;
   state.revealed = false;
+  state.history = [];
+  state._shuffleCache = null;
   $$('.tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
   if (mode === 'study') renderStudy();
   else if (mode === 'quiz') renderQuiz();
   else if (mode === 'reading') renderReading();
   else if (mode === 'stats') renderStats();
+}
+
+//─── THEME (auto / light / dark) ─────────────────────────────
+function setTheme(theme) {
+  // theme: 'auto' | 'light' | 'dark'
+  if (theme === 'auto') {
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.removeItem('theme');
+  } else {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }
+  const btn = $('#theme-btn');
+  if (btn) btn.textContent = theme === 'light' ? '☀️' : theme === 'dark' ? '🌙' : '🌓';
+}
+
+function cycleTheme() {
+  const order = ['auto', 'light', 'dark'];
+  const current = localStorage.getItem('theme') || 'auto';
+  const next = order[(order.indexOf(current) + 1) % order.length];
+  setTheme(next);
+  haptic(5);
+}
+
+//─── EXPORT / IMPORT PROGRESS ────────────────────────────────
+function exportProgress() {
+  const blob = new Blob([JSON.stringify(state.progress, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `aplus-study-progress-${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function importProgress() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'application/json,.json';
+  input.addEventListener('change', async () => {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('Expected an object of { questionId: progress }');
+      const cardCount = Object.keys(data).length;
+      if (!confirm(`Replace progress with ${cardCount} cards from this file?`)) return;
+      state.progress = data;
+      for (const q of state.questions) {
+        if (!state.progress[q.id]) state.progress[q.id] = defaultProgress();
+        else migrateProgress(state.progress[q.id]);
+      }
+      await saveProgress();
+      renderStats();
+      alert('Progress imported.');
+    } catch (e) {
+      alert('Import failed: ' + e.message);
+    }
+  });
+  input.click();
+}
+
+//─── KEYBOARD SHORTCUTS ──────────────────────────────────────
+function installKeyboard() {
+  document.addEventListener('keydown', (e) => {
+    // Let the user type in inputs/textareas
+    if (e.target.matches('input, textarea')) return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+    const key = e.key.toLowerCase();
+
+    // Global: theme toggle
+    if (key === 't') { e.preventDefault(); cycleTheme(); return; }
+
+    // Study / Quiz navigation
+    if (state.mode === 'study' || state.mode === 'quiz') {
+      if (key === 'arrowright' || key === 'k' || key === 'n') {
+        e.preventDefault();
+        state.mode === 'study' ? nextQuestion() : nextQuizQuestion();
+        return;
+      }
+      if (key === 'arrowleft' || key === 'j' || key === 'p') {
+        e.preventDefault();
+        state.mode === 'study' ? prevQuestion() : prevQuizQuestion();
+        return;
+      }
+      if (key === ' ' || key === 'enter' || key === 'r') {
+        e.preventDefault();
+        if (!state.revealed) {
+          state.revealed = true;
+          state.mode === 'study' ? renderStudy() : renderQuiz();
+        } else {
+          // When revealed: space/enter advances with a neutral "good" rating
+          const qs = filteredQuestions();
+          if (qs.length > 0) {
+            const q = qs[state.currentIndex];
+            if (state.mode === 'study') {
+              recordRating(q.id, 'good');
+              nextQuestion();
+            } else {
+              const p = state.progress[q.id];
+              p.seen++; p.lastSeen = Date.now(); p.correct++;
+              schedule(p, 'good');
+              haptic(10); saveProgress();
+              nextQuizQuestion();
+            }
+          }
+        }
+        return;
+      }
+      // Study-only rating shortcuts 1..4
+      if (state.mode === 'study' && state.revealed && ['1', '2', '3', '4'].includes(key)) {
+        e.preventDefault();
+        const rate = ['again', 'hard', 'good', 'easy'][Number(key) - 1];
+        const qs = filteredQuestions();
+        if (qs.length > 0) {
+          recordRating(qs[state.currentIndex].id, rate);
+          nextQuestion();
+        }
+        return;
+      }
+    }
+  });
 }
 
 //─── SWIPE (swipe left to advance in Study/Quiz) ─────────────
@@ -644,6 +919,12 @@ function installSwipe() {
 
 //─── INIT ────────────────────────────────────────────────────
 async function init() {
+  // Theme + shuffle prefs load before any render so first paint is correct
+  setTheme(localStorage.getItem('theme') || 'auto');
+  state.shuffle = localStorage.getItem('shuffle') === 'true';
+
+  $('#theme-btn')?.addEventListener('click', cycleTheme);
+
   try {
     await loadData();
   } catch (e) {
@@ -652,6 +933,7 @@ async function init() {
   }
   $$('.tab').forEach(t => t.addEventListener('click', () => setMode(t.dataset.mode)));
   installSwipe();
+  installKeyboard();
   setMode('study');
 
   // Register service worker for offline

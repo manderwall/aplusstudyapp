@@ -30,6 +30,24 @@
   }
 }
 
+/* Manual theme overrides (higher specificity than :root + @media) */
+html[data-theme="dark"] {
+  --bg: #0f0f0f;
+  --surface: #1a1a1a;
+  --surface-2: #252525;
+  --border: #333;
+  --text: #f0f0f0;
+  --text-dim: #a0a0a0;
+}
+html[data-theme="light"] {
+  --bg: #fafafa;
+  --surface: #ffffff;
+  --surface-2: #f0f0f0;
+  --border: #d0d0d0;
+  --text: #1a1a1a;
+  --text-dim: #606060;
+}
+
 html, body {
   height: 100%;
   background: var(--bg);
@@ -66,11 +84,36 @@ header h1 {
   font-weight: 600;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 #progress-hud {
   color: var(--text-dim);
   font-size: 14px;
   font-variant-numeric: tabular-nums;
 }
+
+#theme-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  color: var(--text);
+  transition: transform 0.1s, background 0.1s;
+}
+#theme-btn:active { transform: scale(0.92); }
+#theme-btn:hover { background: var(--border); }
 
 #main {
   flex: 1;
@@ -170,6 +213,49 @@ header h1 {
   line-height: 1.6;
 }
 
+/* Explanation lead paragraph: states the answer, made scannable */
+.card-section .expl-lead {
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--text);
+}
+.card-section .expl-para {
+  font-size: 15px;
+  color: var(--text-dim);
+  margin-top: 10px;
+}
+.card-section .expl-para strong {
+  color: var(--text);
+  background: none;
+  padding: 0;
+}
+
+.card-section .expl-tip {
+  background: rgba(90, 166, 255, 0.08);
+  border-left: 3px solid var(--accent);
+  padding: 10px 14px;
+  border-radius: 0 10px 10px 0;
+  margin-top: 16px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.card-section .expl-tip strong {
+  display: block;
+  color: var(--accent);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  background: none;
+  padding: 0;
+}
+.card-section .expl-tip p {
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
 .card-section strong {
   background: rgba(90, 166, 255, 0.15);
   padding: 1px 4px;
@@ -241,6 +327,30 @@ button.action.bad { background: var(--bad); color: #fff; border-color: var(--bad
   height: 280px;
   touch-action: none;
   display: block;
+}
+
+/* Search bar (above filter bar in Study/Quiz) */
+.search-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+.search-row input[type="search"] {
+  flex: 1;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.search-row input[type="search"]:focus {
+  border-color: var(--accent);
 }
 
 /* Filter bar */
@@ -503,6 +613,79 @@ button.action.bad { background: var(--bad); color: #fff; border-color: var(--bad
   cursor: pointer;
 }
 
+/* Stats headings */
+.stats-h {
+  margin: 20px 0 12px;
+  font-size: 13px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+/* Settings panel (Stats page) */
+.settings-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 15px;
+}
+.settings-row:last-child { border-bottom: none; }
+.settings-row input[type="checkbox"] {
+  width: 44px;
+  height: 26px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.settings-row input[type="checkbox"]::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: var(--text-dim);
+  border-radius: 50%;
+  transition: left 0.15s, background 0.15s;
+}
+.settings-row input[type="checkbox"]:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.settings-row input[type="checkbox"]:checked::after {
+  left: 20px;
+  background: #fff;
+}
+.settings-actions { display: flex; gap: 8px; }
+
+.small-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 500;
+}
+.small-btn:active { transform: scale(0.97); }
+.small-btn:hover { background: var(--border); }
+
 /* Smaller screens (iPhone portrait) */
 @media (max-width: 600px) {
   #main { padding: 14px 14px 20px; }
@@ -541,6 +724,13 @@ button.action.bad { background: var(--bad); color: #fff; border-color: var(--bad
   .stats-row { gap: 8px; }
   .stat-card { min-width: calc(50% - 4px); padding: 14px 10px; }
   .stat-card .number { font-size: 26px; }
+
+  /* Search bar: edge-to-edge */
+  .search-row { margin: 0 0 10px; }
+  .search-row input[type="search"] { padding: 9px 12px; font-size: 14px; }
+
+  /* Prev button takes less room on narrow */
+  #prev-btn { flex-basis: calc(50% - 4px); }
 
   /* Options list: less indent, smaller text */
   .q-options { padding-left: 22px; }
