@@ -30,6 +30,85 @@
   }
 }
 
+/* ─── Accessibility / preference overrides ─── */
+
+/* Text size scales whole app */
+html[data-size="small"]   { font-size: 15px; }
+html[data-size="medium"]  { font-size: 17px; }
+html[data-size="large"]   { font-size: 19px; }
+html[data-size="xlarge"]  { font-size: 22px; }
+
+/* Dyslexia-friendly fonts (loaded as @font-face below) */
+html[data-font="atkinson"] body { font-family: 'Atkinson Hyperlegible', -apple-system, system-ui, sans-serif; }
+html[data-font="opendyslexic"] body { font-family: 'OpenDyslexic', -apple-system, system-ui, sans-serif; letter-spacing: 0.02em; }
+
+/* Reduced motion respects OS setting by default; explicit override forces it off too */
+html[data-motion="reduced"] *,
+html[data-motion="reduced"] *::before,
+html[data-motion="reduced"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* High contrast bumps text/border strength without changing hue */
+html[data-contrast="high"] {
+  --text:       #ffffff;
+  --text-dim:   #d8d8d8;
+  --border:     #777;
+  --bg:         #000;
+  --surface:    #111;
+  --surface-2: #1c1c1c;
+}
+html[data-contrast="high"][data-theme="light"],
+html[data-contrast="high"] {
+  /* keep it tightly-controlled; light+high mirrors dark+high for predictability */
+}
+
+/* Focus mode: hides chrome so only the card is visible */
+html[data-focus] #tabbar,
+html[data-focus] .filter-bar,
+html[data-focus] .search-row,
+html[data-focus] .card-meta,
+html[data-focus] #progress-hud { display: none !important; }
+html[data-focus] header { border-bottom: none; }
+html[data-focus] #main { padding-top: 12px; }
+
+/* Segmented control for S/M/L/XL + font picker */
+.seg-control {
+  display: inline-flex;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.seg-control button {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 500;
+  border-right: 1px solid var(--border);
+}
+.seg-control button:last-child { border-right: none; }
+.seg-control button.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Fonts (Atkinson Hyperlegible, OpenDyslexic) are loaded dynamically by JS
+   only when the user selects them — keeps the default path network-free. */
+
 /* Manual theme overrides (higher specificity than :root + @media) */
 html[data-theme="dark"] {
   --bg: #0f0f0f;
@@ -96,7 +175,7 @@ header h1 {
   font-variant-numeric: tabular-nums;
 }
 
-#theme-btn {
+#theme-btn, #focus-btn {
   background: var(--surface-2);
   border: 1px solid var(--border);
   width: 36px;
@@ -112,8 +191,8 @@ header h1 {
   color: var(--text);
   transition: transform 0.1s, background 0.1s;
 }
-#theme-btn:active { transform: scale(0.92); }
-#theme-btn:hover { background: var(--border); }
+#theme-btn:active, #focus-btn:active { transform: scale(0.92); }
+#theme-btn:hover, #focus-btn:hover { background: var(--border); }
 
 #main {
   flex: 1;
