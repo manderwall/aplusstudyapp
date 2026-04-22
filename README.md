@@ -7,12 +7,26 @@ A Progressive Web App (PWA) for Amanda. CompTIA A+ Core 1 (220-1201) study tool 
 - **Study mode** — flashcards with spaced repetition (again / hard / good / easy). Cards come back at increasing intervals based on how well you did; "again" brings it back in a minute, "easy" pushes it out days.
 - **Quiz mode** — same questions but tracked as right/wrong for accuracy stats. Wrong answers are scheduled for quick review; right answers graduate out.
 - **Reading mode** — your concept-fix sheets for 23 objectives (all 5 pretests' weak areas).
-- **Stats mode** — mastery bars per OBJ, total accuracy, reset button.
+- **Stats mode** — mastery bars per OBJ, accuracy, shuffle toggle, export/import progress, reset.
+- **Readable explanations** — long CompTIA explanations are auto-split into a lead answer + supporting paragraphs, with any "For the exam..." tip pulled into its own callout. No more walls of text.
 - **Apple Pencil scratch pad** — beneath every question on iPad (shown at widths >600px), pressure-sensitive canvas for subnet math, diagrams, etc. Hidden on iPhone portrait to keep the card readable.
-- **Filter by OBJ or "Due"** — scroll the filter bar to drill a specific objective, or toggle the green **Due (N)** chip to see only cards scheduled for review right now.
-- **Swipe to advance** — swipe left on Study/Quiz cards to skip to the next question. Light haptic tap on supported devices.
+- **Filter by OBJ, "Due", or search** — scroll the filter bar to drill a specific objective, toggle the green **Due (N)** chip to see only cards scheduled for review, or type in the search box to narrow by question/explanation text.
+- **Shuffle** — optional random order, toggled from Stats. Persists across sessions.
+- **Swipe / keyboard / prev** — swipe left on Study/Quiz cards to skip; use the **← Prev** button to go back; desktop keyboard shortcuts (see below).
+- **Theme toggle** — 🌓 button in the header cycles Auto / Light / Dark, saved to your device.
+- **Export / import progress** — download your progress as JSON from Stats, import it on another device or after a browser wipe.
 - **Offline** — service worker caches everything. Once installed, works in airplane mode.
 - **Progress persists** — IndexedDB stores ratings, ease, and next-due timestamps between sessions.
+
+## Keyboard shortcuts (desktop study)
+
+| Key | Action |
+|---|---|
+| `Space` / `Enter` / `R` | Reveal answer. If already revealed, advances with a "good" rating. |
+| `1` / `2` / `3` / `4` | Rate: Again / Hard / Good / Easy (Study mode, after reveal) |
+| `→` / `K` / `N` | Next question |
+| `←` / `J` / `P` | Previous question |
+| `T` | Cycle theme (auto / light / dark) |
 
 ## Installing to home screen (iPad or iPhone)
 
@@ -134,8 +148,7 @@ studyapp/
 - **PBQ images aren't in the default dataset.** Same reason — PBQs reference motherboard diagrams, router dashboards, etc. that weren't captured. The app shows a clear yellow banner for PBQs without images and tells you where to drop the file. 10 of 119 questions are PBQs.
 - **No pretest-6 import flow in the UI.** When you take more pretests, run `extract-text pretest_N.docx` and re-run the extraction script — or ask Claude Code to do it.
 - **Scratch pad drawings don't persist.** Per-question saving is a future feature.
-- **No search.** If you need to find a specific question, use the OBJ filter.
-- **No cross-device sync.** iPhone and iPad keep separate progress (each IndexedDB is origin+device scoped).
+- **No automatic cross-device sync.** iPhone and iPad keep separate progress (IndexedDB is origin+device scoped). Use Stats → **Export / Import** to move progress manually, or add the Supabase sync extension below.
 
 ## The path I'd take this week
 
