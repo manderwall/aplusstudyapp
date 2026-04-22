@@ -30,6 +30,9 @@ const PREF_DEFAULTS = {
   'size':    'medium',         // small | medium | large | xlarge
   'font':    'system',         // system | atkinson | opendyslexic
   'autosync':'off',            // on | off
+  'anxiety': 'off',            // on | off — hide numeric feedback
+  'sound':   'off',            // off | white | pink | brown
+  'shake':   'off',            // on | off — shake-to-shuffle
 };
 
 function pref(key) {
@@ -120,21 +123,23 @@ function haptic(pattern = 10) {
   if (navigator.vibrate) navigator.vibrate(pattern);
 }
 
-//─── SESSION (Pomodoro) ──────────────────────────────────────
-function startSession(minutes) {
-  const startCards = cardsRatedToday();
+//─── SESSION (Pomodoro or card-count micro-goal) ─────────────
+function startSession({ minutes = 0, targetCards = 0 } = {}) {
   state.session = {
-    endsAt: Date.now() + minutes * MIN,
-    startCards,
+    endsAt: minutes > 0 ? Date.now() + minutes * MIN : null,
+    targetCards: targetCards > 0 ? targetCards : null,
     ratedIds: new Set(),
     length: minutes,
+    targetDesc: targetCards > 0 ? `${targetCards} card${targetCards === 1 ? '' : 's'}` : `${minutes} min`,
   };
   if (state._sessionTick) clearInterval(state._sessionTick);
-  state._sessionTick = setInterval(() => {
-    if (!state.session) return;
-    if (Date.now() >= state.session.endsAt) endSession(true);
-    else updateHUD();
-  }, 1000);
+  if (minutes > 0) {
+    state._sessionTick = setInterval(() => {
+      if (!state.session) return;
+      if (Date.now() >= state.session.endsAt) endSession(true);
+      else updateHUD();
+    }, 1000);
+  }
   updateHUD();
 }
 
@@ -147,14 +152,20 @@ function endSession(triggerSummary) {
     const reviewed = sess.ratedIds.size;
     const msg = reviewed === 0
       ? `Session done. No cards rated this time — that's OK, sometimes just showing up is the win.`
-      : `Session done. ${reviewed} card${reviewed === 1 ? '' : 's'} reviewed over ${sess.length} minute${sess.length === 1 ? '' : 's'}. 🎉`;
+      : `Session done. ${reviewed} card${reviewed === 1 ? '' : 's'} reviewed. 🎉`;
     haptic([80, 60, 80]);
     alert(msg);
   }
 }
 
 function onCardRated(qid) {
-  if (state.session) state.session.ratedIds.add(qid);
+  if (state.session) {
+    state.session.ratedIds.add(qid);
+    // Card-count micro-goal reached → end naturally
+    if (state.session.targetCards && state.session.ratedIds.size >= state.session.targetCards) {
+      endSession(true);
+    }
+  }
   bumpStreak();
   scheduleAutoSync();
 }
@@ -372,9 +383,13 @@ function updateHUD() {
   if (!hud) return;
   const parts = [];
   if (state.session) {
-    parts.push(`⏱ ${formatRemaining(state.session.endsAt - Date.now())}`);
+    if (state.session.endsAt) parts.push(`⏱ ${formatRemaining(state.session.endsAt - Date.now())}`);
+    if (state.session.targetCards) {
+      const done = state.session.ratedIds.size;
+      parts.push(`🎯 ${done}/${state.session.targetCards}`);
+    }
   }
-  if (state.mode === 'study' || state.mode === 'quiz') {
+  if (pref('anxiety') !== 'on' && (state.mode === 'study' || state.mode === 'quiz')) {
     const qs = filteredQuestions();
     const total = qs.length;
     const idx = state.currentIndex + 1;
@@ -414,7 +429,7 @@ function renderStudy() {
         <span class="tag obj">OBJ ${q.obj}</span>
         ${q.qtype === 'PBQ' ? '<span class="tag pbq">PBQ</span>' : `<span class="tag">${q.qtype}</span>`}
         <span class="tag">P${q.pretest} Q${q.qnum}</span>
-        ${prog.seen > 0 ? `<span class="tag">Seen ${prog.seen}×</span>` : ''}
+        ${prog.seen > 0 ? `<span class="tag numeric">Seen ${prog.seen}×</span>` : ''}
         ${edited ? '<span class="tag edited">✏️ Edited</span>' : ''}
         <button class="tag tag-btn" id="edit-btn" title="Add/edit options and image">✏️ Edit</button>
       </div>
@@ -531,7 +546,7 @@ function renderQuiz() {
       <div class="card-meta">
         <span class="tag obj">OBJ ${q.obj}</span>
         ${q.qtype === 'PBQ' ? '<span class="tag pbq">PBQ</span>' : `<span class="tag">${q.qtype}</span>`}
-        ${accuracy !== null ? `<span class="tag">${accuracy}% (${prog.correct}/${prog.seen})</span>` : ''}
+        ${accuracy !== null ? `<span class="tag numeric">${accuracy}% (${prog.correct}/${prog.seen})</span>` : ''}
         ${edited ? '<span class="tag edited">✏️ Edited</span>' : ''}
         <button class="tag tag-btn" id="edit-btn" title="Add/edit options and image">✏️ Edit</button>
       </div>
@@ -659,7 +674,7 @@ function renderStats() {
   const streak = getStreak();
   $('#main').innerHTML = `
     <div class="stats-wrap">
-      <div class="stats-row">
+      <div class="stats-row numeric-ui">
         <div class="stat-card">
           <div class="number">${seen.length}</div>
           <div class="label">Seen</div>
@@ -692,19 +707,25 @@ function renderStats() {
       <div class="settings-panel">
         ${state.session ? `
           <div class="settings-row">
-            <span>⏱ Session running — ${formatRemaining(state.session.endsAt - Date.now())} left</span>
+            <span>Session running — ${state.session.targetDesc}${state.session.endsAt ? ` · ${formatRemaining(state.session.endsAt - Date.now())} left` : ''}${state.session.targetCards ? ` · ${state.session.ratedIds.size}/${state.session.targetCards} done` : ''}</span>
             <button class="small-btn" id="session-end">End now</button>
           </div>
         ` : `
           <div class="settings-row">
-            <span>Short, time-boxed session. No scrolling off into forever.</span>
+            <span>Time-boxed</span>
+            <span class="settings-actions">
+              <button class="small-btn" data-session-min="5">5 min</button>
+              <button class="small-btn" data-session-min="15">15 min</button>
+              <button class="small-btn" data-session-min="25">25 min</button>
+            </span>
           </div>
           <div class="settings-row">
-            <span>Start a session</span>
+            <span>Card-count (micro-goal)</span>
             <span class="settings-actions">
-              <button class="small-btn" data-session="5">5 min</button>
-              <button class="small-btn" data-session="15">15 min</button>
-              <button class="small-btn" data-session="25">25 min</button>
+              <button class="small-btn" data-session-cards="1">1 card</button>
+              <button class="small-btn" data-session-cards="3">3 cards</button>
+              <button class="small-btn" data-session-cards="5">5 cards</button>
+              <button class="small-btn" data-session-cards="10">10 cards</button>
             </span>
           </div>
         `}
@@ -745,10 +766,27 @@ function renderStats() {
           <span>Auto-sync to cloud (every 5s after save)</span>
           <input type="checkbox" data-pref="autosync" data-on="on" data-off="off" ${pref('autosync')==='on'?'checked':''}>
         </label>
+        <label class="settings-row" title="Hides accuracy %, progress numbers, and mastery bars. Keeps streak + session timer.">
+          <span>Anxiety Mode (hide numbers)</span>
+          <input type="checkbox" data-pref="anxiety" data-on="on" data-off="off" ${pref('anxiety')==='on'?'checked':''}>
+        </label>
+        <label class="settings-row">
+          <span>Shake to toggle shuffle (iOS)</span>
+          <input type="checkbox" id="shake-toggle" data-pref="shake" data-on="on" data-off="off" ${pref('shake')==='on'?'checked':''}>
+        </label>
+        <div class="settings-row">
+          <span>Focus sound (white-noise generator)</span>
+          <span class="seg-control" data-pref="sound">
+            <button data-val="off" class="${pref('sound')==='off'?'active':''}">Off</button>
+            <button data-val="white" class="${pref('sound')==='white'?'active':''}">White</button>
+            <button data-val="pink" class="${pref('sound')==='pink'?'active':''}">Pink</button>
+            <button data-val="brown" class="${pref('sound')==='brown'?'active':''}">Brown</button>
+          </span>
+        </div>
       </div>
 
-      <h3 class="stats-h">Mastery by Objective</h3>
-      <div class="obj-bar-list">
+      <h3 class="stats-h numeric-ui">Mastery by Objective</h3>
+      <div class="obj-bar-list numeric-ui">
         ${objStats.map(s => `
           <div class="obj-bar">
             <div class="obj-label">OBJ ${s.obj}</div>
@@ -835,23 +873,37 @@ function renderStats() {
     state._shuffleCache = null;
   });
 
-  // Accessibility: segmented controls (size / font)
+  // Accessibility: segmented controls (size / font / sound)
   $$('.seg-control').forEach(group => {
     const key = group.dataset.pref;
     group.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => {
       setPref(key, btn.dataset.val);
+      if (key === 'sound') setSound(btn.dataset.val);
       renderStats();
     }));
   });
-  // Accessibility: checkboxes (contrast / motion / haptics / autosync)
+  // Accessibility: checkboxes (contrast / motion / haptics / autosync / anxiety / shake)
   $$('input[type="checkbox"][data-pref]').forEach(input => {
-    input.addEventListener('change', (e) => {
-      setPref(input.dataset.pref, e.target.checked ? input.dataset.on : input.dataset.off);
+    input.addEventListener('change', async (e) => {
+      const key = input.dataset.pref;
+      const val = e.target.checked ? input.dataset.on : input.dataset.off;
+      if (key === 'shake' && val === 'on') {
+        const granted = await enableShake();
+        if (!granted) { e.target.checked = false; return; }
+      } else if (key === 'shake' && val === 'off') {
+        disableShake();
+      }
+      setPref(key, val);
+      if (key === 'anxiety') updateHUD();
     });
   });
-  // Focus session buttons
-  $$('button[data-session]').forEach(btn => btn.addEventListener('click', () => {
-    startSession(Number(btn.dataset.session));
+  // Focus session buttons (time-based or card-count)
+  $$('button[data-session-min]').forEach(btn => btn.addEventListener('click', () => {
+    startSession({ minutes: Number(btn.dataset.sessionMin) });
+    renderStats();
+  }));
+  $$('button[data-session-cards]').forEach(btn => btn.addEventListener('click', () => {
+    startSession({ targetCards: Number(btn.dataset.sessionCards) });
     renderStats();
   }));
   $('#session-end')?.addEventListener('click', () => { endSession(false); renderStats(); });
@@ -1213,6 +1265,105 @@ function setMode(mode) {
   else if (mode === 'stats') renderStats();
 }
 
+//─── FOCUS SOUND (Web Audio, no downloads) ───────────────────
+let _audioCtx = null;
+let _audioSrc = null;
+let _audioGain = null;
+
+function generateNoiseBuffer(ctx, type) {
+  const size = 2 * ctx.sampleRate;  // 2 seconds, looped
+  const buf = ctx.createBuffer(1, size, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  if (type === 'white') {
+    for (let i = 0; i < size; i++) d[i] = Math.random() * 2 - 1;
+  } else if (type === 'pink') {
+    // Voss-McCartney approximation — cheap, good enough
+    let b0=0, b1=0, b2=0, b3=0, b4=0, b5=0, b6=0;
+    for (let i = 0; i < size; i++) {
+      const w = Math.random() * 2 - 1;
+      b0 = 0.99886 * b0 + w * 0.0555179;
+      b1 = 0.99332 * b1 + w * 0.0750759;
+      b2 = 0.96900 * b2 + w * 0.1538520;
+      b3 = 0.86650 * b3 + w * 0.3104856;
+      b4 = 0.55000 * b4 + w * 0.5329522;
+      b5 = -0.7616 * b5 - w * 0.0168980;
+      d[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.11;
+      b6 = w * 0.115926;
+    }
+  } else if (type === 'brown') {
+    let last = 0;
+    for (let i = 0; i < size; i++) {
+      const w = Math.random() * 2 - 1;
+      last = (last + 0.02 * w) / 1.02;
+      d[i] = last * 3.5;
+    }
+  }
+  return buf;
+}
+
+function setSound(type) {
+  if (_audioSrc) { try { _audioSrc.stop(); } catch {} _audioSrc = null; }
+  if (type === 'off') return;
+  if (!_audioCtx) {
+    const Ctor = window.AudioContext || window.webkitAudioContext;
+    if (!Ctor) return;
+    _audioCtx = new Ctor();
+  }
+  _audioCtx.resume();
+  if (!_audioGain) {
+    _audioGain = _audioCtx.createGain();
+    _audioGain.gain.value = 0.15;
+    _audioGain.connect(_audioCtx.destination);
+  }
+  const src = _audioCtx.createBufferSource();
+  src.buffer = generateNoiseBuffer(_audioCtx, type);
+  src.loop = true;
+  src.connect(_audioGain);
+  src.start();
+  _audioSrc = src;
+}
+
+//─── SHAKE TO SHUFFLE (DeviceMotion, iOS-permission-aware) ───
+let _shakeInstalled = false;
+let _shakeLastFire = 0;
+
+function onShakeMotion(e) {
+  const a = e.accelerationIncludingGravity;
+  if (!a) return;
+  const mag = Math.sqrt((a.x||0)**2 + (a.y||0)**2 + (a.z||0)**2);
+  const now = Date.now();
+  if (mag > 25 && now - _shakeLastFire > 1200) {
+    _shakeLastFire = now;
+    haptic([20, 40, 20]);
+    state.shuffle = !state.shuffle;
+    localStorage.setItem('shuffle', state.shuffle ? 'true' : 'false');
+    state._shuffleCache = null;
+    if (state.mode === 'study') renderStudy();
+    else if (state.mode === 'quiz') renderQuiz();
+  }
+}
+
+async function enableShake() {
+  if (_shakeInstalled) return true;
+  // iOS 13+ requires explicit permission for motion events
+  if (typeof DeviceMotionEvent !== 'undefined'
+      && typeof DeviceMotionEvent.requestPermission === 'function') {
+    try {
+      const result = await DeviceMotionEvent.requestPermission();
+      if (result !== 'granted') { alert('Motion permission denied — shake disabled.'); return false; }
+    } catch (e) { alert('Couldn\'t request motion permission: ' + e.message); return false; }
+  }
+  window.addEventListener('devicemotion', onShakeMotion);
+  _shakeInstalled = true;
+  return true;
+}
+
+function disableShake() {
+  if (!_shakeInstalled) return;
+  window.removeEventListener('devicemotion', onShakeMotion);
+  _shakeInstalled = false;
+}
+
 //─── FOCUS MODE ──────────────────────────────────────────────
 function toggleFocus() {
   state.focus = !state.focus;
@@ -1502,6 +1653,8 @@ async function init() {
   applyPrefs();
   setTheme(localStorage.getItem('theme') || 'auto');
   state.shuffle = localStorage.getItem('shuffle') === 'true';
+  if (pref('sound') !== 'off') setSound(pref('sound'));  // ambient noise restores (needs gesture on some browsers)
+  if (pref('shake') === 'on') enableShake().catch(() => {});
 
   $('#theme-btn')?.addEventListener('click', cycleTheme);
   $('#focus-btn')?.addEventListener('click', toggleFocus);
