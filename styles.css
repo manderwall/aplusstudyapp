@@ -58,20 +58,6 @@ html[data-motion="reduced"] *::after {
   }
 }
 
-/* High contrast bumps text/border strength without changing hue */
-html[data-contrast="high"] {
-  --text:       #ffffff;
-  --text-dim:   #d8d8d8;
-  --border:     #777;
-  --bg:         #000;
-  --surface:    #111;
-  --surface-2: #1c1c1c;
-}
-html[data-contrast="high"][data-theme="light"],
-html[data-contrast="high"] {
-  /* keep it tightly-controlled; light+high mirrors dark+high for predictability */
-}
-
 /* Anxiety Mode: hide numeric progress feedback, keep streak + timer */
 html[data-anxiety="on"] .numeric-ui,
 html[data-anxiety="on"] .card-meta .tag.numeric {
@@ -131,6 +117,18 @@ html[data-theme="light"] {
   --border: #d0d0d0;
   --text: #1a1a1a;
   --text-dim: #606060;
+}
+
+/* High contrast — declared AFTER theme overrides so it wins source-order when
+   both attributes are set. Forces near-pure-black + brighter text for both
+   auto and dark themes; mirrors for predictability. */
+html[data-contrast="high"] {
+  --bg:        #000;
+  --surface:   #111;
+  --surface-2: #1c1c1c;
+  --border:    #777;
+  --text:      #ffffff;
+  --text-dim:  #dddddd;
 }
 
 html, body {
@@ -862,6 +860,21 @@ button.action.bad { background: var(--bad); color: #fff; border-color: var(--bad
   #main { padding: 14px 14px 20px; }
   .card { padding: 18px; border-radius: 14px; margin-bottom: 14px; }
   .card-question { font-size: 17px; }
+
+  /* Sticky rate/action bar stays visible while reading long explanations.
+     Negative bottom offsets #main's padding-bottom so the bar reaches the
+     outer edge of the scroll container — no explanation-text peeking under. */
+  .card { padding-bottom: 0; }
+  .card .btn-row {
+    position: sticky;
+    bottom: -20px;  /* matches #main padding-bottom below */
+    background: var(--surface);
+    margin: 24px -18px 0;
+    padding: 14px 18px 14px;
+    border-top: 1px solid var(--border);
+    border-radius: 0 0 14px 14px;
+    z-index: 2;
+  }
   header { padding: 10px 14px; }
   header h1 { font-size: 16px; }
   #progress-hud { font-size: 12px; }
@@ -910,6 +923,19 @@ button.action.bad { background: var(--bad); color: #fff; border-color: var(--bad
   /* Reading mode: less side padding */
   .reading-list .obj-section { padding: 16px; }
   .reading-list h2 { font-size: 18px; }
+
+  /* Settings rows: stack label + control vertically when cramped so
+     seg-controls never clip off-screen. Keep checkboxes inline. */
+  .settings-row:has(.seg-control) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .settings-row .seg-control { width: 100%; justify-content: stretch; }
+  .settings-row .seg-control button { flex: 1; padding: 8px 6px; }
+
+  /* Stats "Options" panel — stack label + Export/Import buttons too */
+  .settings-row .settings-actions { flex-wrap: wrap; }
 
   /* Tab bar: tighter labels */
   .tab-icon { font-size: 20px; }
