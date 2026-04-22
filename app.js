@@ -6,12 +6,69 @@ const state = {
   questions: [],
   conceptFixes: {},
   mode: 'study',
-  filter: { obj: null, due: false },
+  filter: { obj: null, due: false, search: '' },
   currentIndex: 0,
   revealed: false,
-  reviewSet: [],
-  progress: {},    // { questionId: { status, seen, correct, lastSeen, ease, interval, due } }
+  editing: false,  // when true, render the edit form instead of the question card
+  focus: false,    // Focus Mode: hides filter/meta chrome to show just the card
+  history: [],     // stack of previous currentIndex values for Prev nav
+  shuffle: false,
+  _shuffleCache: null,  // { key, list }
+  progress: {},    // { questionId: { status, seen, correct, lastSeen, ease, interval, due, updated_at } }
+  overrides: {},   // { questionId: { options?, image?, images? } } — user-added content
+  // Active study session (Pomodoro-style)
+  session: null,   // { endsAt, startCards, ratedIds: Set<string>, length }
+  _sessionTick: null,  // setInterval id for HUD refresh
+  _autoSyncTimer: null,  // debounce handle for cloud push
 };
+
+// Accessibility / preference keys (persisted in localStorage via pref()/setPref())
+const PREF_DEFAULTS = {
+  'haptics': 'on',            // on | off
+  'motion':  'full',           // full | reduced
+  'contrast':'normal',         // normal | high
+  'size':    'medium',         // small | medium | large | xlarge
+  'font':    'system',         // system | atkinson | opendyslexic
+  'autosync':'off',            // on | off
+  'anxiety': 'off',            // on | off — hide numeric feedback
+  'sound':   'off',            // off | white | pink | brown
+  'shake':   'off',            // on | off — shake-to-shuffle
+};
+
+function pref(key) {
+  return localStorage.getItem(`pref.${key}`) || PREF_DEFAULTS[key];
+}
+
+function setPref(key, value) {
+  if (value === PREF_DEFAULTS[key]) localStorage.removeItem(`pref.${key}`);
+  else localStorage.setItem(`pref.${key}`, value);
+  applyPrefs();
+}
+
+function applyPrefs() {
+  const html = document.documentElement;
+  for (const k of Object.keys(PREF_DEFAULTS)) {
+    html.setAttribute(`data-${k}`, pref(k));
+  }
+  ensureFontLoaded(pref('font'));
+}
+
+// Load dyslexia-friendly fonts lazily so the default path has no external requests
+const FONT_URLS = {
+  atkinson: 'https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap',
+  opendyslexic: 'https://fonts.cdnfonts.com/css/opendyslexic',
+};
+function ensureFontLoaded(font) {
+  const href = FONT_URLS[font];
+  if (!href) return;
+  const id = `font-${font}`;
+  if (document.getElementById(id)) return;
+  const link = document.createElement('link');
+  link.id = id;
+  link.rel = 'stylesheet';
+  link.href = href;
+  document.head.appendChild(link);
+}
 
 const MIN = 60 * 1000;
 const DAY = 24 * 60 * 60 * 1000;
@@ -62,13 +119,126 @@ function isDue(q) {
 }
 
 function haptic(pattern = 10) {
+  if (pref('haptics') === 'off') return;
   if (navigator.vibrate) navigator.vibrate(pattern);
 }
 
-//─── INDEXEDDB (progress persistence) ────────────────────────
+//─── SESSION (Pomodoro or card-count micro-goal) ─────────────
+function startSession({ minutes = 0, targetCards = 0 } = {}) {
+  state.session = {
+    endsAt: minutes > 0 ? Date.now() + minutes * MIN : null,
+    targetCards: targetCards > 0 ? targetCards : null,
+    ratedIds: new Set(),
+    length: minutes,
+    targetDesc: targetCards > 0 ? `${targetCards} card${targetCards === 1 ? '' : 's'}` : `${minutes} min`,
+  };
+  if (state._sessionTick) clearInterval(state._sessionTick);
+  if (minutes > 0) {
+    state._sessionTick = setInterval(() => {
+      if (!state.session) return;
+      if (Date.now() >= state.session.endsAt) endSession(true);
+      else updateHUD();
+    }, 1000);
+  }
+  updateHUD();
+}
+
+function endSession(triggerSummary) {
+  if (state._sessionTick) { clearInterval(state._sessionTick); state._sessionTick = null; }
+  const sess = state.session;
+  state.session = null;
+  updateHUD();
+  if (triggerSummary && sess) {
+    const reviewed = sess.ratedIds.size;
+    const msg = reviewed === 0
+      ? `Session done. No cards rated this time — that's OK, sometimes just showing up is the win.`
+      : `Session done. ${reviewed} card${reviewed === 1 ? '' : 's'} reviewed. 🎉`;
+    haptic([80, 60, 80]);
+    alert(msg);
+  }
+}
+
+function onCardRated(qid) {
+  if (state.session) {
+    state.session.ratedIds.add(qid);
+    // Card-count micro-goal reached → end naturally
+    if (state.session.targetCards && state.session.ratedIds.size >= state.session.targetCards) {
+      endSession(true);
+    }
+  }
+  bumpStreak();
+  scheduleAutoSync();
+}
+
+//─── DAILY STREAK ────────────────────────────────────────────
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function bumpStreak() {
+  const today = todayKey();
+  const last = localStorage.getItem('streak.lastDay');
+  if (last === today) {
+    const n = Number(localStorage.getItem('streak.todayCards') || '0') + 1;
+    localStorage.setItem('streak.todayCards', String(n));
+    return;
+  }
+  // New day: check if yesterday → increment, else reset to 1
+  let count = Number(localStorage.getItem('streak.count') || '0');
+  if (last) {
+    const [ly, lm, ld] = last.split('-').map(Number);
+    const lastDate = new Date(ly, lm - 1, ld);
+    const now = new Date();
+    const y = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const diffDays = Math.round((y - lastDate) / (24*60*60*1000));
+    count = diffDays === 1 ? count + 1 : 1;
+  } else {
+    count = 1;
+  }
+  localStorage.setItem('streak.lastDay', today);
+  localStorage.setItem('streak.count', String(count));
+  localStorage.setItem('streak.todayCards', '1');
+}
+
+function getStreak() {
+  const last = localStorage.getItem('streak.lastDay');
+  const count = Number(localStorage.getItem('streak.count') || '0');
+  const today = todayKey();
+  // If last day wasn't yesterday or today, streak is effectively 0 now
+  if (!last) return { count: 0, today: 0 };
+  const [ly, lm, ld] = last.split('-').map(Number);
+  const lastDate = new Date(ly, lm - 1, ld);
+  const now = new Date();
+  const y = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffDays = Math.round((y - lastDate) / (24*60*60*1000));
+  const active = diffDays <= 1;
+  return {
+    count: active ? count : 0,
+    today: last === today ? Number(localStorage.getItem('streak.todayCards') || '0') : 0,
+  };
+}
+
+function cardsRatedToday() {
+  return getStreak().today;
+}
+
+//─── AUTO-SYNC ───────────────────────────────────────────────
+function scheduleAutoSync() {
+  if (pref('autosync') !== 'on') return;
+  const cfg = getCloudCfg();
+  if (!cfg.url || !cfg.key || !cfg.syncKey) return;
+  clearTimeout(state._autoSyncTimer);
+  state._autoSyncTimer = setTimeout(() => {
+    cloudPush().catch(err => console.warn('Auto-sync push failed', err));
+  }, 5000);
+}
+
+//─── INDEXEDDB (progress + overrides persistence) ────────────
 const DB_NAME = 'aplus-study';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE = 'progress';
+const OSTORE = 'overrides';   // per-question edits: { [qid]: {options?, image?, images?} }
 
 function openDB() {
   return new Promise((resolve, reject) => {
@@ -76,32 +246,38 @@ function openDB() {
     req.onupgradeneeded = () => {
       const db = req.result;
       if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
+      if (!db.objectStoreNames.contains(OSTORE)) db.createObjectStore(OSTORE);
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
   });
 }
 
+function idbGet(store, key) {
+  return openDB().then(db => new Promise(resolve => {
+    const tx = db.transaction(store, 'readonly');
+    const r = tx.objectStore(store).get(key);
+    r.onsuccess = () => resolve(r.result);
+    r.onerror = () => resolve(undefined);
+  }));
+}
+
+function idbPut(store, key, value) {
+  return openDB().then(db => new Promise(resolve => {
+    const tx = db.transaction(store, 'readwrite');
+    tx.objectStore(store).put(value, key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => resolve();
+  }));
+}
+
 async function loadProgress() {
-  try {
-    const db = await openDB();
-    return new Promise((resolve) => {
-      const tx = db.transaction(STORE, 'readonly');
-      const req = tx.objectStore(STORE).get('all');
-      req.onsuccess = () => resolve(req.result || {});
-      req.onerror = () => resolve({});
-    });
-  } catch { return {}; }
+  try { return (await idbGet(STORE, 'all')) || {}; } catch { return {}; }
 }
-
 async function saveProgress() {
-  try {
-    const db = await openDB();
-    const tx = db.transaction(STORE, 'readwrite');
-    tx.objectStore(STORE).put(state.progress, 'all');
-  } catch (e) { console.warn('Save failed', e); }
+  try { await idbPut(STORE, 'all', state.progress); }
+  catch (e) { console.warn('Save progress failed', e); }
 }
-
 async function clearProgress() {
   try {
     const db = await openDB();
@@ -109,6 +285,14 @@ async function clearProgress() {
     tx.objectStore(STORE).clear();
     state.progress = {};
   } catch (e) { console.warn('Clear failed', e); }
+}
+
+async function loadOverrides() {
+  try { return (await idbGet(OSTORE, 'all')) || {}; } catch { return {}; }
+}
+async function saveOverrides() {
+  try { await idbPut(OSTORE, 'all', state.overrides); }
+  catch (e) { console.warn('Save overrides failed', e); }
 }
 
 //─── DATA LOAD ───────────────────────────────────────────────
@@ -120,6 +304,7 @@ async function loadData() {
   state.questions = await questionsRes.json();
   state.conceptFixes = await fixesRes.json();
   state.progress = await loadProgress();
+  state.overrides = await loadOverrides();
   // Initialize progress for any new question; migrate older saves
   let migrated = false;
   for (const q of state.questions) {
@@ -150,10 +335,35 @@ function uniqueObjs() {
   return objs;
 }
 
+// Merge a base question with any user-added override (options, image, images)
+function getQuestion(q) {
+  const o = state.overrides[q.id];
+  return o ? { ...q, ...o } : q;
+}
+
 function filteredQuestions() {
   let qs = state.questions.slice();
   if (state.filter.obj) qs = qs.filter(q => q.obj === state.filter.obj);
   if (state.filter.due) qs = qs.filter(isDue);
+  if (state.filter.search) {
+    const q = state.filter.search.toLowerCase();
+    qs = qs.filter(x =>
+      x.question.toLowerCase().includes(q) ||
+      (x.explanation || '').toLowerCase().includes(q)
+    );
+  }
+  if (state.shuffle) {
+    const key = `${state.filter.obj}|${state.filter.due}|${state.filter.search}|${qs.length}|${qs.map(x=>x.id).join(',').slice(0,40)}`;
+    if (!state._shuffleCache || state._shuffleCache.key !== key) {
+      const shuffled = qs.slice();
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      state._shuffleCache = { key, list: shuffled };
+    }
+    return state._shuffleCache.list;
+  }
   return qs;
 }
 
@@ -161,13 +371,32 @@ function dueCount() {
   return state.questions.filter(isDue).length;
 }
 
+function formatRemaining(ms) {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
 function updateHUD() {
-  const qs = filteredQuestions();
-  const total = qs.length;
-  const idx = state.currentIndex + 1;
-  const parts = total > 0 ? [`${Math.min(idx, total)} / ${total}`] : [`0 / 0`];
-  if (!state.filter.due) parts.push(`${dueCount()} due`);
-  $('#progress-hud').textContent = parts.join(' · ');
+  const hud = $('#progress-hud');
+  if (!hud) return;
+  const parts = [];
+  if (state.session) {
+    if (state.session.endsAt) parts.push(`⏱ ${formatRemaining(state.session.endsAt - Date.now())}`);
+    if (state.session.targetCards) {
+      const done = state.session.ratedIds.size;
+      parts.push(`🎯 ${done}/${state.session.targetCards}`);
+    }
+  }
+  if (pref('anxiety') !== 'on' && (state.mode === 'study' || state.mode === 'quiz')) {
+    const qs = filteredQuestions();
+    const total = qs.length;
+    const idx = state.currentIndex + 1;
+    parts.push(total > 0 ? `${Math.min(idx, total)} / ${total}` : `0 / 0`);
+    if (!state.filter.due) parts.push(`${dueCount()} due`);
+  }
+  hud.textContent = parts.join(' · ');
 }
 
 //─── MODE: STUDY (flashcards with self-rating) ──────────────
@@ -180,9 +409,19 @@ function renderStudy() {
     return;
   }
   if (state.currentIndex >= qs.length) state.currentIndex = 0;
-  const q = qs[state.currentIndex];
+  const baseQ = qs[state.currentIndex];
+  const q = getQuestion(baseQ);
   const prog = state.progress[q.id];
 
+  if (state.editing) {
+    $('#main').innerHTML = `${filterBarHTML()}${renderEditFormHTML(q)}`;
+    renderFilterBar();
+    updateHUD();
+    attachEditEvents(q);
+    return;
+  }
+
+  const edited = !!state.overrides[q.id];
   $('#main').innerHTML = `
     ${filterBarHTML()}
     <div class="card">
@@ -190,7 +429,9 @@ function renderStudy() {
         <span class="tag obj">OBJ ${q.obj}</span>
         ${q.qtype === 'PBQ' ? '<span class="tag pbq">PBQ</span>' : `<span class="tag">${q.qtype}</span>`}
         <span class="tag">P${q.pretest} Q${q.qnum}</span>
-        ${prog.seen > 0 ? `<span class="tag">Seen ${prog.seen}×</span>` : ''}
+        ${prog.seen > 0 ? `<span class="tag numeric">Seen ${prog.seen}×</span>` : ''}
+        ${edited ? '<span class="tag edited">✏️ Edited</span>' : ''}
+        <button class="tag tag-btn" id="edit-btn" title="Add/edit options and image">✏️ Edit</button>
       </div>
       <div class="card-question">${escape(q.question)}</div>
       ${renderImageHTML(q)}
@@ -202,7 +443,7 @@ function renderStudy() {
         </div>
         <div class="card-section right">
           <div class="label">Correct answer & explanation</div>
-          <p>${formatExplanation(q.explanation)}</p>
+          ${formatExplanation(q.explanation)}
         </div>
         <div class="btn-row">
           <button class="action bad" data-rate="again">Again</button>
@@ -212,6 +453,7 @@ function renderStudy() {
         </div>
       ` : `
         <div class="btn-row">
+          <button class="action" id="prev-btn" aria-label="Previous">← Prev</button>
           <button class="action primary" id="reveal-btn">Reveal answer</button>
           <button class="action" id="skip-btn">Skip →</button>
         </div>
@@ -223,6 +465,7 @@ function renderStudy() {
   updateHUD();
   attachStudyEvents(q);
   attachScratchpadEvents();
+  $('#edit-btn')?.addEventListener('click', () => { state.editing = true; renderStudy(); });
 }
 
 function attachStudyEvents(q) {
@@ -230,6 +473,8 @@ function attachStudyEvents(q) {
   if (reveal) reveal.addEventListener('click', () => { state.revealed = true; renderStudy(); });
   const skip = $('#skip-btn');
   if (skip) skip.addEventListener('click', () => { nextQuestion(); });
+  const prev = $('#prev-btn');
+  if (prev) prev.addEventListener('click', () => { prevQuestion(); });
   $$('[data-rate]').forEach(btn => btn.addEventListener('click', () => {
     const rate = btn.dataset.rate;
     recordRating(q.id, rate);
@@ -241,17 +486,33 @@ function recordRating(qid, rate) {
   const p = state.progress[qid];
   p.seen++;
   p.lastSeen = Date.now();
+  p.updated_at = p.lastSeen;
   if (rate === 'good' || rate === 'easy') p.correct++;
   schedule(p, rate);
   haptic(10);
   saveProgress();
+  onCardRated(qid);
 }
 
 function nextQuestion() {
   const qs = filteredQuestions();
   state.revealed = false;
   if (qs.length === 0) { renderStudy(); return; }
+  state.history.push(state.currentIndex);
+  if (state.history.length > 50) state.history.shift();
   state.currentIndex = (state.currentIndex + 1) % qs.length;
+  renderStudy();
+}
+
+function prevQuestion() {
+  const qs = filteredQuestions();
+  state.revealed = false;
+  if (qs.length === 0) { renderStudy(); return; }
+  if (state.history.length > 0) {
+    state.currentIndex = state.history.pop();
+  } else {
+    state.currentIndex = state.currentIndex === 0 ? qs.length - 1 : state.currentIndex - 1;
+  }
   renderStudy();
 }
 
@@ -265,17 +526,29 @@ function renderQuiz() {
     return;
   }
   if (state.currentIndex >= qs.length) state.currentIndex = 0;
-  const q = qs[state.currentIndex];
+  const baseQ = qs[state.currentIndex];
+  const q = getQuestion(baseQ);
   const prog = state.progress[q.id];
   const accuracy = prog.seen > 0 ? Math.round((prog.correct / prog.seen) * 100) : null;
 
+  if (state.editing) {
+    $('#main').innerHTML = `${filterBarHTML()}${renderEditFormHTML(q)}`;
+    renderFilterBar();
+    updateHUD();
+    attachEditEvents(q);
+    return;
+  }
+
+  const edited = !!state.overrides[q.id];
   $('#main').innerHTML = `
     ${filterBarHTML()}
     <div class="card">
       <div class="card-meta">
         <span class="tag obj">OBJ ${q.obj}</span>
         ${q.qtype === 'PBQ' ? '<span class="tag pbq">PBQ</span>' : `<span class="tag">${q.qtype}</span>`}
-        ${accuracy !== null ? `<span class="tag">${accuracy}% (${prog.correct}/${prog.seen})</span>` : ''}
+        ${accuracy !== null ? `<span class="tag numeric">${accuracy}% (${prog.correct}/${prog.seen})</span>` : ''}
+        ${edited ? '<span class="tag edited">✏️ Edited</span>' : ''}
+        <button class="tag tag-btn" id="edit-btn" title="Add/edit options and image">✏️ Edit</button>
       </div>
       <div class="card-question">${escape(q.question)}</div>
       ${renderImageHTML(q)}
@@ -287,7 +560,7 @@ function renderQuiz() {
         </div>
         <div class="card-section right">
           <div class="label">Correct answer & explanation</div>
-          <p>${formatExplanation(q.explanation)}</p>
+          ${formatExplanation(q.explanation)}
         </div>
         <div class="btn-row">
           <button class="action bad" data-qa="wrong">I got it wrong</button>
@@ -298,6 +571,7 @@ function renderQuiz() {
           Think of your answer, then tap reveal.
         </p>
         <div class="btn-row">
+          <button class="action" id="prev-btn" aria-label="Previous">← Prev</button>
           <button class="action primary" id="reveal-btn">Reveal</button>
           <button class="action" id="skip-btn">Skip →</button>
         </div>
@@ -311,15 +585,20 @@ function renderQuiz() {
   if (reveal) reveal.addEventListener('click', () => { state.revealed = true; renderQuiz(); });
   const skip = $('#skip-btn');
   if (skip) skip.addEventListener('click', () => { nextQuizQuestion(); });
+  const prev = $('#prev-btn');
+  if (prev) prev.addEventListener('click', () => { prevQuizQuestion(); });
+  $('#edit-btn')?.addEventListener('click', () => { state.editing = true; renderQuiz(); });
   $$('[data-qa]').forEach(btn => btn.addEventListener('click', () => {
     const right = btn.dataset.qa === 'right';
     const p = state.progress[q.id];
     p.seen++;
     p.lastSeen = Date.now();
+    p.updated_at = p.lastSeen;
     if (right) p.correct++;
     schedule(p, right ? 'good' : 'again');
     haptic(10);
     saveProgress();
+    onCardRated(q.id);
     nextQuizQuestion();
   }));
   attachScratchpadEvents();
@@ -329,7 +608,21 @@ function nextQuizQuestion() {
   const qs = filteredQuestions();
   state.revealed = false;
   if (qs.length === 0) { renderQuiz(); return; }
+  state.history.push(state.currentIndex);
+  if (state.history.length > 50) state.history.shift();
   state.currentIndex = (state.currentIndex + 1) % qs.length;
+  renderQuiz();
+}
+
+function prevQuizQuestion() {
+  const qs = filteredQuestions();
+  state.revealed = false;
+  if (qs.length === 0) { renderQuiz(); return; }
+  if (state.history.length > 0) {
+    state.currentIndex = state.history.pop();
+  } else {
+    state.currentIndex = state.currentIndex === 0 ? qs.length - 1 : state.currentIndex - 1;
+  }
   renderQuiz();
 }
 
@@ -378,9 +671,10 @@ function renderStats() {
     return { obj, total: objQs.length, seen: objSeen, accuracy: objAcc, mastered: objMastered };
   });
 
+  const streak = getStreak();
   $('#main').innerHTML = `
     <div class="stats-wrap">
-      <div class="stats-row">
+      <div class="stats-row numeric-ui">
         <div class="stat-card">
           <div class="number">${seen.length}</div>
           <div class="label">Seen</div>
@@ -398,9 +692,101 @@ function renderStats() {
           <div class="label">Accuracy</div>
         </div>
       </div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="number">🔥 ${streak.count}</div>
+          <div class="label">Day streak</div>
+        </div>
+        <div class="stat-card">
+          <div class="number">${streak.today}</div>
+          <div class="label">Today</div>
+        </div>
+      </div>
 
-      <h3 style="margin: 20px 0 12px; font-size: 16px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">Mastery by Objective</h3>
-      <div class="obj-bar-list">
+      <h3 class="stats-h">Focus session</h3>
+      <div class="settings-panel">
+        ${state.session ? `
+          <div class="settings-row">
+            <span>Session running — ${state.session.targetDesc}${state.session.endsAt ? ` · ${formatRemaining(state.session.endsAt - Date.now())} left` : ''}${state.session.targetCards ? ` · ${state.session.ratedIds.size}/${state.session.targetCards} done` : ''}</span>
+            <button class="small-btn" id="session-end">End now</button>
+          </div>
+        ` : `
+          <div class="settings-row">
+            <span>Time</span>
+            <span class="settings-actions">
+              <button class="small-btn" data-session-min="5">5 min</button>
+              <button class="small-btn" data-session-min="15">15 min</button>
+              <button class="small-btn" data-session-min="25">25 min</button>
+            </span>
+          </div>
+          <div class="settings-row">
+            <span>Card count</span>
+            <span class="settings-actions">
+              <button class="small-btn" data-session-cards="1">1</button>
+              <button class="small-btn" data-session-cards="3">3</button>
+              <button class="small-btn" data-session-cards="5">5</button>
+              <button class="small-btn" data-session-cards="10">10</button>
+            </span>
+          </div>
+        `}
+      </div>
+
+      <h3 class="stats-h">Accessibility</h3>
+      <div class="settings-panel">
+        <div class="settings-row">
+          <span>Text size</span>
+          <span class="seg-control" data-pref="size">
+            <button data-val="small" class="${pref('size')==='small'?'active':''}">S</button>
+            <button data-val="medium" class="${pref('size')==='medium'?'active':''}">M</button>
+            <button data-val="large" class="${pref('size')==='large'?'active':''}">L</button>
+            <button data-val="xlarge" class="${pref('size')==='xlarge'?'active':''}">XL</button>
+          </span>
+        </div>
+        <div class="settings-row">
+          <span>Font</span>
+          <span class="seg-control" data-pref="font">
+            <button data-val="system" class="${pref('font')==='system'?'active':''}">System</button>
+            <button data-val="atkinson" class="${pref('font')==='atkinson'?'active':''}">Atkinson</button>
+            <button data-val="opendyslexic" class="${pref('font')==='opendyslexic'?'active':''}">OpenDyslexic</button>
+          </span>
+        </div>
+        <label class="settings-row">
+          <span>High contrast</span>
+          <input type="checkbox" data-pref="contrast" data-on="high" data-off="normal" ${pref('contrast')==='high'?'checked':''}>
+        </label>
+        <label class="settings-row">
+          <span>Reduce motion</span>
+          <input type="checkbox" data-pref="motion" data-on="reduced" data-off="full" ${pref('motion')==='reduced'?'checked':''}>
+        </label>
+        <label class="settings-row">
+          <span>Haptic feedback</span>
+          <input type="checkbox" data-pref="haptics" data-on="on" data-off="off" ${pref('haptics')==='on'?'checked':''}>
+        </label>
+        <label class="settings-row">
+          <span>Auto-sync to cloud (every 5s after save)</span>
+          <input type="checkbox" data-pref="autosync" data-on="on" data-off="off" ${pref('autosync')==='on'?'checked':''}>
+        </label>
+        <label class="settings-row" title="Hides accuracy %, progress numbers, and mastery bars. Keeps streak + session timer.">
+          <span>Anxiety Mode (hide numbers)</span>
+          <input type="checkbox" data-pref="anxiety" data-on="on" data-off="off" ${pref('anxiety')==='on'?'checked':''}>
+        </label>
+        <label class="settings-row">
+          <span>Shake to toggle shuffle (iOS)</span>
+          <input type="checkbox" id="shake-toggle" data-pref="shake" data-on="on" data-off="off" ${pref('shake')==='on'?'checked':''}>
+        </label>
+        <div class="settings-row">
+          <span>Focus sound</span>
+          <span class="seg-control" data-pref="sound">
+            <button data-val="off" class="${pref('sound')==='off'?'active':''}">Off</button>
+            <button data-val="white" class="${pref('sound')==='white'?'active':''}">White</button>
+            <button data-val="pink" class="${pref('sound')==='pink'?'active':''}">Pink</button>
+            <button data-val="brown" class="${pref('sound')==='brown'?'active':''}">Brown</button>
+          </span>
+        </div>
+      </div>
+
+      <h3 class="stats-h numeric-ui">Mastery by Objective</h3>
+      <div class="obj-bar-list numeric-ui">
         ${objStats.map(s => `
           <div class="obj-bar">
             <div class="obj-label">OBJ ${s.obj}</div>
@@ -412,6 +798,58 @@ function renderStats() {
         `).join('')}
       </div>
 
+      <h3 class="stats-h">Options</h3>
+      <div class="settings-panel">
+        <label class="settings-row">
+          <span>🔀 Shuffle questions</span>
+          <input type="checkbox" id="shuffle-toggle" ${state.shuffle ? 'checked' : ''}>
+        </label>
+        <div class="settings-row">
+          <span>💾 Progress</span>
+          <span class="settings-actions">
+            <button class="small-btn" id="export-btn">Export</button>
+            <button class="small-btn" id="import-btn">Import</button>
+          </span>
+        </div>
+        <div class="settings-row">
+          <span>✏️ Question edits <span class="settings-count">${Object.keys(state.overrides).length}</span></span>
+          <span class="settings-actions">
+            <button class="small-btn" id="export-overrides-btn">Export</button>
+            <button class="small-btn" id="import-overrides-btn">Import</button>
+          </span>
+        </div>
+      </div>
+
+      <h3 class="stats-h">Cloud sync (Supabase)</h3>
+      <div class="settings-panel">
+        <div class="settings-stack">
+          <label class="settings-vrow">
+            <span class="settings-vlabel">Project URL</span>
+            <input id="cloud-url" type="url" placeholder="https://xxxx.supabase.co" value="${escape(getCloudCfg().url)}">
+          </label>
+          <label class="settings-vrow">
+            <span class="settings-vlabel">Anon key</span>
+            <input id="cloud-key" type="password" placeholder="eyJ…" value="${escape(getCloudCfg().key)}">
+          </label>
+          <label class="settings-vrow">
+            <span class="settings-vlabel">Sync key (any string you pick — same on every device)</span>
+            <input id="cloud-sync" type="text" placeholder="amanda-aplus" value="${escape(getCloudCfg().syncKey)}">
+          </label>
+          <div class="settings-actions" style="justify-content: space-between; padding: 4px 0;">
+            <span class="settings-meta" id="cloud-status">${
+              localStorage.getItem('supabase.lastSync')
+                ? `Last sync: ${new Date(localStorage.getItem('supabase.lastSync')).toLocaleString()}`
+                : 'Not yet synced.'
+            }</span>
+            <span class="settings-actions">
+              <button class="small-btn" id="cloud-save">Save</button>
+              <button class="small-btn" id="cloud-pull">⬇ Pull</button>
+              <button class="small-btn" id="cloud-push">⬆ Push</button>
+            </span>
+          </div>
+        </div>
+      </div>
+
       <button class="reset-btn" id="reset-btn">Reset all progress</button>
     </div>
   `;
@@ -419,11 +857,86 @@ function renderStats() {
     if (confirm('Reset all study progress? This cannot be undone.')) {
       await clearProgress();
       for (const q of state.questions) {
-        state.progress[q.id] = { status: 'new', seen: 0, correct: 0, lastSeen: 0 };
+        state.progress[q.id] = defaultProgress();
       }
+      await saveProgress();
       renderStats();
     }
   });
+  $('#export-btn')?.addEventListener('click', exportProgress);
+  $('#import-btn')?.addEventListener('click', importProgress);
+  $('#export-overrides-btn')?.addEventListener('click', exportOverrides);
+  $('#import-overrides-btn')?.addEventListener('click', importOverrides);
+  $('#shuffle-toggle')?.addEventListener('change', (e) => {
+    state.shuffle = e.target.checked;
+    localStorage.setItem('shuffle', state.shuffle ? 'true' : 'false');
+    state._shuffleCache = null;
+  });
+
+  // Accessibility: segmented controls (size / font / sound)
+  $$('.seg-control').forEach(group => {
+    const key = group.dataset.pref;
+    group.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => {
+      setPref(key, btn.dataset.val);
+      if (key === 'sound') setSound(btn.dataset.val);
+      renderStats();
+    }));
+  });
+  // Accessibility: checkboxes (contrast / motion / haptics / autosync / anxiety / shake)
+  $$('input[type="checkbox"][data-pref]').forEach(input => {
+    input.addEventListener('change', async (e) => {
+      const key = input.dataset.pref;
+      const val = e.target.checked ? input.dataset.on : input.dataset.off;
+      if (key === 'shake' && val === 'on') {
+        const granted = await enableShake();
+        if (!granted) { e.target.checked = false; return; }
+      } else if (key === 'shake' && val === 'off') {
+        disableShake();
+      }
+      setPref(key, val);
+      if (key === 'anxiety') updateHUD();
+    });
+  });
+  // Focus session buttons (time-based or card-count)
+  $$('button[data-session-min]').forEach(btn => btn.addEventListener('click', () => {
+    startSession({ minutes: Number(btn.dataset.sessionMin) });
+    renderStats();
+  }));
+  $$('button[data-session-cards]').forEach(btn => btn.addEventListener('click', () => {
+    startSession({ targetCards: Number(btn.dataset.sessionCards) });
+    renderStats();
+  }));
+  $('#session-end')?.addEventListener('click', () => { endSession(false); renderStats(); });
+
+  $('#cloud-save')?.addEventListener('click', () => {
+    saveCloudCfg($('#cloud-url').value.trim(), $('#cloud-key').value.trim(), $('#cloud-sync').value.trim());
+    setCloudStatus('Configuration saved.');
+  });
+  $('#cloud-push')?.addEventListener('click', async () => {
+    setCloudStatus('Pushing…');
+    try {
+      saveCloudCfg($('#cloud-url').value.trim(), $('#cloud-key').value.trim(), $('#cloud-sync').value.trim());
+      await cloudPush();
+      setCloudStatus(`Pushed ${new Date().toLocaleTimeString()}`);
+    } catch (e) { setCloudStatus(`Push failed: ${e.message}`, true); }
+  });
+  $('#cloud-pull')?.addEventListener('click', async () => {
+    if (!confirm('Pull will overwrite local progress with cloud data. Continue?')) return;
+    setCloudStatus('Pulling…');
+    try {
+      saveCloudCfg($('#cloud-url').value.trim(), $('#cloud-key').value.trim(), $('#cloud-sync').value.trim());
+      await cloudPull();
+      setCloudStatus(`Pulled ${new Date().toLocaleTimeString()}`);
+      renderStats();
+    } catch (e) { setCloudStatus(`Pull failed: ${e.message}`, true); }
+  });
+}
+
+function setCloudStatus(text, isError = false) {
+  const el = $('#cloud-status');
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = isError ? 'var(--bad)' : 'var(--text-dim)';
 }
 
 //─── FILTER BAR (shared by Study + Quiz) ─────────────────────
@@ -432,6 +945,10 @@ function filterBarHTML() {
   const counts = {};
   for (const o of objs) counts[o] = state.questions.filter(q => q.obj === o).length;
   return `
+    <div class="search-row">
+      <input id="search-input" type="search" placeholder="Search question text…" value="${escape(state.filter.search)}" autocomplete="off">
+      ${state.filter.search ? '<button id="search-clear" class="small-btn" aria-label="Clear search">✕</button>' : ''}
+    </div>
     <div class="filter-bar">
       <button class="due-chip ${state.filter.due ? 'active' : ''}" data-filter="due">
         ${state.filter.due ? '✓ ' : ''}Due (${dueCount()})
@@ -454,9 +971,48 @@ function renderFilterBar() {
     else state.filter.obj = f;
     state.currentIndex = 0;
     state.revealed = false;
+    state.editing = false;
+    state.history = [];
+    state._shuffleCache = null;
     if (state.mode === 'study') renderStudy();
     else if (state.mode === 'quiz') renderQuiz();
   }));
+
+  const searchInput = $('#search-input');
+  if (searchInput) {
+    // Re-apply so caret isn't lost when the filter bar rerenders
+    let debounce;
+    searchInput.addEventListener('input', (e) => {
+      clearTimeout(debounce);
+      const val = e.target.value;
+      debounce = setTimeout(() => {
+        state.filter.search = val;
+        state.currentIndex = 0;
+        state.revealed = false;
+        state.editing = false;
+        state.history = [];
+        state._shuffleCache = null;
+        if (state.mode === 'study') renderStudy();
+        else if (state.mode === 'quiz') renderQuiz();
+        // Restore focus + caret after rerender
+        const again = $('#search-input');
+        if (again) { again.focus(); again.setSelectionRange(val.length, val.length); }
+      }, 200);
+    });
+  }
+  const searchClear = $('#search-clear');
+  if (searchClear) {
+    searchClear.addEventListener('click', () => {
+      state.filter.search = '';
+      state.currentIndex = 0;
+      state.revealed = false;
+      state.editing = false;
+      state.history = [];
+      state._shuffleCache = null;
+      if (state.mode === 'study') renderStudy();
+      else if (state.mode === 'quiz') renderQuiz();
+    });
+  }
 }
 
 //─── SCRATCH PAD (Apple Pencil) ──────────────────────────────
@@ -579,21 +1135,111 @@ function renderOptionsHTML(q) {
     </ol>`;
 }
 
+//─── IN-APP QUESTION EDITOR ──────────────────────────────────
+function renderEditFormHTML(q) {
+  const optsText = (q.options || []).join('\n');
+  const imgVal = q.image || (q.images && q.images[0]) || '';
+  return `
+    <div class="card edit-card">
+      <h3 class="edit-title">Edit question <span class="edit-id">${escape(q.id)}</span></h3>
+      <p class="edit-question">${escape(q.question)}</p>
+
+      <label class="edit-field">
+        <span class="edit-label">Multiple-choice options (one per line)</span>
+        <textarea id="edit-options" rows="6" placeholder="Cable modem&#10;DSL&#10;ONT&#10;SDN">${escape(optsText)}</textarea>
+        <span class="edit-hint">Tip: enter the four answer choices. Order doesn't matter — the app doesn't grade clicks.</span>
+      </label>
+
+      <label class="edit-field">
+        <span class="edit-label">Image URL (PBQs)</span>
+        <input id="edit-image" type="text" value="${escape(imgVal)}" placeholder="images/${escape(q.id)}.png or https://…">
+        <span class="edit-hint">Drop a PNG/JPG into the project's <code>images/</code> folder and use that path, or paste any URL.</span>
+      </label>
+
+      <div class="btn-row">
+        <button class="action" id="edit-cancel">Cancel</button>
+        ${state.overrides[q.id] ? '<button class="action bad" id="edit-clear">Clear edits</button>' : ''}
+        <button class="action primary" id="edit-save">Save</button>
+      </div>
+    </div>
+  `;
+}
+
+function attachEditEvents(q) {
+  const close = () => {
+    state.editing = false;
+    if (state.mode === 'study') renderStudy();
+    else if (state.mode === 'quiz') renderQuiz();
+  };
+  $('#edit-cancel').addEventListener('click', close);
+  $('#edit-clear')?.addEventListener('click', async () => {
+    delete state.overrides[q.id];
+    await saveOverrides();
+    close();
+  });
+  $('#edit-save').addEventListener('click', async () => {
+    const optsText = $('#edit-options').value.trim();
+    const imgVal = $('#edit-image').value.trim();
+    const override = {};
+    if (optsText) {
+      override.options = optsText.split('\n').map(s => s.trim()).filter(Boolean);
+    }
+    if (imgVal) override.image = imgVal;
+    if (Object.keys(override).length === 0) {
+      delete state.overrides[q.id];
+    } else {
+      state.overrides[q.id] = override;
+    }
+    await saveOverrides();
+    close();
+  });
+}
+
 //─── HELPERS ─────────────────────────────────────────────────
 function escape(s) {
   if (!s) return '';
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+// Format a raw explanation blob into a scannable layout:
+// - Strip redundant "OBJ X.X:" prefix (already shown as a tag)
+// - Break into paragraphs (every 2 sentences) so it's not a wall of text
+// - Pull "For the exam..." into its own callout at the bottom
+// - Give the first paragraph a lead style so the answer stands out
 function formatExplanation(text) {
   if (!text) return '';
-  // Let **bold** and simple markdown through
-  let html = escape(text);
-  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  // Line breaks
-  html = html.replace(/\n\n/g, '</p><p>');
-  html = html.replace(/\n/g, '<br>');
-  return `<p>${html}</p>`;
+  text = text.replace(/^OBJ \d+\.\d+:\s*/i, '').trim();
+
+  let tip = '';
+  const tipIdx = text.search(/For the exam[,:]?/i);
+  if (tipIdx !== -1) {
+    tip = text.slice(tipIdx).replace(/^For the exam[,:]?\s*/i, '').trim();
+    text = text.slice(0, tipIdx).trim();
+  }
+
+  const mdBold = (s) => escape(s).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  // Split only at a space between a sentence-ending punctuation mark and the
+  // next sentence's capital letter. Avoids breaking numbers like "2.4 GHz" or
+  // "802.11g" — those decimals aren't followed by a capital letter.
+  const sentences = text.split(/(?<=[.!?])\s+(?=[A-Z])/);
+
+  let body;
+  if (sentences.length < 3) {
+    body = `<p class="expl-lead">${mdBold(text)}</p>`;
+  } else {
+    const paras = [];
+    for (let i = 0; i < sentences.length; i += 2) {
+      paras.push(sentences.slice(i, i + 2).join(' ').trim());
+    }
+    body = paras.map((p, i) =>
+      `<p class="${i === 0 ? 'expl-lead' : 'expl-para'}">${mdBold(p)}</p>`
+    ).join('');
+  }
+
+  if (tip) {
+    body += `<div class="expl-tip"><strong>💡 For the exam</strong><p>${mdBold(tip)}</p></div>`;
+  }
+  return body;
 }
 
 function emptyHTML(title, sub) {
@@ -609,11 +1255,370 @@ function setMode(mode) {
   state.mode = mode;
   state.currentIndex = 0;
   state.revealed = false;
+  state.editing = false;
+  state.history = [];
+  state._shuffleCache = null;
   $$('.tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
   if (mode === 'study') renderStudy();
   else if (mode === 'quiz') renderQuiz();
   else if (mode === 'reading') renderReading();
   else if (mode === 'stats') renderStats();
+}
+
+//─── FOCUS SOUND (Web Audio, no downloads) ───────────────────
+let _audioCtx = null;
+let _audioSrc = null;
+let _audioGain = null;
+
+function generateNoiseBuffer(ctx, type) {
+  const size = 2 * ctx.sampleRate;  // 2 seconds, looped
+  const buf = ctx.createBuffer(1, size, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  if (type === 'white') {
+    for (let i = 0; i < size; i++) d[i] = Math.random() * 2 - 1;
+  } else if (type === 'pink') {
+    // Voss-McCartney approximation — cheap, good enough
+    let b0=0, b1=0, b2=0, b3=0, b4=0, b5=0, b6=0;
+    for (let i = 0; i < size; i++) {
+      const w = Math.random() * 2 - 1;
+      b0 = 0.99886 * b0 + w * 0.0555179;
+      b1 = 0.99332 * b1 + w * 0.0750759;
+      b2 = 0.96900 * b2 + w * 0.1538520;
+      b3 = 0.86650 * b3 + w * 0.3104856;
+      b4 = 0.55000 * b4 + w * 0.5329522;
+      b5 = -0.7616 * b5 - w * 0.0168980;
+      d[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.11;
+      b6 = w * 0.115926;
+    }
+  } else if (type === 'brown') {
+    let last = 0;
+    for (let i = 0; i < size; i++) {
+      const w = Math.random() * 2 - 1;
+      last = (last + 0.02 * w) / 1.02;
+      d[i] = last * 3.5;
+    }
+  }
+  return buf;
+}
+
+function setSound(type) {
+  if (_audioSrc) { try { _audioSrc.stop(); } catch {} _audioSrc = null; }
+  if (type === 'off') return;
+  if (!_audioCtx) {
+    const Ctor = window.AudioContext || window.webkitAudioContext;
+    if (!Ctor) return;
+    _audioCtx = new Ctor();
+  }
+  _audioCtx.resume();
+  if (!_audioGain) {
+    _audioGain = _audioCtx.createGain();
+    _audioGain.gain.value = 0.15;
+    _audioGain.connect(_audioCtx.destination);
+  }
+  const src = _audioCtx.createBufferSource();
+  src.buffer = generateNoiseBuffer(_audioCtx, type);
+  src.loop = true;
+  src.connect(_audioGain);
+  src.start();
+  _audioSrc = src;
+}
+
+//─── SHAKE TO SHUFFLE (DeviceMotion, iOS-permission-aware) ───
+let _shakeInstalled = false;
+let _shakeLastFire = 0;
+
+function onShakeMotion(e) {
+  const a = e.accelerationIncludingGravity;
+  if (!a) return;
+  const mag = Math.sqrt((a.x||0)**2 + (a.y||0)**2 + (a.z||0)**2);
+  const now = Date.now();
+  if (mag > 25 && now - _shakeLastFire > 1200) {
+    _shakeLastFire = now;
+    haptic([20, 40, 20]);
+    state.shuffle = !state.shuffle;
+    localStorage.setItem('shuffle', state.shuffle ? 'true' : 'false');
+    state._shuffleCache = null;
+    if (state.mode === 'study') renderStudy();
+    else if (state.mode === 'quiz') renderQuiz();
+  }
+}
+
+async function enableShake() {
+  if (_shakeInstalled) return true;
+  // iOS 13+ requires explicit permission for motion events
+  if (typeof DeviceMotionEvent !== 'undefined'
+      && typeof DeviceMotionEvent.requestPermission === 'function') {
+    try {
+      const result = await DeviceMotionEvent.requestPermission();
+      if (result !== 'granted') { alert('Motion permission denied — shake disabled.'); return false; }
+    } catch (e) { alert('Couldn\'t request motion permission: ' + e.message); return false; }
+  }
+  window.addEventListener('devicemotion', onShakeMotion);
+  _shakeInstalled = true;
+  return true;
+}
+
+function disableShake() {
+  if (!_shakeInstalled) return;
+  window.removeEventListener('devicemotion', onShakeMotion);
+  _shakeInstalled = false;
+}
+
+//─── FOCUS MODE ──────────────────────────────────────────────
+function toggleFocus() {
+  state.focus = !state.focus;
+  document.documentElement.toggleAttribute('data-focus', state.focus);
+  haptic(5);
+  const btn = $('#focus-btn');
+  if (btn) btn.textContent = state.focus ? '🔓' : '🔒';
+}
+
+//─── THEME (auto / light / dark) ─────────────────────────────
+function setTheme(theme) {
+  // theme: 'auto' | 'light' | 'dark'
+  if (theme === 'auto') {
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.removeItem('theme');
+  } else {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }
+  const btn = $('#theme-btn');
+  if (btn) btn.textContent = theme === 'light' ? '☀️' : theme === 'dark' ? '🌙' : '🌓';
+}
+
+function cycleTheme() {
+  const order = ['auto', 'light', 'dark'];
+  const current = localStorage.getItem('theme') || 'auto';
+  const next = order[(order.indexOf(current) + 1) % order.length];
+  setTheme(next);
+  haptic(5);
+}
+
+//─── EXPORT / IMPORT PROGRESS ────────────────────────────────
+function exportProgress() {
+  const blob = new Blob([JSON.stringify(state.progress, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `aplus-study-progress-${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function importProgress() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'application/json,.json';
+  input.addEventListener('change', async () => {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('Expected an object of { questionId: progress }');
+      const cardCount = Object.keys(data).length;
+      if (!confirm(`Replace progress with ${cardCount} cards from this file?`)) return;
+      state.progress = data;
+      for (const q of state.questions) {
+        if (!state.progress[q.id]) state.progress[q.id] = defaultProgress();
+        else migrateProgress(state.progress[q.id]);
+      }
+      await saveProgress();
+      renderStats();
+      alert('Progress imported.');
+    } catch (e) {
+      alert('Import failed: ' + e.message);
+    }
+  });
+  input.click();
+}
+
+function exportOverrides() {
+  const blob = new Blob([JSON.stringify(state.overrides, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `aplus-study-overrides-${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function importOverrides() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'application/json,.json';
+  input.addEventListener('change', async () => {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('Expected an object of { questionId: { options?, image? } }');
+      const choice = confirm(`Merge ${Object.keys(data).length} edits into existing overrides?\n\nClick OK to merge (existing edits kept), Cancel to replace.`);
+      state.overrides = choice ? { ...state.overrides, ...data } : data;
+      await saveOverrides();
+      renderStats();
+      alert('Overrides imported.');
+    } catch (e) {
+      alert('Import failed: ' + e.message);
+    }
+  });
+  input.click();
+}
+
+//─── SUPABASE CLOUD SYNC (optional) ──────────────────────────
+// Stores progress + overrides in a single Postgres row keyed by sync_key.
+// User configures URL + anon key + sync_key once, then can push / pull.
+function getCloudCfg() {
+  return {
+    url: (localStorage.getItem('supabase.url') || '').trim().replace(/\/+$/, ''),
+    key: (localStorage.getItem('supabase.key') || '').trim(),
+    syncKey: (localStorage.getItem('supabase.syncKey') || '').trim(),
+  };
+}
+
+function saveCloudCfg(url, key, syncKey) {
+  localStorage.setItem('supabase.url', url);
+  localStorage.setItem('supabase.key', key);
+  localStorage.setItem('supabase.syncKey', syncKey);
+}
+
+function cloudHeaders(key, extra = {}) {
+  return {
+    'apikey': key,
+    'Authorization': `Bearer ${key}`,
+    'Content-Type': 'application/json',
+    ...extra,
+  };
+}
+
+async function cloudPush() {
+  const { url, key, syncKey } = getCloudCfg();
+  if (!url || !key || !syncKey) throw new Error('Set Supabase URL, anon key, and sync key first');
+  const body = JSON.stringify({
+    sync_key: syncKey,
+    data: { progress: state.progress, overrides: state.overrides, version: 1 },
+    updated_at: new Date().toISOString(),
+  });
+  const res = await fetch(`${url}/rest/v1/progress`, {
+    method: 'POST',
+    headers: cloudHeaders(key, { 'Prefer': 'resolution=merge-duplicates,return=minimal' }),
+    body,
+  });
+  if (!res.ok) throw new Error(`Push ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  localStorage.setItem('supabase.lastSync', new Date().toISOString());
+}
+
+async function cloudPull({ merge = true } = {}) {
+  const { url, key, syncKey } = getCloudCfg();
+  if (!url || !key || !syncKey) throw new Error('Set Supabase URL, anon key, and sync key first');
+  const res = await fetch(`${url}/rest/v1/progress?sync_key=eq.${encodeURIComponent(syncKey)}&select=data,updated_at`, {
+    headers: cloudHeaders(key),
+  });
+  if (!res.ok) throw new Error(`Pull ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  const rows = await res.json();
+  if (!rows.length) throw new Error(`No row found for sync key "${syncKey}"`);
+  const data = rows[0].data || {};
+  const cloudProgress = data.progress || {};
+  const cloudOverrides = data.overrides || {};
+
+  if (merge) {
+    // Per-card last-write-wins: keep whichever side has a newer updated_at
+    for (const [id, cloudP] of Object.entries(cloudProgress)) {
+      const localP = state.progress[id];
+      if (!localP) { state.progress[id] = cloudP; continue; }
+      const cTime = cloudP.updated_at || cloudP.lastSeen || 0;
+      const lTime = localP.updated_at || localP.lastSeen || 0;
+      if (cTime > lTime) state.progress[id] = cloudP;
+    }
+    // Overrides: prefer whichever has more fields (naive — rare to edit same card in two places concurrently)
+    for (const [id, cloudO] of Object.entries(cloudOverrides)) {
+      const localO = state.overrides[id];
+      if (!localO || Object.keys(cloudO).length > Object.keys(localO).length) {
+        state.overrides[id] = cloudO;
+      }
+    }
+  } else {
+    state.progress = cloudProgress;
+    state.overrides = cloudOverrides;
+  }
+
+  // Re-apply defaults/migrations for any card the cloud didn't cover
+  for (const q of state.questions) {
+    if (!state.progress[q.id]) state.progress[q.id] = defaultProgress();
+    else migrateProgress(state.progress[q.id]);
+  }
+  await saveProgress();
+  await saveOverrides();
+  localStorage.setItem('supabase.lastSync', new Date().toISOString());
+}
+
+//─── KEYBOARD SHORTCUTS ──────────────────────────────────────
+function installKeyboard() {
+  document.addEventListener('keydown', (e) => {
+    // Let the user type in inputs/textareas
+    if (e.target.matches('input, textarea')) return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+    const key = e.key.toLowerCase();
+
+    // Global shortcuts
+    if (key === 't') { e.preventDefault(); cycleTheme(); return; }
+    if (key === 'f') { e.preventDefault(); toggleFocus(); return; }
+    if (key === 'escape' && state.focus) { e.preventDefault(); toggleFocus(); return; }
+
+    // Study / Quiz navigation
+    if (state.mode === 'study' || state.mode === 'quiz') {
+      if (key === 'arrowright' || key === 'k' || key === 'n') {
+        e.preventDefault();
+        state.mode === 'study' ? nextQuestion() : nextQuizQuestion();
+        return;
+      }
+      if (key === 'arrowleft' || key === 'j' || key === 'p') {
+        e.preventDefault();
+        state.mode === 'study' ? prevQuestion() : prevQuizQuestion();
+        return;
+      }
+      if (key === ' ' || key === 'enter' || key === 'r') {
+        e.preventDefault();
+        if (!state.revealed) {
+          state.revealed = true;
+          state.mode === 'study' ? renderStudy() : renderQuiz();
+        } else {
+          // When revealed: space/enter advances with a neutral "good" rating
+          const qs = filteredQuestions();
+          if (qs.length > 0) {
+            const q = qs[state.currentIndex];
+            if (state.mode === 'study') {
+              recordRating(q.id, 'good');
+              nextQuestion();
+            } else {
+              const p = state.progress[q.id];
+              p.seen++; p.lastSeen = Date.now(); p.updated_at = p.lastSeen; p.correct++;
+              schedule(p, 'good');
+              haptic(10); saveProgress(); onCardRated(q.id);
+              nextQuizQuestion();
+            }
+          }
+        }
+        return;
+      }
+      // Study-only rating shortcuts 1..4
+      if (state.mode === 'study' && state.revealed && ['1', '2', '3', '4'].includes(key)) {
+        e.preventDefault();
+        const rate = ['again', 'hard', 'good', 'easy'][Number(key) - 1];
+        const qs = filteredQuestions();
+        if (qs.length > 0) {
+          recordRating(qs[state.currentIndex].id, rate);
+          nextQuestion();
+        }
+        return;
+      }
+    }
+  });
 }
 
 //─── SWIPE (swipe left to advance in Study/Quiz) ─────────────
@@ -644,6 +1649,16 @@ function installSwipe() {
 
 //─── INIT ────────────────────────────────────────────────────
 async function init() {
+  // Prefs / theme / shuffle all load before any render so first paint is correct
+  applyPrefs();
+  setTheme(localStorage.getItem('theme') || 'auto');
+  state.shuffle = localStorage.getItem('shuffle') === 'true';
+  if (pref('sound') !== 'off') setSound(pref('sound'));  // ambient noise restores (needs gesture on some browsers)
+  if (pref('shake') === 'on') enableShake().catch(() => {});
+
+  $('#theme-btn')?.addEventListener('click', cycleTheme);
+  $('#focus-btn')?.addEventListener('click', toggleFocus);
+
   try {
     await loadData();
   } catch (e) {
@@ -652,6 +1667,7 @@ async function init() {
   }
   $$('.tab').forEach(t => t.addEventListener('click', () => setMode(t.dataset.mode)));
   installSwipe();
+  installKeyboard();
   setMode('study');
 
   // Register service worker for offline

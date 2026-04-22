@@ -7,12 +7,57 @@ A Progressive Web App (PWA) for Amanda. CompTIA A+ Core 1 (220-1201) study tool 
 - **Study mode** — flashcards with spaced repetition (again / hard / good / easy). Cards come back at increasing intervals based on how well you did; "again" brings it back in a minute, "easy" pushes it out days.
 - **Quiz mode** — same questions but tracked as right/wrong for accuracy stats. Wrong answers are scheduled for quick review; right answers graduate out.
 - **Reading mode** — your concept-fix sheets for 23 objectives (all 5 pretests' weak areas).
-- **Stats mode** — mastery bars per OBJ, total accuracy, reset button.
+- **Stats mode** — mastery bars per OBJ, accuracy, shuffle toggle, export/import progress, reset.
+- **Readable explanations** — long CompTIA explanations are auto-split into a lead answer + supporting paragraphs, with any "For the exam..." tip pulled into its own callout. No more walls of text.
 - **Apple Pencil scratch pad** — beneath every question on iPad (shown at widths >600px), pressure-sensitive canvas for subnet math, diagrams, etc. Hidden on iPhone portrait to keep the card readable.
-- **Filter by OBJ or "Due"** — scroll the filter bar to drill a specific objective, or toggle the green **Due (N)** chip to see only cards scheduled for review right now.
-- **Swipe to advance** — swipe left on Study/Quiz cards to skip to the next question. Light haptic tap on supported devices.
+- **Filter by OBJ, "Due", or search** — scroll the filter bar to drill a specific objective, toggle the green **Due (N)** chip to see only cards scheduled for review, or type in the search box to narrow by question/explanation text.
+- **Shuffle** — optional random order, toggled from Stats. Persists across sessions.
+- **Swipe / keyboard / prev** — swipe left on Study/Quiz cards to skip; use the **← Prev** button to go back; desktop keyboard shortcuts (see below).
+- **Theme toggle** — 🌓 button in the header cycles Auto / Light / Dark, saved to your device.
+- **Export / import progress** — download your progress as JSON from Stats, import it on another device or after a browser wipe.
 - **Offline** — service worker caches everything. Once installed, works in airplane mode.
 - **Progress persists** — IndexedDB stores ratings, ease, and next-due timestamps between sessions.
+
+## Keyboard shortcuts (desktop study)
+
+| Key | Action |
+|---|---|
+| `Space` / `Enter` / `R` | Reveal answer. If already revealed, advances with a "good" rating. |
+| `1` / `2` / `3` / `4` | Rate: Again / Hard / Good / Easy (Study mode, after reveal) |
+| `→` / `K` / `N` | Next question |
+| `←` / `J` / `P` | Previous question |
+| `T` | Cycle theme (auto / light / dark) |
+| `F` | Toggle Focus Mode (hides chrome) — `Esc` also exits |
+
+## AuDHD-friendly features
+
+Built to be flexible, because sensory needs flip between *understimulated* (ADHD-side: needs visual engagement) and *overstimulated* (autism-side: needs calm, minimal UI). Everything here is togglable from **Stats → Accessibility**, **Stats → Focus session**, and the 🔒 / 🌓 header buttons.
+
+- **Focus Mode** (🔒 button or `F`) — hides the tab bar, filter chips, search box, progress HUD, and card meta tags. Just the question. Great when scrolling chrome becomes noise.
+- **Focus Sessions** (Stats → Focus session):
+  - **Time-boxed** — 5 / 15 / 25 min with a visible ⏱ countdown in the header (time-blindness).
+  - **Card-count micro-goals** — 1 / 3 / 5 / 10 cards. Session ends automatically when the count is hit. "One card" is a valid commitment; you can always do one.
+  - End-of-session summary celebrates whatever you did. "End now" exits early without guilt.
+- **Anxiety Mode** — hides accuracy %, progress counters, mastery bars, seen counts. Keeps streak + session timer. Turn on when numbers feel like judgement.
+- **Focus sound** — built-in white / pink / brown noise generator via Web Audio (no downloads, no tracking). Pink is gentler than white; brown is "the one that sounds like a waterfall."
+- **Shake to shuffle** — iPhone only. Toggle in Accessibility, grant motion permission when prompted, then shake the phone to flip shuffle on/off mid-study (with a haptic confirmation).
+- **Text size** — S / M / L / XL. Scales the whole app.
+- **Font** — System default, **Atkinson Hyperlegible** (open-source, designed for low vision, loaded from Google Fonts), or **OpenDyslexic** (weighted letter bottoms to resist letter-swapping).
+- **High contrast** — pure-black background + brighter text/borders. Reduces visual clutter.
+- **Reduce motion** — kills transitions and animations. The OS-level `prefers-reduced-motion` setting is also respected automatically.
+- **Haptic feedback** — on by default (a tiny tap on every rate). Toggle off if vibrations are distracting.
+- **Daily streak + Today counter** in Stats — dopamine-friendly "I did a thing" signal without a full leaderboard grind.
+- **Scratch pad** — doubles as a drawing / fidget space on iPad while you think. Hidden on iPhone portrait to cut clutter.
+- **Auto-sync** — if you've set up Supabase, flip "Auto-sync" on and every rated card quietly syncs 5s later. No "did I forget to push?" worry.
+
+Design principles that shaped this:
+
+1. **Everything is a toggle, nothing is a mandate.** Today you might want haptics + motion + high-contrast; tomorrow you might not. Preferences persist per device.
+2. **Reduce decision load.** The "default next action" (Reveal, Skip, a rating button) is always visually primary, always in the same spot.
+3. **Time is visible.** Session countdown + card progress + due count are all numeric — no guessing "how long have I been at this?"
+4. **Low-stakes sessions.** You can start a 5-minute session. You can end it early. Rating one card counts as "showing up."
+
+None of this is medical advice — it's just options that map to patterns in the neurodivergent design literature. Use what helps, ignore what doesn't.
 
 ## Installing to home screen (iPad or iPhone)
 
@@ -62,9 +107,24 @@ Progress is stored per-device. If you install to both iPad and iPhone, they don'
 - Tap **Reveal answer** → rate how you did → next question. Progress saves automatically.
 - Come back later and tap the green **Due** chip to drill only cards scheduled for review.
 
-## Data schema (for adding options + PBQ images)
+## Adding multiple-choice options + PBQ images
 
-Each question in `data/questions.json` is an object:
+Two ways to fill in the data the original extraction missed:
+
+### Option A — In-app editor (no source files needed)
+
+Every Study/Quiz card now has a small **✏️ Edit** button in its meta row. Tap it to open a form where you can:
+
+- Paste the four MC options (one per line)
+- Add an image URL (`images/p1q36.png`, or any HTTPS URL)
+
+Saves are stored in IndexedDB as **overrides** — they don't touch `data/questions.json`. An "✏️ Edited" tag appears on cards you've edited so you can see your work. Stats → **Question edits → Export** dumps your overrides as JSON; **Import** loads them back. They sync via cloud too (see below).
+
+This is the fastest path: open a card, type the four options from your pretest screenshot, save, move on.
+
+### Option B — Edit `data/questions.json` directly (permanent, ships in the repo)
+
+If you want the options/images committed for everyone (or you have many to add at once), edit `data/questions.json`. Each entry is an object:
 
 ```jsonc
 {
@@ -88,7 +148,52 @@ Each question in `data/questions.json` is an object:
 - **`options`** — an array of strings. When present, they're rendered as a lettered list (A, B, C, D) above the Reveal button. Absent = the old behavior (think-then-reveal). The app doesn't score clicks on options; you still self-rate.
 - **`image` / `images`** — paths relative to the project root. Drop PNG/JPG into an `images/` folder and reference it here. PBQs without an image show a yellow "image not available" banner so you can still read the explanation.
 
-To backfill options and PBQ figures, you'll need to re-extract from the source pretest docs (the current `questions.json` was extracted from plaintext where options weren't captured). Add them question-by-question or re-run the extraction script with an updated parser.
+In-app edits (Option A above) live in IndexedDB and are merged onto the base question at render time, so an in-app edit overrides the JSON for that question.
+
+## Cloud sync (Supabase)
+
+Optional. Lets iPad + iPhone share progress and edits without exporting JSON manually.
+
+### One-time Supabase setup
+
+1. Create a free Supabase project at https://supabase.com.
+2. In the SQL editor, run:
+
+```sql
+create table if not exists progress (
+  sync_key text primary key,
+  data jsonb not null,
+  updated_at timestamptz default now()
+);
+
+-- Allow the anon key to read/write rows (anyone with the URL + sync_key can sync,
+-- which is fine for a personal study app — keep your sync_key secret-ish).
+alter table progress enable row level security;
+create policy "anon read"  on progress for select using (true);
+create policy "anon write" on progress for insert with check (true);
+create policy "anon update" on progress for update using (true);
+```
+
+3. In **Settings → API**, copy:
+   - **Project URL** (`https://xxxx.supabase.co`)
+   - **anon / public key** (the long `eyJ…` JWT)
+
+### Configure on each device
+
+1. Open the app → **Stats** → **Cloud sync (Supabase)**
+2. Paste the URL, the anon key, and pick a **Sync key** — any string you want, must be the same on every device (e.g. `amanda-aplus-2026`).
+3. Tap **Save**.
+
+### Use it
+
+- **⬆ Push** — write your local progress + question edits to the cloud, replacing whatever was there for your sync_key.
+- **⬇ Pull** — overwrite local progress + edits with what's in the cloud.
+
+Workflow: study on iPad → Push. Open iPhone → Pull. Study on iPhone → Push. Last write wins; there's no auto-merge.
+
+### Privacy
+
+Your sync_key is the only "auth" — anyone who knows your project URL, anon key, and sync_key can read/write your row. The anon key is meant to be embedded in clients, but it's still worth not committing it to a public repo and using a non-obvious sync_key.
 
 ## Vibe-coding additions
 
@@ -118,7 +223,7 @@ studyapp/
 - **Search:** Add a search box that filters on question text.
 - **Export to Anki:** Convert `questions.json` → Anki `.apkg` via `genanki` Python library.
 - **Drawing save:** Extend the scratchpad to save the canvas PNG per question to IndexedDB.
-- **Cross-device sync:** Add Supabase free tier — write progress to a remote table, read on launch.
+- **Auto-sync:** the current Supabase integration is manual push/pull. Could call `cloudPush()` on every save (debounced) for true auto-sync.
 - **Tune the SRS:** defaults live in `schedule()` in `app.js` — cap is 30 days so exam-prep doesn't schedule past the exam. Change `MAX_INTERVAL_DAYS` if you want longer intervals after the test.
 
 ### Things to know about iOS PWAs
@@ -134,8 +239,7 @@ studyapp/
 - **PBQ images aren't in the default dataset.** Same reason — PBQs reference motherboard diagrams, router dashboards, etc. that weren't captured. The app shows a clear yellow banner for PBQs without images and tells you where to drop the file. 10 of 119 questions are PBQs.
 - **No pretest-6 import flow in the UI.** When you take more pretests, run `extract-text pretest_N.docx` and re-run the extraction script — or ask Claude Code to do it.
 - **Scratch pad drawings don't persist.** Per-question saving is a future feature.
-- **No search.** If you need to find a specific question, use the OBJ filter.
-- **No cross-device sync.** iPhone and iPad keep separate progress (each IndexedDB is origin+device scoped).
+- **Cross-device sync is manual.** iPhone and iPad keep separate progress unless you wire up Supabase (see "Cloud sync" below) and tap Push/Pull. Stats → Export/Import works as a no-backend alternative.
 
 ## The path I'd take this week
 
