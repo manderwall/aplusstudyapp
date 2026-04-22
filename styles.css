@@ -1,4 +1,4 @@
-/* A+ Study — iPad-first stylesheet */
+/* A+ Study — iPad + iPhone stylesheet */
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
@@ -269,6 +269,68 @@ button.action.bad { background: var(--bad); color: #fff; border-color: var(--bad
   color: #fff;
   border-color: var(--accent);
 }
+.filter-bar button.due-chip {
+  border-color: var(--good);
+  color: var(--good);
+  font-weight: 600;
+}
+.filter-bar button.due-chip.active {
+  background: var(--good);
+  color: #000;
+  border-color: var(--good);
+}
+
+/* Question images (for PBQs when available) */
+.q-images {
+  margin: 4px 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.q-images img {
+  max-width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.q-image-missing {
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid var(--warn);
+  color: var(--text);
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 4px 0 18px;
+}
+.q-image-missing strong { display: block; margin-bottom: 4px; color: var(--warn); }
+.q-image-missing code {
+  background: var(--surface-2);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 12px;
+}
+
+/* Multiple-choice option list (shown when q.options is present) */
+.q-options {
+  list-style-position: outside;
+  padding-left: 28px;
+  margin: 4px 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.q-options li {
+  padding: 10px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  line-height: 1.5;
+  font-size: 16px;
+}
+.q-options li::marker { color: var(--accent); font-weight: 700; }
 
 /* Reading mode */
 .reading-list {
@@ -441,11 +503,60 @@ button.action.bad { background: var(--bad); color: #fff; border-color: var(--bad
   cursor: pointer;
 }
 
-/* Smaller screens (iPhone) */
+/* Smaller screens (iPhone portrait) */
 @media (max-width: 600px) {
-  #main { padding: 16px; }
-  .card { padding: 20px; }
+  #main { padding: 14px 14px 20px; }
+  .card { padding: 18px; border-radius: 14px; margin-bottom: 14px; }
   .card-question { font-size: 17px; }
-  header { padding: 12px 16px; }
-  header h1 { font-size: 17px; }
+  header { padding: 10px 14px; }
+  header h1 { font-size: 16px; }
+  #progress-hud { font-size: 12px; }
+
+  /* Pencil-only feature: hide scratchpad on narrow screens */
+  .scratchpad-wrap { display: none; }
+
+  /* Thumb-friendly 2x2 button grid instead of 1x4 squeeze */
+  .btn-row { gap: 8px; }
+  button.action {
+    min-width: 0;
+    flex-basis: calc(50% - 4px);
+    min-height: 56px;
+    font-size: 15px;
+    padding: 0 10px;
+    border-radius: 14px;
+  }
+
+  .card-meta { flex-wrap: wrap; gap: 6px; font-size: 11px; }
+  .card-meta .tag { padding: 2px 8px; }
+
+  /* Filter bar: edge-to-edge scroller so chips reach thumb */
+  .filter-bar {
+    margin: 0 -14px 12px;
+    padding: 4px 14px;
+    scrollbar-width: none;
+  }
+  .filter-bar::-webkit-scrollbar { display: none; }
+
+  /* Stats: 2x2 grid, tighter */
+  .stats-row { gap: 8px; }
+  .stat-card { min-width: calc(50% - 4px); padding: 14px 10px; }
+  .stat-card .number { font-size: 26px; }
+
+  /* Options list: less indent, smaller text */
+  .q-options { padding-left: 22px; }
+  .q-options li { font-size: 15px; padding: 9px 12px; }
+
+  /* Reading mode: less side padding */
+  .reading-list .obj-section { padding: 16px; }
+  .reading-list h2 { font-size: 18px; }
+
+  /* Tab bar: tighter labels */
+  .tab-icon { font-size: 20px; }
+  .tab-label { font-size: 10px; }
+  .tab { min-height: 54px; padding: 8px 4px; }
+}
+
+/* Very small phones (iPhone SE portrait) */
+@media (max-width: 360px) {
+  button.action { flex-basis: 100%; }
 }
