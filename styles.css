@@ -267,6 +267,22 @@ header h1 {
 .card-meta .tag.pbq { background: var(--warn); color: #000; }
 .card-meta .tag.obj { color: var(--accent); }
 .card-meta .tag.edited { background: var(--good); color: #000; }
+.card-meta .tag.repeats {
+  background: var(--bad);
+  color: #fff;
+  font-weight: 700;
+}
+
+.wrong-picks {
+  list-style-position: outside;
+  padding-left: 20px;
+  margin: 4px 0 0;
+}
+.wrong-picks li {
+  margin-bottom: 4px;
+  line-height: 1.5;
+  color: var(--text);
+}
 .card-meta .tag-btn {
   border: 1px dashed var(--border);
   background: transparent;
