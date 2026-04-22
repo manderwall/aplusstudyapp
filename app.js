@@ -9,10 +9,12 @@ const state = {
   filter: { obj: null, due: false, search: '' },
   currentIndex: 0,
   revealed: false,
+  editing: false,  // when true, render the edit form instead of the question card
   history: [],     // stack of previous currentIndex values for Prev nav
   shuffle: false,
   _shuffleCache: null,  // { key, list }
   progress: {},    // { questionId: { status, seen, correct, lastSeen, ease, interval, due } }
+  overrides: {},   // { questionId: { options?, image?, images? } } — user-added content
 };
 
 const MIN = 60 * 1000;
@@ -67,10 +69,11 @@ function haptic(pattern = 10) {
   if (navigator.vibrate) navigator.vibrate(pattern);
 }
 
-//─── INDEXEDDB (progress persistence) ────────────────────────
+//─── INDEXEDDB (progress + overrides persistence) ────────────
 const DB_NAME = 'aplus-study';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE = 'progress';
+const OSTORE = 'overrides';   // per-question edits: { [qid]: {options?, image?, images?} }
 
 function openDB() {
   return new Promise((resolve, reject) => {
@@ -78,32 +81,38 @@ function openDB() {
     req.onupgradeneeded = () => {
       const db = req.result;
       if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
+      if (!db.objectStoreNames.contains(OSTORE)) db.createObjectStore(OSTORE);
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
   });
 }
 
+function idbGet(store, key) {
+  return openDB().then(db => new Promise(resolve => {
+    const tx = db.transaction(store, 'readonly');
+    const r = tx.objectStore(store).get(key);
+    r.onsuccess = () => resolve(r.result);
+    r.onerror = () => resolve(undefined);
+  }));
+}
+
+function idbPut(store, key, value) {
+  return openDB().then(db => new Promise(resolve => {
+    const tx = db.transaction(store, 'readwrite');
+    tx.objectStore(store).put(value, key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => resolve();
+  }));
+}
+
 async function loadProgress() {
-  try {
-    const db = await openDB();
-    return new Promise((resolve) => {
-      const tx = db.transaction(STORE, 'readonly');
-      const req = tx.objectStore(STORE).get('all');
-      req.onsuccess = () => resolve(req.result || {});
-      req.onerror = () => resolve({});
-    });
-  } catch { return {}; }
+  try { return (await idbGet(STORE, 'all')) || {}; } catch { return {}; }
 }
-
 async function saveProgress() {
-  try {
-    const db = await openDB();
-    const tx = db.transaction(STORE, 'readwrite');
-    tx.objectStore(STORE).put(state.progress, 'all');
-  } catch (e) { console.warn('Save failed', e); }
+  try { await idbPut(STORE, 'all', state.progress); }
+  catch (e) { console.warn('Save progress failed', e); }
 }
-
 async function clearProgress() {
   try {
     const db = await openDB();
@@ -111,6 +120,14 @@ async function clearProgress() {
     tx.objectStore(STORE).clear();
     state.progress = {};
   } catch (e) { console.warn('Clear failed', e); }
+}
+
+async function loadOverrides() {
+  try { return (await idbGet(OSTORE, 'all')) || {}; } catch { return {}; }
+}
+async function saveOverrides() {
+  try { await idbPut(OSTORE, 'all', state.overrides); }
+  catch (e) { console.warn('Save overrides failed', e); }
 }
 
 //─── DATA LOAD ───────────────────────────────────────────────
@@ -122,6 +139,7 @@ async function loadData() {
   state.questions = await questionsRes.json();
   state.conceptFixes = await fixesRes.json();
   state.progress = await loadProgress();
+  state.overrides = await loadOverrides();
   // Initialize progress for any new question; migrate older saves
   let migrated = false;
   for (const q of state.questions) {
@@ -150,6 +168,12 @@ function uniqueObjs() {
     return am - bm || an - bn;
   });
   return objs;
+}
+
+// Merge a base question with any user-added override (options, image, images)
+function getQuestion(q) {
+  const o = state.overrides[q.id];
+  return o ? { ...q, ...o } : q;
 }
 
 function filteredQuestions() {
@@ -201,9 +225,19 @@ function renderStudy() {
     return;
   }
   if (state.currentIndex >= qs.length) state.currentIndex = 0;
-  const q = qs[state.currentIndex];
+  const baseQ = qs[state.currentIndex];
+  const q = getQuestion(baseQ);
   const prog = state.progress[q.id];
 
+  if (state.editing) {
+    $('#main').innerHTML = `${filterBarHTML()}${renderEditFormHTML(q)}`;
+    renderFilterBar();
+    updateHUD();
+    attachEditEvents(q);
+    return;
+  }
+
+  const edited = !!state.overrides[q.id];
   $('#main').innerHTML = `
     ${filterBarHTML()}
     <div class="card">
@@ -212,6 +246,8 @@ function renderStudy() {
         ${q.qtype === 'PBQ' ? '<span class="tag pbq">PBQ</span>' : `<span class="tag">${q.qtype}</span>`}
         <span class="tag">P${q.pretest} Q${q.qnum}</span>
         ${prog.seen > 0 ? `<span class="tag">Seen ${prog.seen}×</span>` : ''}
+        ${edited ? '<span class="tag edited">✏️ Edited</span>' : ''}
+        <button class="tag tag-btn" id="edit-btn" title="Add/edit options and image">✏️ Edit</button>
       </div>
       <div class="card-question">${escape(q.question)}</div>
       ${renderImageHTML(q)}
@@ -245,6 +281,7 @@ function renderStudy() {
   updateHUD();
   attachStudyEvents(q);
   attachScratchpadEvents();
+  $('#edit-btn')?.addEventListener('click', () => { state.editing = true; renderStudy(); });
 }
 
 function attachStudyEvents(q) {
@@ -303,10 +340,20 @@ function renderQuiz() {
     return;
   }
   if (state.currentIndex >= qs.length) state.currentIndex = 0;
-  const q = qs[state.currentIndex];
+  const baseQ = qs[state.currentIndex];
+  const q = getQuestion(baseQ);
   const prog = state.progress[q.id];
   const accuracy = prog.seen > 0 ? Math.round((prog.correct / prog.seen) * 100) : null;
 
+  if (state.editing) {
+    $('#main').innerHTML = `${filterBarHTML()}${renderEditFormHTML(q)}`;
+    renderFilterBar();
+    updateHUD();
+    attachEditEvents(q);
+    return;
+  }
+
+  const edited = !!state.overrides[q.id];
   $('#main').innerHTML = `
     ${filterBarHTML()}
     <div class="card">
@@ -314,6 +361,8 @@ function renderQuiz() {
         <span class="tag obj">OBJ ${q.obj}</span>
         ${q.qtype === 'PBQ' ? '<span class="tag pbq">PBQ</span>' : `<span class="tag">${q.qtype}</span>`}
         ${accuracy !== null ? `<span class="tag">${accuracy}% (${prog.correct}/${prog.seen})</span>` : ''}
+        ${edited ? '<span class="tag edited">✏️ Edited</span>' : ''}
+        <button class="tag tag-btn" id="edit-btn" title="Add/edit options and image">✏️ Edit</button>
       </div>
       <div class="card-question">${escape(q.question)}</div>
       ${renderImageHTML(q)}
@@ -352,6 +401,7 @@ function renderQuiz() {
   if (skip) skip.addEventListener('click', () => { nextQuizQuestion(); });
   const prev = $('#prev-btn');
   if (prev) prev.addEventListener('click', () => { prevQuizQuestion(); });
+  $('#edit-btn')?.addEventListener('click', () => { state.editing = true; renderQuiz(); });
   $$('[data-qa]').forEach(btn => btn.addEventListener('click', () => {
     const right = btn.dataset.qa === 'right';
     const p = state.progress[q.id];
@@ -480,6 +530,43 @@ function renderStats() {
             <button class="small-btn" id="import-btn">Import</button>
           </span>
         </div>
+        <div class="settings-row">
+          <span>✏️ Question edits <span class="settings-count">${Object.keys(state.overrides).length}</span></span>
+          <span class="settings-actions">
+            <button class="small-btn" id="export-overrides-btn">Export</button>
+            <button class="small-btn" id="import-overrides-btn">Import</button>
+          </span>
+        </div>
+      </div>
+
+      <h3 class="stats-h">Cloud sync (Supabase)</h3>
+      <div class="settings-panel">
+        <div class="settings-stack">
+          <label class="settings-vrow">
+            <span class="settings-vlabel">Project URL</span>
+            <input id="cloud-url" type="url" placeholder="https://xxxx.supabase.co" value="${escape(getCloudCfg().url)}">
+          </label>
+          <label class="settings-vrow">
+            <span class="settings-vlabel">Anon key</span>
+            <input id="cloud-key" type="password" placeholder="eyJ…" value="${escape(getCloudCfg().key)}">
+          </label>
+          <label class="settings-vrow">
+            <span class="settings-vlabel">Sync key (any string you pick — same on every device)</span>
+            <input id="cloud-sync" type="text" placeholder="amanda-aplus" value="${escape(getCloudCfg().syncKey)}">
+          </label>
+          <div class="settings-actions" style="justify-content: space-between; padding: 4px 0;">
+            <span class="settings-meta" id="cloud-status">${
+              localStorage.getItem('supabase.lastSync')
+                ? `Last sync: ${new Date(localStorage.getItem('supabase.lastSync')).toLocaleString()}`
+                : 'Not yet synced.'
+            }</span>
+            <span class="settings-actions">
+              <button class="small-btn" id="cloud-save">Save</button>
+              <button class="small-btn" id="cloud-pull">⬇ Pull</button>
+              <button class="small-btn" id="cloud-push">⬆ Push</button>
+            </span>
+          </div>
+        </div>
       </div>
 
       <button class="reset-btn" id="reset-btn">Reset all progress</button>
@@ -497,11 +584,43 @@ function renderStats() {
   });
   $('#export-btn')?.addEventListener('click', exportProgress);
   $('#import-btn')?.addEventListener('click', importProgress);
+  $('#export-overrides-btn')?.addEventListener('click', exportOverrides);
+  $('#import-overrides-btn')?.addEventListener('click', importOverrides);
   $('#shuffle-toggle')?.addEventListener('change', (e) => {
     state.shuffle = e.target.checked;
     localStorage.setItem('shuffle', state.shuffle ? 'true' : 'false');
     state._shuffleCache = null;
   });
+
+  $('#cloud-save')?.addEventListener('click', () => {
+    saveCloudCfg($('#cloud-url').value.trim(), $('#cloud-key').value.trim(), $('#cloud-sync').value.trim());
+    setCloudStatus('Configuration saved.');
+  });
+  $('#cloud-push')?.addEventListener('click', async () => {
+    setCloudStatus('Pushing…');
+    try {
+      saveCloudCfg($('#cloud-url').value.trim(), $('#cloud-key').value.trim(), $('#cloud-sync').value.trim());
+      await cloudPush();
+      setCloudStatus(`Pushed ${new Date().toLocaleTimeString()}`);
+    } catch (e) { setCloudStatus(`Push failed: ${e.message}`, true); }
+  });
+  $('#cloud-pull')?.addEventListener('click', async () => {
+    if (!confirm('Pull will overwrite local progress with cloud data. Continue?')) return;
+    setCloudStatus('Pulling…');
+    try {
+      saveCloudCfg($('#cloud-url').value.trim(), $('#cloud-key').value.trim(), $('#cloud-sync').value.trim());
+      await cloudPull();
+      setCloudStatus(`Pulled ${new Date().toLocaleTimeString()}`);
+      renderStats();
+    } catch (e) { setCloudStatus(`Pull failed: ${e.message}`, true); }
+  });
+}
+
+function setCloudStatus(text, isError = false) {
+  const el = $('#cloud-status');
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = isError ? 'var(--bad)' : 'var(--text-dim)';
 }
 
 //─── FILTER BAR (shared by Study + Quiz) ─────────────────────
@@ -536,6 +655,7 @@ function renderFilterBar() {
     else state.filter.obj = f;
     state.currentIndex = 0;
     state.revealed = false;
+    state.editing = false;
     state.history = [];
     state._shuffleCache = null;
     if (state.mode === 'study') renderStudy();
@@ -553,6 +673,7 @@ function renderFilterBar() {
         state.filter.search = val;
         state.currentIndex = 0;
         state.revealed = false;
+        state.editing = false;
         state.history = [];
         state._shuffleCache = null;
         if (state.mode === 'study') renderStudy();
@@ -569,6 +690,7 @@ function renderFilterBar() {
       state.filter.search = '';
       state.currentIndex = 0;
       state.revealed = false;
+      state.editing = false;
       state.history = [];
       state._shuffleCache = null;
       if (state.mode === 'study') renderStudy();
@@ -697,6 +819,66 @@ function renderOptionsHTML(q) {
     </ol>`;
 }
 
+//─── IN-APP QUESTION EDITOR ──────────────────────────────────
+function renderEditFormHTML(q) {
+  const optsText = (q.options || []).join('\n');
+  const imgVal = q.image || (q.images && q.images[0]) || '';
+  return `
+    <div class="card edit-card">
+      <h3 class="edit-title">Edit question <span class="edit-id">${escape(q.id)}</span></h3>
+      <p class="edit-question">${escape(q.question)}</p>
+
+      <label class="edit-field">
+        <span class="edit-label">Multiple-choice options (one per line)</span>
+        <textarea id="edit-options" rows="6" placeholder="Cable modem&#10;DSL&#10;ONT&#10;SDN">${escape(optsText)}</textarea>
+        <span class="edit-hint">Tip: enter the four answer choices. Order doesn't matter — the app doesn't grade clicks.</span>
+      </label>
+
+      <label class="edit-field">
+        <span class="edit-label">Image URL (PBQs)</span>
+        <input id="edit-image" type="text" value="${escape(imgVal)}" placeholder="images/${escape(q.id)}.png or https://…">
+        <span class="edit-hint">Drop a PNG/JPG into the project's <code>images/</code> folder and use that path, or paste any URL.</span>
+      </label>
+
+      <div class="btn-row">
+        <button class="action" id="edit-cancel">Cancel</button>
+        ${state.overrides[q.id] ? '<button class="action bad" id="edit-clear">Clear edits</button>' : ''}
+        <button class="action primary" id="edit-save">Save</button>
+      </div>
+    </div>
+  `;
+}
+
+function attachEditEvents(q) {
+  const close = () => {
+    state.editing = false;
+    if (state.mode === 'study') renderStudy();
+    else if (state.mode === 'quiz') renderQuiz();
+  };
+  $('#edit-cancel').addEventListener('click', close);
+  $('#edit-clear')?.addEventListener('click', async () => {
+    delete state.overrides[q.id];
+    await saveOverrides();
+    close();
+  });
+  $('#edit-save').addEventListener('click', async () => {
+    const optsText = $('#edit-options').value.trim();
+    const imgVal = $('#edit-image').value.trim();
+    const override = {};
+    if (optsText) {
+      override.options = optsText.split('\n').map(s => s.trim()).filter(Boolean);
+    }
+    if (imgVal) override.image = imgVal;
+    if (Object.keys(override).length === 0) {
+      delete state.overrides[q.id];
+    } else {
+      state.overrides[q.id] = override;
+    }
+    await saveOverrides();
+    close();
+  });
+}
+
 //─── HELPERS ─────────────────────────────────────────────────
 function escape(s) {
   if (!s) return '';
@@ -757,6 +939,7 @@ function setMode(mode) {
   state.mode = mode;
   state.currentIndex = 0;
   state.revealed = false;
+  state.editing = false;
   state.history = [];
   state._shuffleCache = null;
   $$('.tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
@@ -826,6 +1009,105 @@ function importProgress() {
     }
   });
   input.click();
+}
+
+function exportOverrides() {
+  const blob = new Blob([JSON.stringify(state.overrides, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `aplus-study-overrides-${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function importOverrides() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'application/json,.json';
+  input.addEventListener('change', async () => {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('Expected an object of { questionId: { options?, image? } }');
+      const choice = confirm(`Merge ${Object.keys(data).length} edits into existing overrides?\n\nClick OK to merge (existing edits kept), Cancel to replace.`);
+      state.overrides = choice ? { ...state.overrides, ...data } : data;
+      await saveOverrides();
+      renderStats();
+      alert('Overrides imported.');
+    } catch (e) {
+      alert('Import failed: ' + e.message);
+    }
+  });
+  input.click();
+}
+
+//─── SUPABASE CLOUD SYNC (optional) ──────────────────────────
+// Stores progress + overrides in a single Postgres row keyed by sync_key.
+// User configures URL + anon key + sync_key once, then can push / pull.
+function getCloudCfg() {
+  return {
+    url: (localStorage.getItem('supabase.url') || '').trim().replace(/\/+$/, ''),
+    key: (localStorage.getItem('supabase.key') || '').trim(),
+    syncKey: (localStorage.getItem('supabase.syncKey') || '').trim(),
+  };
+}
+
+function saveCloudCfg(url, key, syncKey) {
+  localStorage.setItem('supabase.url', url);
+  localStorage.setItem('supabase.key', key);
+  localStorage.setItem('supabase.syncKey', syncKey);
+}
+
+function cloudHeaders(key, extra = {}) {
+  return {
+    'apikey': key,
+    'Authorization': `Bearer ${key}`,
+    'Content-Type': 'application/json',
+    ...extra,
+  };
+}
+
+async function cloudPush() {
+  const { url, key, syncKey } = getCloudCfg();
+  if (!url || !key || !syncKey) throw new Error('Set Supabase URL, anon key, and sync key first');
+  const body = JSON.stringify({
+    sync_key: syncKey,
+    data: { progress: state.progress, overrides: state.overrides, version: 1 },
+    updated_at: new Date().toISOString(),
+  });
+  const res = await fetch(`${url}/rest/v1/progress`, {
+    method: 'POST',
+    headers: cloudHeaders(key, { 'Prefer': 'resolution=merge-duplicates,return=minimal' }),
+    body,
+  });
+  if (!res.ok) throw new Error(`Push ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  localStorage.setItem('supabase.lastSync', new Date().toISOString());
+}
+
+async function cloudPull() {
+  const { url, key, syncKey } = getCloudCfg();
+  if (!url || !key || !syncKey) throw new Error('Set Supabase URL, anon key, and sync key first');
+  const res = await fetch(`${url}/rest/v1/progress?sync_key=eq.${encodeURIComponent(syncKey)}&select=data,updated_at`, {
+    headers: cloudHeaders(key),
+  });
+  if (!res.ok) throw new Error(`Pull ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  const rows = await res.json();
+  if (!rows.length) throw new Error(`No row found for sync key "${syncKey}"`);
+  const data = rows[0].data || {};
+  if (data.progress) state.progress = data.progress;
+  if (data.overrides) state.overrides = data.overrides;
+  // Re-apply migrations so missing fields don't break the UI
+  for (const q of state.questions) {
+    if (!state.progress[q.id]) state.progress[q.id] = defaultProgress();
+    else migrateProgress(state.progress[q.id]);
+  }
+  await saveProgress();
+  await saveOverrides();
+  localStorage.setItem('supabase.lastSync', new Date().toISOString());
 }
 
 //─── KEYBOARD SHORTCUTS ──────────────────────────────────────
