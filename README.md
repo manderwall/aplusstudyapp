@@ -34,7 +34,13 @@ A Progressive Web App (PWA) for Amanda. CompTIA A+ Core 1 (220-1201) study tool 
 Built to be flexible, because sensory needs flip between *understimulated* (ADHD-side: needs visual engagement) and *overstimulated* (autism-side: needs calm, minimal UI). Everything here is togglable from **Stats → Accessibility**, **Stats → Focus session**, and the 🔒 / 🌓 header buttons.
 
 - **Focus Mode** (🔒 button or `F`) — hides the tab bar, filter chips, search box, progress HUD, and card meta tags. Just the question. Great when scrolling chrome becomes noise.
-- **Focus Sessions** (Stats → Focus session → 5 / 15 / 25 min) — a visible ⏱ countdown in the header makes time tangible (helpful for time-blindness). At zero, a summary shows cards reviewed. "End now" exits early without guilt.
+- **Focus Sessions** (Stats → Focus session):
+  - **Time-boxed** — 5 / 15 / 25 min with a visible ⏱ countdown in the header (time-blindness).
+  - **Card-count micro-goals** — 1 / 3 / 5 / 10 cards. Session ends automatically when the count is hit. "One card" is a valid commitment; you can always do one.
+  - End-of-session summary celebrates whatever you did. "End now" exits early without guilt.
+- **Anxiety Mode** — hides accuracy %, progress counters, mastery bars, seen counts. Keeps streak + session timer. Turn on when numbers feel like judgement.
+- **Focus sound** — built-in white / pink / brown noise generator via Web Audio (no downloads, no tracking). Pink is gentler than white; brown is "the one that sounds like a waterfall."
+- **Shake to shuffle** — iPhone only. Toggle in Accessibility, grant motion permission when prompted, then shake the phone to flip shuffle on/off mid-study (with a haptic confirmation).
 - **Text size** — S / M / L / XL. Scales the whole app.
 - **Font** — System default, **Atkinson Hyperlegible** (open-source, designed for low vision, loaded from Google Fonts), or **OpenDyslexic** (weighted letter bottoms to resist letter-swapping).
 - **High contrast** — pure-black background + brighter text/borders. Reduces visual clutter.

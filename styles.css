@@ -72,6 +72,12 @@ html[data-contrast="high"] {
   /* keep it tightly-controlled; light+high mirrors dark+high for predictability */
 }
 
+/* Anxiety Mode: hide numeric progress feedback, keep streak + timer */
+html[data-anxiety="on"] .numeric-ui,
+html[data-anxiety="on"] .card-meta .tag.numeric {
+  display: none !important;
+}
+
 /* Focus mode: hides chrome so only the card is visible */
 html[data-focus] #tabbar,
 html[data-focus] .filter-bar,
