@@ -6,12 +6,64 @@ const state = {
   questions: [],
   conceptFixes: {},
   mode: 'study',
-  filter: { obj: null },
+  filter: { obj: null, due: false },
   currentIndex: 0,
   revealed: false,
-  reviewSet: [],   // question IDs in the current review session
-  progress: {},    // { questionId: { status: 'new'|'learning'|'good', seen: N, correct: N, lastSeen: ts } }
+  reviewSet: [],
+  progress: {},    // { questionId: { status, seen, correct, lastSeen, ease, interval, due } }
 };
+
+const MIN = 60 * 1000;
+const DAY = 24 * 60 * 60 * 1000;
+const MAX_INTERVAL_DAYS = 30;  // cap so exam-prep doesn't schedule cards past the exam
+
+function defaultProgress() {
+  return { status: 'new', seen: 0, correct: 0, lastSeen: 0, ease: 2.5, interval: 0, due: 0 };
+}
+
+function migrateProgress(p) {
+  if (p.ease === undefined) p.ease = 2.5;
+  if (p.interval === undefined) p.interval = 0;
+  if (p.due === undefined) p.due = 0;
+  return p;
+}
+
+function schedule(p, rate) {
+  const now = Date.now();
+  if (rate === 'again') {
+    p.ease = Math.max(1.3, p.ease - 0.2);
+    p.interval = 0;
+    p.due = now + MIN;
+    p.status = 'learning';
+  } else if (rate === 'hard') {
+    p.ease = Math.max(1.3, p.ease - 0.15);
+    if (p.interval === 0) { p.due = now + 10 * MIN; }
+    else {
+      p.interval = Math.min(MAX_INTERVAL_DAYS, p.interval * 1.2);
+      p.due = now + p.interval * DAY;
+    }
+    p.status = 'learning';
+  } else if (rate === 'good') {
+    if (p.interval === 0) p.interval = 1;
+    else p.interval = Math.min(MAX_INTERVAL_DAYS, p.interval * p.ease);
+    p.due = now + p.interval * DAY;
+    p.status = p.status === 'new' ? 'learning' : 'good';
+  } else if (rate === 'easy') {
+    p.ease = p.ease + 0.15;
+    if (p.interval === 0) p.interval = 3;
+    else p.interval = Math.min(MAX_INTERVAL_DAYS, p.interval * p.ease * 1.3);
+    p.due = now + p.interval * DAY;
+    p.status = 'good';
+  }
+}
+
+function isDue(q) {
+  return (state.progress[q.id].due || 0) <= Date.now();
+}
+
+function haptic(pattern = 10) {
+  if (navigator.vibrate) navigator.vibrate(pattern);
+}
 
 //─── INDEXEDDB (progress persistence) ────────────────────────
 const DB_NAME = 'aplus-study';
@@ -68,12 +120,19 @@ async function loadData() {
   state.questions = await questionsRes.json();
   state.conceptFixes = await fixesRes.json();
   state.progress = await loadProgress();
-  // Initialize progress for any new question
+  // Initialize progress for any new question; migrate older saves
+  let migrated = false;
   for (const q of state.questions) {
-    if (!state.progress[q.id]) {
-      state.progress[q.id] = { status: 'new', seen: 0, correct: 0, lastSeen: 0 };
+    const p = state.progress[q.id];
+    if (!p) {
+      state.progress[q.id] = defaultProgress();
+      migrated = true;
+    } else if (p.ease === undefined || p.interval === undefined || p.due === undefined) {
+      migrateProgress(p);
+      migrated = true;
     }
   }
+  if (migrated) saveProgress();
 }
 
 //─── UTILITIES ───────────────────────────────────────────────
@@ -94,14 +153,21 @@ function uniqueObjs() {
 function filteredQuestions() {
   let qs = state.questions.slice();
   if (state.filter.obj) qs = qs.filter(q => q.obj === state.filter.obj);
+  if (state.filter.due) qs = qs.filter(isDue);
   return qs;
+}
+
+function dueCount() {
+  return state.questions.filter(isDue).length;
 }
 
 function updateHUD() {
   const qs = filteredQuestions();
   const total = qs.length;
   const idx = state.currentIndex + 1;
-  $('#progress-hud').textContent = `${Math.min(idx, total)} / ${total}`;
+  const parts = total > 0 ? [`${Math.min(idx, total)} / ${total}`] : [`0 / 0`];
+  if (!state.filter.due) parts.push(`${dueCount()} due`);
+  $('#progress-hud').textContent = parts.join(' · ');
 }
 
 //─── MODE: STUDY (flashcards with self-rating) ──────────────
@@ -127,6 +193,8 @@ function renderStudy() {
         ${prog.seen > 0 ? `<span class="tag">Seen ${prog.seen}×</span>` : ''}
       </div>
       <div class="card-question">${escape(q.question)}</div>
+      ${renderImageHTML(q)}
+      ${renderOptionsHTML(q)}
       ${state.revealed ? `
         <div class="card-section wrong">
           <div class="label">You picked (wrong)</div>
@@ -174,17 +242,16 @@ function recordRating(qid, rate) {
   p.seen++;
   p.lastSeen = Date.now();
   if (rate === 'good' || rate === 'easy') p.correct++;
-  if (rate === 'easy') p.status = 'good';
-  else if (rate === 'good') p.status = p.status === 'new' ? 'learning' : 'good';
-  else if (rate === 'hard') p.status = 'learning';
-  else if (rate === 'again') p.status = 'learning';
+  schedule(p, rate);
+  haptic(10);
   saveProgress();
 }
 
 function nextQuestion() {
   const qs = filteredQuestions();
-  state.currentIndex = (state.currentIndex + 1) % qs.length;
   state.revealed = false;
+  if (qs.length === 0) { renderStudy(); return; }
+  state.currentIndex = (state.currentIndex + 1) % qs.length;
   renderStudy();
 }
 
@@ -211,6 +278,8 @@ function renderQuiz() {
         ${accuracy !== null ? `<span class="tag">${accuracy}% (${prog.correct}/${prog.seen})</span>` : ''}
       </div>
       <div class="card-question">${escape(q.question)}</div>
+      ${renderImageHTML(q)}
+      ${renderOptionsHTML(q)}
       ${state.revealed ? `
         <div class="card-section wrong">
           <div class="label">Common wrong pick</div>
@@ -248,7 +317,8 @@ function renderQuiz() {
     p.seen++;
     p.lastSeen = Date.now();
     if (right) p.correct++;
-    if (right) p.status = p.status === 'new' ? 'learning' : 'good';
+    schedule(p, right ? 'good' : 'again');
+    haptic(10);
     saveProgress();
     nextQuizQuestion();
   }));
@@ -257,8 +327,9 @@ function renderQuiz() {
 
 function nextQuizQuestion() {
   const qs = filteredQuestions();
-  state.currentIndex = (state.currentIndex + 1) % qs.length;
   state.revealed = false;
+  if (qs.length === 0) { renderQuiz(); return; }
+  state.currentIndex = (state.currentIndex + 1) % qs.length;
   renderQuiz();
 }
 
@@ -362,6 +433,9 @@ function filterBarHTML() {
   for (const o of objs) counts[o] = state.questions.filter(q => q.obj === o).length;
   return `
     <div class="filter-bar">
+      <button class="due-chip ${state.filter.due ? 'active' : ''}" data-filter="due">
+        ${state.filter.due ? '✓ ' : ''}Due (${dueCount()})
+      </button>
       <button class="${state.filter.obj === null ? 'active' : ''}" data-filter="all">All (${state.questions.length})</button>
       ${objs.map(o => `
         <button class="${state.filter.obj === o ? 'active' : ''}" data-filter="${o}">
@@ -375,7 +449,9 @@ function filterBarHTML() {
 function renderFilterBar() {
   $$('[data-filter]').forEach(btn => btn.addEventListener('click', () => {
     const f = btn.dataset.filter;
-    state.filter.obj = f === 'all' ? null : f;
+    if (f === 'due') state.filter.due = !state.filter.due;
+    else if (f === 'all') state.filter.obj = null;
+    else state.filter.obj = f;
     state.currentIndex = 0;
     state.revealed = false;
     if (state.mode === 'study') renderStudy();
@@ -473,6 +549,36 @@ function attachScratchpadEvents() {
   canvas.addEventListener('pointerleave', stop);
 }
 
+//─── QUESTION IMAGE + OPTIONS ────────────────────────────────
+function renderImageHTML(q) {
+  // Support both `image` (single path) and `images` (array)
+  const imgs = q.images || (q.image ? [q.image] : []);
+  if (imgs.length > 0) {
+    return `<div class="q-images">${imgs.map(src =>
+      `<img src="${escape(src)}" alt="Question figure" loading="lazy">`
+    ).join('')}</div>`;
+  }
+  // PBQ with no image → make it clear it's missing
+  if (q.qtype === 'PBQ') {
+    return `<div class="q-image-missing">
+      <strong>⚠️ Image not available.</strong>
+      This PBQ references a figure from the original pretest. Drop a PNG/JPG at
+      <code>images/${escape(q.id)}.png</code> and add <code>"image": "images/${escape(q.id)}.png"</code>
+      to this question in <code>data/questions.json</code> to show it here.
+      The explanation below still describes what was being asked.
+    </div>`;
+  }
+  return '';
+}
+
+function renderOptionsHTML(q) {
+  if (!Array.isArray(q.options) || q.options.length === 0) return '';
+  return `
+    <ol class="q-options" type="A">
+      ${q.options.map(opt => `<li>${escape(opt)}</li>`).join('')}
+    </ol>`;
+}
+
 //─── HELPERS ─────────────────────────────────────────────────
 function escape(s) {
   if (!s) return '';
@@ -510,6 +616,32 @@ function setMode(mode) {
   else if (mode === 'stats') renderStats();
 }
 
+//─── SWIPE (swipe left to advance in Study/Quiz) ─────────────
+function installSwipe() {
+  const main = $('#main');
+  let sx = 0, sy = 0, tracking = false, pid = null;
+  main.addEventListener('pointerdown', (e) => {
+    if (state.mode !== 'study' && state.mode !== 'quiz') return;
+    // Don't hijack taps on interactive elements or the scratchpad
+    if (e.target.closest('button, input, a, canvas, .filter-bar, .scratchpad-wrap')) return;
+    sx = e.clientX; sy = e.clientY;
+    tracking = true;
+    pid = e.pointerId;
+  });
+  main.addEventListener('pointerup', (e) => {
+    if (!tracking || e.pointerId !== pid) return;
+    tracking = false;
+    const dx = e.clientX - sx;
+    const dy = e.clientY - sy;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5 && dx < 0) {
+      haptic(15);
+      if (state.mode === 'study') nextQuestion();
+      else nextQuizQuestion();
+    }
+  });
+  main.addEventListener('pointercancel', () => { tracking = false; });
+}
+
 //─── INIT ────────────────────────────────────────────────────
 async function init() {
   try {
@@ -519,6 +651,7 @@ async function init() {
     return;
   }
   $$('.tab').forEach(t => t.addEventListener('click', () => setMode(t.dataset.mode)));
+  installSwipe();
   setMode('study');
 
   // Register service worker for offline
