@@ -30,6 +30,107 @@
   }
 }
 
+/* ─── Accessibility / preference overrides ─── */
+
+/* Text size scales whole app */
+html[data-size="small"]   { font-size: 15px; }
+html[data-size="medium"]  { font-size: 17px; }
+html[data-size="large"]   { font-size: 19px; }
+html[data-size="xlarge"]  { font-size: 22px; }
+
+/* Dyslexia-friendly fonts (loaded as @font-face below) */
+html[data-font="atkinson"] body { font-family: 'Atkinson Hyperlegible', -apple-system, system-ui, sans-serif; }
+html[data-font="opendyslexic"] body { font-family: 'OpenDyslexic', -apple-system, system-ui, sans-serif; letter-spacing: 0.02em; }
+
+/* Reduced motion respects OS setting by default; explicit override forces it off too */
+html[data-motion="reduced"] *,
+html[data-motion="reduced"] *::before,
+html[data-motion="reduced"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Anxiety Mode: hide numeric progress feedback, keep streak + timer */
+html[data-anxiety="on"] .numeric-ui,
+html[data-anxiety="on"] .card-meta .tag.numeric {
+  display: none !important;
+}
+
+/* Focus mode: hides chrome so only the card is visible */
+html[data-focus] #tabbar,
+html[data-focus] .filter-bar,
+html[data-focus] .search-row,
+html[data-focus] .card-meta,
+html[data-focus] #progress-hud { display: none !important; }
+html[data-focus] header { border-bottom: none; }
+html[data-focus] #main { padding-top: 12px; }
+
+/* Segmented control for S/M/L/XL + font picker */
+.seg-control {
+  display: inline-flex;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.seg-control button {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 500;
+  border-right: 1px solid var(--border);
+}
+.seg-control button:last-child { border-right: none; }
+.seg-control button.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Fonts (Atkinson Hyperlegible, OpenDyslexic) are loaded dynamically by JS
+   only when the user selects them — keeps the default path network-free. */
+
+/* Manual theme overrides (higher specificity than :root + @media) */
+html[data-theme="dark"] {
+  --bg: #0f0f0f;
+  --surface: #1a1a1a;
+  --surface-2: #252525;
+  --border: #333;
+  --text: #f0f0f0;
+  --text-dim: #a0a0a0;
+}
+html[data-theme="light"] {
+  --bg: #fafafa;
+  --surface: #ffffff;
+  --surface-2: #f0f0f0;
+  --border: #d0d0d0;
+  --text: #1a1a1a;
+  --text-dim: #606060;
+}
+
+/* High contrast — declared AFTER theme overrides so it wins source-order when
+   both attributes are set. Forces near-pure-black + brighter text for both
+   auto and dark themes; mirrors for predictability. */
+html[data-contrast="high"] {
+  --bg:        #000;
+  --surface:   #111;
+  --surface-2: #1c1c1c;
+  --border:    #777;
+  --text:      #ffffff;
+  --text-dim:  #dddddd;
+}
+
 html, body {
   height: 100%;
   background: var(--bg);
@@ -66,11 +167,36 @@ header h1 {
   font-weight: 600;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 #progress-hud {
   color: var(--text-dim);
   font-size: 14px;
   font-variant-numeric: tabular-nums;
 }
+
+#theme-btn, #focus-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  color: var(--text);
+  transition: transform 0.1s, background 0.1s;
+}
+#theme-btn:active, #focus-btn:active { transform: scale(0.92); }
+#theme-btn:hover, #focus-btn:hover { background: var(--border); }
 
 #main {
   flex: 1;
@@ -140,6 +266,20 @@ header h1 {
 
 .card-meta .tag.pbq { background: var(--warn); color: #000; }
 .card-meta .tag.obj { color: var(--accent); }
+.card-meta .tag.edited { background: var(--good); color: #000; }
+.card-meta .tag-btn {
+  border: 1px dashed var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-left: auto;
+}
+.card-meta .tag-btn:hover { color: var(--accent); border-color: var(--accent); }
 
 .card-question {
   font-size: 19px;
@@ -168,6 +308,49 @@ header h1 {
 
 .card-section p {
   line-height: 1.6;
+}
+
+/* Explanation lead paragraph: states the answer, made scannable */
+.card-section .expl-lead {
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--text);
+}
+.card-section .expl-para {
+  font-size: 15px;
+  color: var(--text-dim);
+  margin-top: 10px;
+}
+.card-section .expl-para strong {
+  color: var(--text);
+  background: none;
+  padding: 0;
+}
+
+.card-section .expl-tip {
+  background: rgba(90, 166, 255, 0.08);
+  border-left: 3px solid var(--accent);
+  padding: 10px 14px;
+  border-radius: 0 10px 10px 0;
+  margin-top: 16px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.card-section .expl-tip strong {
+  display: block;
+  color: var(--accent);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  background: none;
+  padding: 0;
+}
+.card-section .expl-tip p {
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.55;
 }
 
 .card-section strong {
@@ -241,6 +424,30 @@ button.action.bad { background: var(--bad); color: #fff; border-color: var(--bad
   height: 280px;
   touch-action: none;
   display: block;
+}
+
+/* Search bar (above filter bar in Study/Quiz) */
+.search-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+.search-row input[type="search"] {
+  flex: 1;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.search-row input[type="search"]:focus {
+  border-color: var(--accent);
 }
 
 /* Filter bar */
@@ -503,11 +710,171 @@ button.action.bad { background: var(--bad); color: #fff; border-color: var(--bad
   cursor: pointer;
 }
 
+/* Stats headings */
+.stats-h {
+  margin: 20px 0 12px;
+  font-size: 13px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+/* Settings panel (Stats page) */
+.settings-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 15px;
+}
+.settings-row:last-child { border-bottom: none; }
+.settings-row input[type="checkbox"] {
+  width: 44px;
+  height: 26px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.settings-row input[type="checkbox"]::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: var(--text-dim);
+  border-radius: 50%;
+  transition: left 0.15s, background 0.15s;
+}
+.settings-row input[type="checkbox"]:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.settings-row input[type="checkbox"]:checked::after {
+  left: 20px;
+  background: #fff;
+}
+.settings-actions { display: flex; gap: 8px; }
+
+.small-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 500;
+}
+.small-btn:active { transform: scale(0.97); }
+.small-btn:hover { background: var(--border); }
+
+.settings-count {
+  background: var(--surface-2);
+  color: var(--text-dim);
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  margin-left: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.settings-stack { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+.settings-vrow { display: flex; flex-direction: column; gap: 4px; }
+.settings-vlabel { font-size: 12px; color: var(--text-dim); }
+.settings-vrow input {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.settings-vrow input:focus { border-color: var(--accent); }
+.settings-meta { font-size: 12px; color: var(--text-dim); }
+
+/* In-app editor */
+.edit-card { padding: 22px; }
+.edit-title { font-size: 17px; margin-bottom: 6px; }
+.edit-id {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-dim);
+  background: var(--surface-2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+}
+.edit-question {
+  color: var(--text-dim);
+  font-size: 14px;
+  margin-bottom: 16px;
+  font-style: italic;
+}
+.edit-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }
+.edit-label { font-size: 13px; font-weight: 600; color: var(--text); }
+.edit-hint { font-size: 12px; color: var(--text-dim); }
+.edit-hint code {
+  background: var(--surface-2);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 11px;
+}
+.edit-field textarea, .edit-field input {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  resize: vertical;
+}
+.edit-field textarea:focus, .edit-field input:focus { border-color: var(--accent); }
+
 /* Smaller screens (iPhone portrait) */
 @media (max-width: 600px) {
   #main { padding: 14px 14px 20px; }
   .card { padding: 18px; border-radius: 14px; margin-bottom: 14px; }
   .card-question { font-size: 17px; }
+
+  /* Sticky rate/action bar stays visible while reading long explanations.
+     Negative bottom offsets #main's padding-bottom so the bar reaches the
+     outer edge of the scroll container — no explanation-text peeking under. */
+  .card { padding-bottom: 0; }
+  .card .btn-row {
+    position: sticky;
+    bottom: -20px;  /* matches #main padding-bottom below */
+    background: var(--surface);
+    margin: 24px -18px 0;
+    padding: 14px 18px 14px;
+    border-top: 1px solid var(--border);
+    border-radius: 0 0 14px 14px;
+    z-index: 2;
+  }
   header { padding: 10px 14px; }
   header h1 { font-size: 16px; }
   #progress-hud { font-size: 12px; }
@@ -542,6 +909,13 @@ button.action.bad { background: var(--bad); color: #fff; border-color: var(--bad
   .stat-card { min-width: calc(50% - 4px); padding: 14px 10px; }
   .stat-card .number { font-size: 26px; }
 
+  /* Search bar: edge-to-edge */
+  .search-row { margin: 0 0 10px; }
+  .search-row input[type="search"] { padding: 9px 12px; font-size: 14px; }
+
+  /* Prev button takes less room on narrow */
+  #prev-btn { flex-basis: calc(50% - 4px); }
+
   /* Options list: less indent, smaller text */
   .q-options { padding-left: 22px; }
   .q-options li { font-size: 15px; padding: 9px 12px; }
@@ -549,6 +923,19 @@ button.action.bad { background: var(--bad); color: #fff; border-color: var(--bad
   /* Reading mode: less side padding */
   .reading-list .obj-section { padding: 16px; }
   .reading-list h2 { font-size: 18px; }
+
+  /* Settings rows: stack label + control vertically when cramped so
+     seg-controls never clip off-screen. Keep checkboxes inline. */
+  .settings-row:has(.seg-control) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .settings-row .seg-control { width: 100%; justify-content: stretch; }
+  .settings-row .seg-control button { flex: 1; padding: 8px 6px; }
+
+  /* Stats "Options" panel — stack label + Export/Import buttons too */
+  .settings-row .settings-actions { flex-wrap: wrap; }
 
   /* Tab bar: tighter labels */
   .tab-icon { font-size: 20px; }
