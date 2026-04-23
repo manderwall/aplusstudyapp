@@ -58,7 +58,7 @@ const state = {
   questions: [],
   conceptFixes: {},
   mode: 'study',
-  filter: { obj: null, due: false, search: '' },
+  filter: { obj: null, due: false, weakest: false, search: '' },
   currentIndex: 0,
   revealed: false,
   selectedOption: null,  // option text the user tapped pre-reveal
@@ -166,13 +166,16 @@ function _drainToasts() {
 }
 
 //─── SESSION (Pomodoro or card-count micro-goal) ─────────────
-function startSession({ minutes = 0, targetCards = 0 } = {}) {
+function startSession({ minutes = 0, targetCards = 0, rapid = false } = {}) {
   state.session = {
     endsAt: minutes > 0 ? Date.now() + minutes * MIN : null,
     targetCards: targetCards > 0 ? targetCards : null,
     ratedIds: new Set(),
     length: minutes,
-    targetDesc: targetCards > 0 ? `${targetCards} card${targetCards === 1 ? '' : 's'}` : `${minutes} min`,
+    rapid,
+    targetDesc: rapid
+      ? '⚡ 60s rapid fire'
+      : targetCards > 0 ? `${targetCards} card${targetCards === 1 ? '' : 's'}` : `${minutes} min`,
   };
   if (state._sessionTick) clearInterval(state._sessionTick);
   if (minutes > 0) {
@@ -542,10 +545,31 @@ function getQuestion(q) {
   return o ? { ...q, ...o } : q;
 }
 
+// Weakest-N list: cards with at least one attempt, ranked by lowest accuracy
+// then by highest seen-count (to break ties toward "cards you keep missing").
+// Unseen cards don't count — they're not weak, they're unread.
+const WEAKEST_LIMIT = 10;
+function weakestIdSet() {
+  const withAttempts = state.questions
+    .map(q => {
+      const p = state.progress[q.id] || {};
+      const seen = p.seen || 0;
+      const acc = seen > 0 ? (p.correct || 0) / seen : 1;
+      return { id: q.id, seen, acc };
+    })
+    .filter(x => x.seen > 0);
+  withAttempts.sort((a, b) => a.acc - b.acc || b.seen - a.seen);
+  return new Set(withAttempts.slice(0, WEAKEST_LIMIT).map(x => x.id));
+}
+
 function filteredQuestions() {
   let qs = state.questions.slice();
   if (state.filter.obj) qs = qs.filter(q => q.obj === state.filter.obj);
   if (state.filter.due) qs = qs.filter(isDue);
+  if (state.filter.weakest) {
+    const ids = weakestIdSet();
+    qs = qs.filter(q => ids.has(q.id));
+  }
   if (state.filter.search) {
     const q = state.filter.search.toLowerCase();
     qs = qs.filter(x =>
@@ -554,7 +578,7 @@ function filteredQuestions() {
     );
   }
   if (state.shuffle) {
-    const key = `${state.filter.obj}|${state.filter.due}|${state.filter.search}|${qs.length}|${qs.map(x=>x.id).join(',').slice(0,40)}`;
+    const key = `${state.filter.obj}|${state.filter.due}|${state.filter.weakest}|${state.filter.search}|${qs.length}|${qs.map(x=>x.id).join(',').slice(0,40)}`;
     if (!state._shuffleCache || state._shuffleCache.key !== key) {
       const shuffled = qs.slice();
       for (let i = shuffled.length - 1; i > 0; i--) {
@@ -570,6 +594,9 @@ function filteredQuestions() {
 
 function dueCount() {
   return state.questions.filter(isDue).length;
+}
+function weakestCount() {
+  return weakestIdSet().size;
 }
 
 function formatRemaining(ms) {
@@ -621,7 +648,9 @@ function renderStudy() {
   document.documentElement.toggleAttribute('data-revealed', !!state.revealed);
   const qs = filteredQuestions();
   if (qs.length === 0) {
-    const msg = state.filter.due
+    const msg = state.filter.weakest
+      ? ['Nothing weak yet', 'Weakest shows cards you\'ve missed before. Rate a few cards and come back — that list builds itself.', 'sleep']
+      : state.filter.due
       ? ['✨ All caught up!', 'No cards due right now — come back later, or tap Due again to turn it off and study anything.', 'celebrate']
       : state.filter.search
       ? ['Hmm, nothing matches', `Nothing for "${escapeHtml(state.filter.search)}". Try a different word or clear the search.`, 'sleep']
@@ -1044,6 +1073,12 @@ function renderStats() {
               <button class="small-btn" data-session-cards="10">10</button>
             </span>
           </div>
+          <div class="settings-row">
+            <span>⚡ Rapid fire <span class="settings-meta">60s sprint · rate as many as you can</span></span>
+            <span class="settings-actions">
+              <button class="small-btn" id="session-rapid">Start</button>
+            </span>
+          </div>
         `}
       </div>
 
@@ -1263,6 +1298,10 @@ function renderStats() {
     startSession({ targetCards: Number(btn.dataset.sessionCards) });
     renderStats();
   }));
+  $('#session-rapid')?.addEventListener('click', () => {
+    startSession({ minutes: 1, rapid: true });
+    setMode('study');
+  });
   $('#session-end')?.addEventListener('click', () => { endSession(false); renderStats(); });
 
   $('#pin-setup')?.addEventListener('click', () => pinSetupFlow());
@@ -1317,6 +1356,11 @@ function filterBarHTML() {
               aria-pressed="${state.filter.due ? 'true' : 'false'}">
         ${state.filter.due ? '✓ ' : ''}Due (${dueCount()})
       </button>
+      <button class="weakest-chip ${state.filter.weakest ? 'active' : ''}" data-filter="weakest"
+              aria-pressed="${state.filter.weakest ? 'true' : 'false'}"
+              title="Your lowest-accuracy cards">
+        ${state.filter.weakest ? '✓ ' : ''}🎯 Weakest (${weakestCount()})
+      </button>
       <button class="${state.filter.obj === null ? 'active' : ''}" data-filter="all"
               aria-pressed="${state.filter.obj === null ? 'true' : 'false'}">All (${state.questions.length})</button>
       ${objs.map(o => `
@@ -1332,9 +1376,10 @@ function filterBarHTML() {
 function renderFilterBar() {
   $$('[data-filter]').forEach(btn => btn.addEventListener('click', () => {
     const f = btn.dataset.filter;
-    if (f === 'due') state.filter.due = !state.filter.due;
-    else if (f === 'all') state.filter.obj = null;
-    else state.filter.obj = f;
+    if (f === 'due')          state.filter.due = !state.filter.due;
+    else if (f === 'weakest') state.filter.weakest = !state.filter.weakest;
+    else if (f === 'all')     state.filter.obj = null;
+    else                      state.filter.obj = f;
     state.currentIndex = 0;
     state.revealed = false;
     state.editing = false;
@@ -1712,7 +1757,7 @@ async function switchExam(newExam) {
   localStorage.setItem('exam', newExam);
   // Reset nav + filter state so we don't point at a card index that doesn't
   // exist in the new dataset.
-  state.filter = { obj: null, due: false, search: '' };
+  state.filter = { obj: null, due: false, weakest: false, search: '' };
   state.currentIndex = 0;
   state.revealed = false;
   state.editing = false;
@@ -2365,20 +2410,99 @@ async function pinRemoveFlow() {
 
 //─── INIT ────────────────────────────────────────────────────
 //─── WELCOME / LANDING SCREEN ─────────────────────────────────
+// Pick today's 3 concrete tasks based on current state. Deterministic so
+// reopening the welcome doesn't reshuffle — takes the sting out of decision
+// load when energy is low.
+function buildTodaysPlan() {
+  const due = dueCount();
+  const weak = weakestCount();
+  const fixes = Object.keys(state.conceptFixes);
+  const daysLeft = daysUntilExam(state.exam);
+  const crunch = daysLeft !== null && daysLeft >= 0 && daysLeft <= 7;
+
+  const tasks = [];
+
+  // Primary: what will hurt the most if skipped today?
+  if (due > 0) {
+    tasks.push({
+      id: 'due', icon: '📚', title: 'Clear your due queue',
+      sub: `${due} card${due === 1 ? '' : 's'} due right now. Spaced repetition works when you show up.`,
+      primary: true,
+    });
+  } else if (crunch) {
+    tasks.push({
+      id: 'rapid', icon: '⚡', title: 'Rapid fire 60s',
+      sub: `Exam is ${daysLeft === 0 ? 'today' : daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + ' away'}. Sprint — rate as many as you can.`,
+      primary: true,
+    });
+  } else {
+    tasks.push({
+      id: 'micro', icon: '🎯', title: 'Just 5 cards',
+      sub: `Nothing due yet. A small micro-session. One-and-done ≤ 5 min.`,
+      primary: true,
+    });
+  }
+
+  // Secondary: the drill if there's something to drill
+  if (weak > 0) {
+    tasks.push({
+      id: 'weakest', icon: '🎯', title: `Drill your weakest ${weak}`,
+      sub: 'Cards you\'ve missed most. 10-minute focused run.',
+    });
+  } else if (crunch && due === 0) {
+    tasks.push({
+      id: 'session15', icon: '⏱', title: '15-min focus session',
+      sub: 'Time-boxed. Countdown in header. End early anytime.',
+    });
+  } else {
+    tasks.push({
+      id: 'session15', icon: '⏱', title: '15-min focus session',
+      sub: 'Time-boxed study. End early anytime without guilt.',
+    });
+  }
+
+  // Tertiary: an off-ramp that still moves you forward
+  if (fixes.length > 0) {
+    tasks.push({
+      id: 'reading', icon: '📖', title: 'Read one concept sheet',
+      sub: 'No flashcards. Just the fix notes per objective.',
+    });
+  } else {
+    tasks.push({
+      id: 'stats', icon: '📊', title: 'See my progress',
+      sub: 'Mastery by objective, streak, accessibility settings.',
+    });
+  }
+  return tasks;
+}
+
 function showWelcome() {
   const streak = getStreak();
-  const due = dueCount();
-  const total = state.questions.length;
   const seen = state.questions.filter(q => state.progress[q.id]?.seen > 0).length;
   const returningUser = seen > 0;
+  const daysLeft = daysUntilExam(state.exam);
+  const examLabel = examDef(state.exam).label.replace(/\s*\(.*\)$/, '');
 
+  const hour = new Date().getHours();
+  const tod = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
   const greeting = returningUser
-    ? `Welcome back${streak.count > 0 ? ` — 🔥 ${streak.count}-day streak` : ''}.`
-    : `Welcome to your CompTIA A+ Core 1 study app.`;
+    ? `${tod}${streak.count > 0 ? ` — 🔥 ${streak.count}-day streak` : ''}.`
+    : `${tod}.`;
 
-  const subtitle = returningUser
-    ? `${due} card${due === 1 ? '' : 's'} due today · ${seen}/${total} cards seen so far.`
-    : `${total} flashcards built from the questions you missed across your pretests. Spaced repetition brings the tough ones back.`;
+  // Countdown line: the most emotionally charged part of the screen.
+  let countdownHtml = '';
+  if (daysLeft !== null) {
+    const urgency = daysLeft < 0 ? 'hud-past' : daysLeft <= 7 ? 'hud-urgent' : daysLeft <= 30 ? 'hud-soon' : '';
+    let text;
+    if (daysLeft < 0) text = `${examLabel} was ${-daysLeft}d ago`;
+    else if (daysLeft === 0) text = `${examLabel} is TODAY`;
+    else text = `${daysLeft} day${daysLeft === 1 ? '' : 's'} to ${examLabel}`;
+    countdownHtml = `<p class="welcome-countdown ${urgency}">⏳ ${text}</p>`;
+  } else if (!returningUser) {
+    countdownHtml = `<p class="welcome-countdown">Set your exam date in Stats → Active exam to see a countdown.</p>`;
+  }
+
+  const tasks = buildTodaysPlan();
 
   const html = `
     <div id="welcome-overlay" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
@@ -2386,44 +2510,29 @@ function showWelcome() {
         <button class="welcome-close" id="welcome-close" aria-label="Close">✕</button>
         <div class="welcome-mascot" aria-hidden="true">${MASCOT(returningUser && streak.count > 0 ? 'celebrate' : 'wave')}</div>
         <h2 id="welcome-title">${greeting}</h2>
-        <p class="welcome-sub">${subtitle}</p>
+        ${countdownHtml}
 
-        <h3>Pick your starting point</h3>
+        <h3>Today's plan</h3>
         <div class="welcome-actions">
-          <button class="welcome-btn primary" data-welcome="due">
-            <span class="wbtn-title">📚 Study due cards</span>
-            <span class="wbtn-sub">${due} due now${streak.today > 0 ? ` · ${streak.today} done today` : ''}</span>
-          </button>
-          <button class="welcome-btn" data-welcome="micro">
-            <span class="wbtn-title">🎯 Just 5 cards</span>
-            <span class="wbtn-sub">A micro-goal. One-and-done ≤ 5 min.</span>
-          </button>
-          <button class="welcome-btn" data-welcome="session15">
-            <span class="wbtn-title">⏱ 15-min focus session</span>
-            <span class="wbtn-sub">Countdown in header. End early anytime.</span>
-          </button>
-          <button class="welcome-btn" data-welcome="reading">
-            <span class="wbtn-title">📖 Read concept sheets</span>
-            <span class="wbtn-sub">No flashcards. Just the fix notes per OBJ.</span>
-          </button>
-          <button class="welcome-btn" data-welcome="stats">
-            <span class="wbtn-title">📊 See my progress</span>
-            <span class="wbtn-sub">Mastery by OBJ, streak, accessibility settings.</span>
-          </button>
+          ${tasks.map(t => `
+            <button class="welcome-btn${t.primary ? ' primary' : ''}" data-welcome="${t.id}">
+              <span class="wbtn-title">${t.icon} ${escapeHtml(t.title)}</span>
+              <span class="wbtn-sub">${escapeHtml(t.sub)}</span>
+            </button>
+          `).join('')}
         </div>
 
         <details class="welcome-help">
-          <summary>How the interface works</summary>
-          <ul>
-            <li><strong>Tap an option</strong> (A/B/C/D) to pick your answer — blue border shows your choice.</li>
-            <li><strong>Tap Reveal</strong> (or press <kbd>Space</kbd>) to check — correct answer highlights green, your wrong pick goes red.</li>
-            <li><strong>Rate</strong> Again / Hard / Good / Easy to schedule next review (spaced repetition).</li>
-            <li><strong>Swipe left</strong> on iPhone (or Skip →) to move on.</li>
-            <li><strong>✏️ Edit</strong> on each card to fix options or add a PBQ image.</li>
-            <li><strong>🔒 Focus Mode</strong> in header (or press <kbd>F</kbd>) hides chrome when overstimulated.</li>
-            <li><strong>🌓 Theme</strong> cycles auto / light / dark. Stats → Accessibility has text size, dyslexic fonts, anxiety mode (hides numbers), high contrast, and more.</li>
-            <li><strong>Apple Pencil</strong>: scratchpad auto-saves per card. On PBQ cards, draw on top of the image to label components from memory.</li>
-          </ul>
+          <summary>More options</summary>
+          <div class="welcome-actions welcome-more">
+            <button class="welcome-btn" data-welcome="due">📚 All due cards</button>
+            <button class="welcome-btn" data-welcome="weakest">🎯 Weakest ${weakestCount()}</button>
+            <button class="welcome-btn" data-welcome="micro">🎯 Just 5 cards</button>
+            <button class="welcome-btn" data-welcome="rapid">⚡ Rapid fire 60s</button>
+            <button class="welcome-btn" data-welcome="session15">⏱ 15-min session</button>
+            <button class="welcome-btn" data-welcome="reading">📖 Concept sheets</button>
+            <button class="welcome-btn" data-welcome="stats">📊 Progress</button>
+          </div>
         </details>
 
         <label class="welcome-dismiss">
@@ -2462,12 +2571,14 @@ function showWelcome() {
     if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
       previouslyFocused.focus();
     }
-    const studyActions = new Set(['due', 'micro', 'session15']);
-    if (action === 'due') { state.filter.due = true; setMode('study'); }
-    else if (action === 'micro') { startSession({ targetCards: 5 }); setMode('study'); }
+    const studyActions = new Set(['due', 'weakest', 'micro', 'session15', 'rapid']);
+    if (action === 'due')            { state.filter.due = true; setMode('study'); }
+    else if (action === 'weakest')   { state.filter.weakest = true; setMode('study'); }
+    else if (action === 'micro')     { startSession({ targetCards: 5 }); setMode('study'); }
     else if (action === 'session15') { startSession({ minutes: 15 }); setMode('study'); }
-    else if (action === 'reading') { setMode('reading'); }
-    else if (action === 'stats') { setMode('stats'); }
+    else if (action === 'rapid')     { startSession({ minutes: 1, rapid: true }); setMode('study'); }
+    else if (action === 'reading')   { setMode('reading'); }
+    else if (action === 'stats')     { setMode('stats'); }
     // For Study-focused actions, auto-enter Focus Mode: hides tab bar, filter
     // bar, HUD, and card meta so it's just the card. Exit with F or the 🔓 button.
     if (studyActions.has(action) && !state.focus) toggleFocus();
