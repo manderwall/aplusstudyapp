@@ -1,5 +1,5 @@
 // Service worker — cache shell + content for offline use
-const CACHE = 'aplus-study-v8';
+const CACHE = 'aplus-study-v9';
 const ASSETS = [
   './',
   './index.html',
