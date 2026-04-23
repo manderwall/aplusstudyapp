@@ -195,6 +195,32 @@ Workflow: study on iPad → Push. Open iPhone → Pull. Study on iPhone → Push
 
 Your sync_key is the only "auth" — anyone who knows your project URL, anon key, and sync_key can read/write your row. The anon key is meant to be embedded in clients, but it's still worth not committing it to a public repo and using a non-obvious sync_key.
 
+## PIN lock (encrypt local data at rest)
+
+Optional. Stops a curious family member (or a pickpocket) from opening the app and reading your progress.
+
+### Setup
+
+1. **Stats → App lock → Set PIN**. Pick a PIN of 4+ characters, re-enter to confirm.
+2. The app derives an AES-GCM 256 key from the PIN via PBKDF2 (SHA-256, 310,000 iterations, random salt) and immediately re-encrypts your existing progress, question edits, and scratchpad drawings under that key.
+3. The salt + a "can you decrypt this sentinel?" verification blob are saved to localStorage. **The PIN and the derived key are never stored.**
+
+### What it does / doesn't protect
+
+- ✅ At rest, the contents of IndexedDB are ciphertext. Opening DevTools and browsing the `aplus-study` database shows random-looking blobs, not your study history.
+- ✅ Losing the device to casual hands means they hit the lock screen and can't decrypt.
+- ❌ If the attacker has the device, knows your PIN, and unlocks the app, everything decrypts.
+- ❌ Supabase cloud sync isn't affected — cloud data is still stored under the anon key + sync_key only. If you need encrypted cloud sync, that's a future extension.
+
+### Daily use
+
+- Every time you launch the app, the lock screen asks for your PIN. The derived key lives in memory only — closing the app drops it.
+- **Forgot PIN?** The lock screen offers "Wipe local data" — it clears the encrypted stores and the setup meta, so you can start over (or re-pull from Supabase on another device that still has a working copy).
+- **Change PIN** (Stats → App lock → Change) re-encrypts every stored blob under a new key without dropping data.
+- **Remove PIN** (Stats → App lock → Remove) decrypts back to plaintext. Use this if you don't want the lock anymore.
+
+If you set a PIN on iPad, you'll need to set one on iPhone independently — each device has its own encrypted store. Supabase pull still works because cloud blobs are plaintext.
+
 ## Vibe-coding additions
 
 If you want to extend it with Claude Code, here's the structure:

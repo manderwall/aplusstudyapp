@@ -20,5 +20,5 @@ jobs:
           node --check sw.js
       - name: Validate questions.json
         run: node scripts/validate-questions.mjs
-      - name: Unit tests (lib.mjs)
-        run: node --test tests/pure.test.mjs
+      - name: Unit tests
+        run: node --test tests/pure.test.mjs tests/crypto.test.mjs

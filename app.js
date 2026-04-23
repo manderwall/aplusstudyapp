@@ -6,6 +6,10 @@ import {
   defaultProgress, migrateProgress, schedule,
   escapeHtml, normalizeOption, formatExplanation,
 } from './lib.mjs';
+import {
+  randomSaltB64, deriveKey, encryptJSON, decryptJSON, isEncryptedBlob,
+  makeVerificationBlob, verifyPin,
+} from './crypto.mjs';
 
 //─── GLOBAL STATE ────────────────────────────────────────────
 const state = {
@@ -27,6 +31,7 @@ const state = {
   session: null,   // { endsAt, startCards, ratedIds: Set<string>, length }
   _sessionTick: null,  // setInterval id for HUD refresh
   _autoSyncTimer: null,  // debounce handle for cloud push
+  _cryptoKey: null,   // AES-GCM key derived from PIN; memory-only
 };
 
 // Accessibility / preference keys (persisted in localStorage via pref()/setPref())
@@ -322,11 +327,39 @@ function idbPut(store, key, value) {
   }));
 }
 
+//─── PIN LOCK (AES-GCM at-rest encryption) ───────────────────
+// Setup metadata lives in localStorage under `pin.setup` as
+//   { v: 1, salt: b64, iterations: N, verification: { v, iv, ct } }
+// The derived key is held in memory only (state._cryptoKey) for the
+// current session; closing the app drops it and requires re-unlock.
+const PIN_SETUP_KEY = 'pin.setup';
+
+function getPinSetup() {
+  try {
+    const raw = localStorage.getItem(PIN_SETUP_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+function savePinSetup(setup) { localStorage.setItem(PIN_SETUP_KEY, JSON.stringify(setup)); }
+function clearPinSetup()     { localStorage.removeItem(PIN_SETUP_KEY); }
+function isPinSet() { return !!getPinSetup(); }
+
+async function maybeEncrypt(obj) {
+  return state._cryptoKey ? encryptJSON(state._cryptoKey, obj) : obj;
+}
+async function maybeDecrypt(raw, fallback) {
+  if (raw === undefined || raw === null) return fallback;
+  if (!isEncryptedBlob(raw)) return raw;
+  if (!state._cryptoKey) throw new Error('locked');
+  return decryptJSON(state._cryptoKey, raw);
+}
+
 async function loadProgress() {
-  try { return (await idbGet(STORE, 'all')) || {}; } catch { return {}; }
+  try { return (await maybeDecrypt(await idbGet(STORE, 'all'), {})) || {}; }
+  catch (e) { if (e.message === 'locked') throw e; return {}; }
 }
 async function saveProgress() {
-  try { await idbPut(STORE, 'all', state.progress); }
+  try { await idbPut(STORE, 'all', await maybeEncrypt(state.progress)); }
   catch (e) { console.warn('Save progress failed', e); }
 }
 async function clearProgress() {
@@ -339,10 +372,11 @@ async function clearProgress() {
 }
 
 async function loadOverrides() {
-  try { return (await idbGet(OSTORE, 'all')) || {}; } catch { return {}; }
+  try { return (await maybeDecrypt(await idbGet(OSTORE, 'all'), {})) || {}; }
+  catch (e) { if (e.message === 'locked') throw e; return {}; }
 }
 async function saveOverrides() {
-  try { await idbPut(OSTORE, 'all', state.overrides); }
+  try { await idbPut(OSTORE, 'all', await maybeEncrypt(state.overrides)); }
   catch (e) { console.warn('Save overrides failed', e); }
 }
 
@@ -924,6 +958,36 @@ function renderStats() {
         </div>
       </div>
 
+      <h3 class="stats-h">App lock (encrypted at rest)</h3>
+      <div class="settings-panel">
+        ${isPinSet() ? `
+          <div class="settings-row">
+            <span>
+              <strong>PIN lock is on.</strong>
+              <span class="settings-meta" style="display:block; margin-top:2px;">
+                Progress, edits, and drawings are AES-GCM encrypted in your browser.
+                Key lives in memory only — you'll re-enter the PIN next launch.
+              </span>
+            </span>
+            <span class="settings-actions">
+              <button class="small-btn" id="pin-change">Change</button>
+              <button class="small-btn" id="pin-remove">Remove</button>
+            </span>
+          </div>
+        ` : `
+          <div class="settings-row">
+            <span>
+              Lock the app with a PIN. Your saved progress, question edits, and
+              scratchpad drawings get encrypted on device — unreadable without
+              the PIN, even via DevTools.
+            </span>
+            <span class="settings-actions">
+              <button class="small-btn" id="pin-setup">Set PIN</button>
+            </span>
+          </div>
+        `}
+      </div>
+
       <h3 class="stats-h">Cloud sync (Supabase)</h3>
       <div class="settings-panel">
         <div class="settings-stack">
@@ -1011,6 +1075,10 @@ function renderStats() {
     renderStats();
   }));
   $('#session-end')?.addEventListener('click', () => { endSession(false); renderStats(); });
+
+  $('#pin-setup')?.addEventListener('click', () => pinSetupFlow());
+  $('#pin-change')?.addEventListener('click', () => pinChangeFlow());
+  $('#pin-remove')?.addEventListener('click', () => pinRemoveFlow());
 
   $('#cloud-save')?.addEventListener('click', () => {
     saveCloudCfg($('#cloud-url').value.trim(), $('#cloud-key').value.trim(), $('#cloud-sync').value.trim());
@@ -1155,12 +1223,22 @@ function renderScratchpadHTML(q) {
   `;
 }
 
-// Drawings persist per question in IndexedDB.
+// Drawings persist per question in IndexedDB. If a PIN is set, the dataURL is
+// encrypted before write and decrypted on read — silently skipped if locked.
 async function loadDrawing(qid) {
-  try { return (await idbGet('drawings', qid)) || null; } catch { return null; }
+  try {
+    const raw = await idbGet('drawings', qid);
+    if (!raw) return null;
+    if (!isEncryptedBlob(raw)) return raw;
+    if (!state._cryptoKey) return null;
+    return await decryptJSON(state._cryptoKey, raw);
+  } catch { return null; }
 }
 async function saveDrawing(qid, dataUrl) {
-  try { await idbPut('drawings', qid, dataUrl); } catch (e) { console.warn('Save drawing failed', e); }
+  try {
+    const value = state._cryptoKey ? await encryptJSON(state._cryptoKey, dataUrl) : dataUrl;
+    await idbPut('drawings', qid, value);
+  } catch (e) { console.warn('Save drawing failed', e); }
 }
 async function clearDrawing(qid) {
   try {
@@ -1810,6 +1888,187 @@ function installSwipe() {
   main.addEventListener('pointercancel', () => { tracking = false; });
 }
 
+//─── LOCK SCREEN (PIN unlock) ────────────────────────────────
+// Shown on boot when pin.setup is present. Resolves with an AES-GCM key on
+// success, or null if the user used "Forgot PIN" to wipe local data.
+function showLockScreen() {
+  return new Promise((resolve) => {
+    const html = `
+      <div id="lock-overlay" role="dialog" aria-modal="true" aria-labelledby="lock-title">
+        <div class="lock-card">
+          <div class="lock-icon" aria-hidden="true">🔒</div>
+          <h2 id="lock-title">Unlock A+ Study</h2>
+          <p class="lock-sub">Enter your PIN to decrypt your progress.</p>
+          <form id="lock-form">
+            <input id="lock-pin" type="password" inputmode="numeric"
+                   autocomplete="off" autocorrect="off" autocapitalize="off"
+                   spellcheck="false" placeholder="PIN" aria-label="PIN"
+                   enterkeyhint="go">
+            <div class="lock-error" id="lock-error" role="alert" hidden></div>
+            <button type="submit" class="action primary" id="lock-submit">Unlock</button>
+          </form>
+          <button class="lock-forgot" id="lock-forgot">Forgot PIN — wipe local data</button>
+        </div>
+      </div>`;
+    document.body.insertAdjacentHTML('beforeend', html);
+    const overlay = $('#lock-overlay');
+    const input = $('#lock-pin');
+    const submit = $('#lock-submit');
+    const errEl = $('#lock-error');
+    setTimeout(() => input.focus(), 50);
+
+    const setError = (msg) => {
+      errEl.textContent = msg;
+      errEl.hidden = !msg;
+    };
+
+    $('#lock-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const pin = input.value;
+      if (!pin) { setError('Enter your PIN.'); return; }
+      const setup = getPinSetup();
+      if (!setup) { overlay.remove(); resolve(null); return; }
+      submit.disabled = true;
+      submit.textContent = 'Unlocking…';
+      try {
+        const key = await deriveKey(pin, setup.salt, setup.iterations);
+        if (!(await verifyPin(key, setup.verification))) {
+          setError('Wrong PIN. Try again.');
+          haptic([30, 60, 30]);
+          input.value = '';
+          input.focus();
+          submit.disabled = false;
+          submit.textContent = 'Unlock';
+          return;
+        }
+        overlay.remove();
+        resolve(key);
+      } catch (err) {
+        setError(`Couldn't unlock: ${err.message}`);
+        submit.disabled = false;
+        submit.textContent = 'Unlock';
+      }
+    });
+
+    $('#lock-forgot').addEventListener('click', async () => {
+      if (!confirm(
+        'This will WIPE all local progress, question edits, and drawings.\n\n' +
+        'Only do this if you truly forgot your PIN. If you have Supabase sync set up ' +
+        'on another device, you can push from there after wiping. Continue?'
+      )) return;
+      await wipeEncryptedStores();
+      clearPinSetup();
+      overlay.remove();
+      resolve(null);
+    });
+  });
+}
+
+async function wipeEncryptedStores() {
+  try {
+    const db = await openDB();
+    await new Promise((done) => {
+      const tx = db.transaction([STORE, OSTORE, DSTORE], 'readwrite');
+      tx.objectStore(STORE).clear();
+      tx.objectStore(OSTORE).clear();
+      tx.objectStore(DSTORE).clear();
+      tx.oncomplete = done;
+      tx.onerror = done;
+    });
+  } catch (e) { console.warn('Wipe failed', e); }
+}
+
+async function rekeyAllDrawings(newKey, oldKey) {
+  // Walk every drawing record and re-encrypt under the new key (or plaintext
+  // when newKey === null). Runs in a single transaction so a crash halfway
+  // through leaves the store consistent.
+  try {
+    const db = await openDB();
+    const keys = await new Promise((res) => {
+      const tx = db.transaction(DSTORE, 'readonly');
+      const r = tx.objectStore(DSTORE).getAllKeys();
+      r.onsuccess = () => res(r.result || []);
+      r.onerror = () => res([]);
+    });
+    for (const k of keys) {
+      const raw = await idbGet(DSTORE, k);
+      if (raw == null) continue;
+      const plain = isEncryptedBlob(raw)
+        ? (oldKey ? await decryptJSON(oldKey, raw) : null)
+        : raw;
+      if (plain == null) continue;
+      const next = newKey ? await encryptJSON(newKey, plain) : plain;
+      await idbPut(DSTORE, k, next);
+    }
+  } catch (e) { console.warn('Drawing re-key failed', e); }
+}
+
+async function pinSetupFlow() {
+  const pin  = prompt('Choose a PIN. 4+ characters. This encrypts your progress on this device — losing it means losing local data unless you\'ve pushed to Supabase.');
+  if (pin == null) return;  // cancelled
+  if (pin.length < 4) { toast('PIN must be at least 4 characters.', 'error'); return; }
+  const confirmPin = prompt('Re-enter the PIN to confirm.');
+  if (confirmPin !== pin) { toast('PINs didn\'t match. PIN not set.', 'error'); return; }
+
+  toast('Encrypting local data…', 'info', 4000);
+  const salt = randomSaltB64();
+  const key = await deriveKey(pin, salt);
+  const verification = await makeVerificationBlob(key);
+  // Encrypt everything currently in memory/disk under the new key.
+  state._cryptoKey = key;
+  await saveProgress();
+  await saveOverrides();
+  await rekeyAllDrawings(key, null);
+  savePinSetup({ v: 1, salt, iterations: 310_000, verification });
+  toast('PIN set. Data is now encrypted on this device.', 'success', 4500);
+  renderStats();
+}
+
+async function pinChangeFlow() {
+  if (!state._cryptoKey) { toast('Unlock required — reload and enter current PIN.', 'error'); return; }
+  const current = prompt('Enter your CURRENT PIN.');
+  if (current == null) return;
+  const setup = getPinSetup();
+  const testKey = await deriveKey(current, setup.salt, setup.iterations);
+  if (!(await verifyPin(testKey, setup.verification))) {
+    toast('Current PIN is wrong.', 'error'); return;
+  }
+  const next = prompt('Choose a NEW PIN. 4+ characters.');
+  if (next == null) return;
+  if (next.length < 4) { toast('New PIN must be at least 4 characters.', 'error'); return; }
+  const confirmNext = prompt('Re-enter the new PIN to confirm.');
+  if (confirmNext !== next) { toast('New PINs didn\'t match. PIN unchanged.', 'error'); return; }
+
+  toast('Re-encrypting local data…', 'info', 4000);
+  const salt = randomSaltB64();
+  const newKey = await deriveKey(next, salt);
+  const verification = await makeVerificationBlob(newKey);
+  const oldKey = state._cryptoKey;
+  state._cryptoKey = newKey;
+  await saveProgress();
+  await saveOverrides();
+  await rekeyAllDrawings(newKey, oldKey);
+  savePinSetup({ v: 1, salt, iterations: 310_000, verification });
+  toast('PIN changed.', 'success');
+  renderStats();
+}
+
+async function pinRemoveFlow() {
+  if (!state._cryptoKey) { toast('Unlock required — reload and enter current PIN.', 'error'); return; }
+  if (!confirm(
+    'Remove the PIN? Your local data will be decrypted back to plaintext ' +
+    'and anyone with access to this device can read it. Continue?'
+  )) return;
+  const oldKey = state._cryptoKey;
+  state._cryptoKey = null;
+  await saveProgress();
+  await saveOverrides();
+  await rekeyAllDrawings(null, oldKey);
+  clearPinSetup();
+  toast('PIN removed. Local data is now plaintext.', 'info', 4500);
+  renderStats();
+}
+
 //─── INIT ────────────────────────────────────────────────────
 //─── WELCOME / LANDING SCREEN ─────────────────────────────────
 function showWelcome() {
@@ -1922,6 +2181,14 @@ async function init() {
   $('#theme-btn')?.addEventListener('click', cycleTheme);
   $('#focus-btn')?.addEventListener('click', toggleFocus);
   $('#help-btn')?.addEventListener('click', showWelcome);
+
+  // If the user set a PIN on a prior session, gate everything behind it
+  // before any sensitive data is loaded. A null key (returned after "Forgot
+  // PIN → wipe") means the stores are cleared; loadData will see no data
+  // and fall back to defaults.
+  if (isPinSet()) {
+    state._cryptoKey = await showLockScreen();
+  }
 
   try {
     await loadData();
