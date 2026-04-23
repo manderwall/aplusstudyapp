@@ -9,6 +9,7 @@ const state = {
   filter: { obj: null, due: false, search: '' },
   currentIndex: 0,
   revealed: false,
+  selectedOption: null,  // option text the user tapped pre-reveal
   editing: false,  // when true, render the edit form instead of the question card
   focus: false,    // Focus Mode: hides filter/meta chrome to show just the card
   history: [],     // stack of previous currentIndex values for Prev nav
@@ -511,10 +512,20 @@ function attachStudyEvents(q) {
   if (skip) skip.addEventListener('click', () => { nextQuestion(); });
   const prev = $('#prev-btn');
   if (prev) prev.addEventListener('click', () => { prevQuestion(); });
+  attachOptionEvents(() => renderStudy());
   $$('[data-rate]').forEach(btn => btn.addEventListener('click', () => {
     const rate = btn.dataset.rate;
     recordRating(q.id, rate);
     nextQuestion();
+  }));
+}
+
+function attachOptionEvents(rerender) {
+  $$('.q-options li.q-option').forEach(li => li.addEventListener('click', () => {
+    if (state.revealed) return;
+    state.selectedOption = li.dataset.option;
+    haptic(5);
+    rerender();
   }));
 }
 
@@ -533,6 +544,7 @@ function recordRating(qid, rate) {
 function nextQuestion() {
   const qs = filteredQuestions();
   state.revealed = false;
+  state.selectedOption = null;
   if (qs.length === 0) { renderStudy(); return; }
   state.history.push(state.currentIndex);
   if (state.history.length > 50) state.history.shift();
@@ -543,6 +555,7 @@ function nextQuestion() {
 function prevQuestion() {
   const qs = filteredQuestions();
   state.revealed = false;
+  state.selectedOption = null;
   if (qs.length === 0) { renderStudy(); return; }
   if (state.history.length > 0) {
     state.currentIndex = state.history.pop();
@@ -628,6 +641,7 @@ function renderQuiz() {
   const prev = $('#prev-btn');
   if (prev) prev.addEventListener('click', () => { prevQuizQuestion(); });
   $('#edit-btn')?.addEventListener('click', () => { state.editing = true; renderQuiz(); });
+  attachOptionEvents(() => renderQuiz());
   $$('[data-qa]').forEach(btn => btn.addEventListener('click', () => {
     const right = btn.dataset.qa === 'right';
     const p = state.progress[q.id];
@@ -647,6 +661,7 @@ function renderQuiz() {
 function nextQuizQuestion() {
   const qs = filteredQuestions();
   state.revealed = false;
+  state.selectedOption = null;
   if (qs.length === 0) { renderQuiz(); return; }
   state.history.push(state.currentIndex);
   if (state.history.length > 50) state.history.shift();
@@ -657,6 +672,7 @@ function nextQuizQuestion() {
 function prevQuizQuestion() {
   const qs = filteredQuestions();
   state.revealed = false;
+  state.selectedOption = null;
   if (qs.length === 0) { renderQuiz(); return; }
   if (state.history.length > 0) {
     state.currentIndex = state.history.pop();
@@ -1012,6 +1028,7 @@ function renderFilterBar() {
     state.currentIndex = 0;
     state.revealed = false;
     state.editing = false;
+    state.selectedOption = null;
     state.history = [];
     state._shuffleCache = null;
     if (state.mode === 'study') renderStudy();
@@ -1030,6 +1047,7 @@ function renderFilterBar() {
         state.currentIndex = 0;
         state.revealed = false;
         state.editing = false;
+        state.selectedOption = null;
         state.history = [];
         state._shuffleCache = null;
         if (state.mode === 'study') renderStudy();
@@ -1047,6 +1065,7 @@ function renderFilterBar() {
       state.currentIndex = 0;
       state.revealed = false;
       state.editing = false;
+      state.selectedOption = null;
       state.history = [];
       state._shuffleCache = null;
       if (state.mode === 'study') renderStudy();
@@ -1169,9 +1188,30 @@ function renderImageHTML(q) {
 
 function renderOptionsHTML(q) {
   if (!Array.isArray(q.options) || q.options.length === 0) return '';
+  const picked = state.selectedOption;
+  const correct = q.correct_short;
+  const isCorrect = (opt) => {
+    if (!correct) return false;
+    const a = opt.toLowerCase().trim().replace(/\s+/g, ' ');
+    const b = correct.toLowerCase().trim().replace(/\s+/g, ' ');
+    return a === b;
+  };
+  const cls = (opt) => {
+    const c = ['q-option'];
+    if (!state.revealed) {
+      if (picked === opt) c.push('picked');
+    } else {
+      if (isCorrect(opt)) c.push('correct');
+      else if (picked === opt) c.push('wrong');
+      if (picked === opt) c.push('yours');
+    }
+    return c.join(' ');
+  };
   return `
     <ol class="q-options" type="A">
-      ${q.options.map(opt => `<li>${escape(opt)}</li>`).join('')}
+      ${q.options.map(opt =>
+        `<li class="${cls(opt)}" data-option="${escape(opt)}">${escape(opt)}</li>`
+      ).join('')}
     </ol>`;
 }
 
@@ -1296,6 +1336,7 @@ function setMode(mode) {
   state.currentIndex = 0;
   state.revealed = false;
   state.editing = false;
+  state.selectedOption = null;
   state.history = [];
   state._shuffleCache = null;
   $$('.tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
