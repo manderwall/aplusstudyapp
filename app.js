@@ -2777,9 +2777,30 @@ function showWelcome() {
   }, 0);
 }
 
+// One-shot defaults for exam dates so users don't have to open Stats just to
+// see their countdown. The sentinel under `exam.defaulted` tracks which exam
+// IDs we've already applied a default to — clearing the date afterwards
+// sticks, because we never re-apply once an ID is in that set.
+function applyDefaultExamDates() {
+  const DEFAULTS = { core1: '2026-04-29' };  // Core 2 left blank on purpose
+  let defaulted;
+  try { defaulted = new Set(JSON.parse(localStorage.getItem('exam.defaulted') || '[]')); }
+  catch { defaulted = new Set(); }
+  let changed = false;
+  for (const [id, iso] of Object.entries(DEFAULTS)) {
+    if (defaulted.has(id)) continue;
+    if (!getExamDate(id)) { setExamDate(id, iso); changed = true; }
+    defaulted.add(id);
+  }
+  if (changed || defaulted.size) {
+    localStorage.setItem('exam.defaulted', JSON.stringify([...defaulted]));
+  }
+}
+
 async function init() {
   // Prefs / theme / shuffle all load before any render so first paint is correct
   applyPrefs();
+  applyDefaultExamDates();
   // Active exam is persisted separately so the PIN gate can still unlock the
   // right encrypted progress blob on first load.
   const savedExam = localStorage.getItem('exam');
