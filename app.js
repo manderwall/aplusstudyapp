@@ -63,7 +63,8 @@ const state = {
   filter: { obj: null, due: false, weakest: false, search: '' },
   currentIndex: 0,
   revealed: false,
-  selectedOption: null,  // option text the user tapped pre-reveal
+  selectedOption: null,  // option text the user tapped pre-reveal (single-answer Qs)
+  selectedOptions: [],   // option texts the user has toggled on (Multiple Answer Qs)
   editing: false,  // when true, render the edit form instead of the question card
   focus: false,    // Focus Mode: hides filter/meta chrome to show just the card
   history: [],     // stack of previous currentIndex values for Prev nav
@@ -907,11 +908,28 @@ function attachStudyEvents(q) {
   }));
 }
 
+function isMultipleAnswer(q) {
+  return q.qtype === 'Multiple Answer' ||
+    (Array.isArray(q.correct_picks) && q.correct_picks.length > 1);
+}
+
 function attachOptionEvents(rerender) {
+  const q = state._currentQ;
+  const ma = q && isMultipleAnswer(q);
   const items = $$('.q-options li.q-option');
   const pick = (li) => {
     if (state.revealed) return;
-    state.selectedOption = li.dataset.option;
+    const opt = li.dataset.option;
+    if (ma) {
+      // Toggle: add or remove from the selectedOptions array
+      const arr = state.selectedOptions || [];
+      const idx = arr.indexOf(opt);
+      if (idx === -1) arr.push(opt);
+      else arr.splice(idx, 1);
+      state.selectedOptions = arr;
+    } else {
+      state.selectedOption = opt;
+    }
     haptic(5);
     rerender();
   };
@@ -951,6 +969,7 @@ function nextQuestion() {
   const qs = filteredQuestions();
   state.revealed = false;
   state.selectedOption = null;
+  state.selectedOptions = [];
   if (qs.length === 0) { renderStudy(); return; }
   state.history.push(state.currentIndex);
   if (state.history.length > 50) state.history.shift();
@@ -962,6 +981,7 @@ function prevQuestion() {
   const qs = filteredQuestions();
   state.revealed = false;
   state.selectedOption = null;
+  state.selectedOptions = [];
   if (qs.length === 0) { renderStudy(); return; }
   if (state.history.length > 0) {
     state.currentIndex = state.history.pop();
@@ -1069,6 +1089,7 @@ function nextQuizQuestion() {
   const qs = filteredQuestions();
   state.revealed = false;
   state.selectedOption = null;
+  state.selectedOptions = [];
   if (qs.length === 0) { renderQuiz(); return; }
   state.history.push(state.currentIndex);
   if (state.history.length > 50) state.history.shift();
@@ -1080,6 +1101,7 @@ function prevQuizQuestion() {
   const qs = filteredQuestions();
   state.revealed = false;
   state.selectedOption = null;
+  state.selectedOptions = [];
   if (qs.length === 0) { renderQuiz(); return; }
   if (state.history.length > 0) {
     state.currentIndex = state.history.pop();
@@ -1575,6 +1597,7 @@ function renderFilterBar() {
     state.revealed = false;
     state.editing = false;
     state.selectedOption = null;
+    state.selectedOptions = [];
     state.history = [];
     state._orderCache = null;
     if (state.mode === 'study') renderStudy();
@@ -1594,6 +1617,7 @@ function renderFilterBar() {
         state.revealed = false;
         state.editing = false;
         state.selectedOption = null;
+        state.selectedOptions = [];
         state.history = [];
         state._orderCache = null;
         if (state.mode === 'study') renderStudy();
@@ -1612,6 +1636,7 @@ function renderFilterBar() {
       state.revealed = false;
       state.editing = false;
       state.selectedOption = null;
+      state.selectedOptions = [];
       state.history = [];
       state._orderCache = null;
       if (state.mode === 'study') renderStudy();
@@ -1834,10 +1859,27 @@ function renderPretestMissHTML(q) {
 function renderRatingButtonsHTML(q) {
   const p = state.progress[q.id] || {};
   const now = Date.now();
-  const rec = recommendedRating({ picked: state.selectedOption, correct: q.correct_short });
-  const recLabel = state.selectedOption
-    ? (rec === 'good' ? '✓ You picked the right answer' : '✗ You missed this one')
-    : 'Tip: pick an answer next time for a smarter default';
+  // For Multiple Answer Qs, "right" means the user's picks exactly match the
+  // correct set; anything else is a miss. For single-answer, delegate to the
+  // pure helper so this logic stays one place.
+  let rec, recLabel;
+  if (isMultipleAnswer(q)) {
+    const picks = state.selectedOptions || [];
+    const correctArr = Array.isArray(q.correct_picks) ? q.correct_picks : [];
+    const norm = (s) => (s || '').toLowerCase().trim().replace(/\s+/g, ' ');
+    const pickedSet = new Set(picks.map(norm));
+    const correctSetN = new Set(correctArr.map(norm));
+    const sameSize = pickedSet.size === correctSetN.size;
+    const allMatch = sameSize && [...pickedSet].every(x => correctSetN.has(x));
+    if (picks.length === 0) { rec = 'hard'; recLabel = 'Tip: pick your answers next time for a smarter default'; }
+    else if (allMatch)       { rec = 'good'; recLabel = '✓ You picked all the right answers'; }
+    else                     { rec = 'again'; recLabel = '✗ You missed one or more answers'; }
+  } else {
+    rec = recommendedRating({ picked: state.selectedOption, correct: q.correct_short });
+    recLabel = state.selectedOption
+      ? (rec === 'good' ? '✓ You picked the right answer' : '✗ You missed this one')
+      : 'Tip: pick an answer next time for a smarter default';
+  }
   const rates = [
     { key: 'again', cls: 'bad',    label: 'Again' },
     { key: 'hard',  cls: 'warn',   label: 'Hard' },
@@ -1863,10 +1905,14 @@ function renderRatingButtonsHTML(q) {
 
 function renderOptionsHTML(q) {
   if (!Array.isArray(q.options) || q.options.length === 0) return '';
+  state._currentQ = q;  // cached for attachOptionEvents to read qtype
   // Shuffle options into a stable per-card order so the correct answer isn't
   // always in the same slot, but the layout doesn't change on re-renders.
   const options = shuffleOptionsForCard(q.options, q.id);
-  const picked = state.selectedOption;
+  const ma = isMultipleAnswer(q);
+  const pickedSet = ma
+    ? new Set((state.selectedOptions || []))
+    : new Set(state.selectedOption ? [state.selectedOption] : []);
   const norm = (s) => (s || '').toLowerCase().trim().replace(/\s+/g, ' ');
   // Multiple Answer questions use correct_picks (array); single-answer uses correct_short.
   const correctSet = new Set(
@@ -1878,7 +1924,7 @@ function renderOptionsHTML(q) {
   const cls = (opt) => {
     const c = ['q-option'];
     const correct = isCorrect(opt);
-    const isPicked = picked === opt;
+    const isPicked = pickedSet.has(opt);
     if (!state.revealed) {
       if (isPicked) c.push('picked');
     } else {
@@ -1889,22 +1935,29 @@ function renderOptionsHTML(q) {
     return c.join(' ');
   };
   const LETTERS = 'ABCDEFGHIJ';
-  // role=radio + aria-checked makes screen readers announce each option as a
-  // choice; tabindex lets keyboard users focus the first option and arrow
-  // through the rest (see attachOptionEvents). The letter badge + text +
-  // status icon are separate spans so the three regions can size and style
-  // independently without relying on ::marker / ::before pseudo-elements.
+  const needCount = ma
+    ? (Array.isArray(q.correct_picks) ? q.correct_picks.length : 2)
+    : 1;
+  const hint = ma && !state.revealed
+    ? `<div class="ma-hint">Select ${needCount} answers — tap again to deselect. Picked ${pickedSet.size} of ${needCount}.</div>`
+    : '';
+  const role = ma ? 'group' : 'radiogroup';
+  const itemRole = ma ? 'checkbox' : 'radio';
+  // role=radiogroup+radio for single-answer; role=group+checkbox for MA so
+  // screen readers announce that multiple picks are allowed. Letter badge +
+  // text + status icon are separate spans so each region styles independently.
   return `
-    <ol class="q-options" role="radiogroup" aria-label="Answer choices">
+    ${hint}
+    <ol class="q-options${ma ? ' q-options-ma' : ''}" role="${role}" aria-label="Answer choices">
       ${options.map((opt, i) => {
-        const checked = picked === opt;
-        const tab = (picked ? checked : i === 0) ? 0 : -1;
+        const checked = pickedSet.has(opt);
+        const tab = (pickedSet.size ? checked : i === 0) ? 0 : -1;
         const correct = isCorrect(opt);
         const describe = state.revealed
           ? (correct ? ' (correct answer)' : checked ? ' (your pick, incorrect)' : '')
           : '';
         const letter = LETTERS[i] || String(i + 1);
-        return `<li class="${cls(opt)}" role="radio"
+        return `<li class="${cls(opt)}" role="${itemRole}"
             aria-checked="${checked ? 'true' : 'false'}"
             tabindex="${tab}"
             data-option="${escapeHtml(opt)}"
@@ -2003,6 +2056,7 @@ async function switchExam(newExam) {
   state.revealed = false;
   state.editing = false;
   state.selectedOption = null;
+  state.selectedOptions = [];
   state.history = [];
   state._orderCache = null;
   try { await loadData(); }
@@ -2019,6 +2073,7 @@ function setMode(mode) {
   state.revealed = false;
   state.editing = false;
   state.selectedOption = null;
+  state.selectedOptions = [];
   state.history = [];
   state._orderCache = null;
   $$('.tab').forEach(t => {
