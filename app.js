@@ -1793,6 +1793,101 @@ function installSwipe() {
 }
 
 //─── INIT ────────────────────────────────────────────────────
+//─── WELCOME / LANDING SCREEN ─────────────────────────────────
+function showWelcome() {
+  const streak = getStreak();
+  const due = dueCount();
+  const total = state.questions.length;
+  const seen = state.questions.filter(q => state.progress[q.id]?.seen > 0).length;
+  const returningUser = seen > 0;
+
+  const greeting = returningUser
+    ? `Welcome back${streak.count > 0 ? ` — 🔥 ${streak.count}-day streak` : ''}.`
+    : `Welcome to your CompTIA A+ Core 1 study app.`;
+
+  const subtitle = returningUser
+    ? `${due} card${due === 1 ? '' : 's'} due today · ${seen}/${total} cards seen so far.`
+    : `${total} flashcards built from the questions you missed across your pretests. Spaced repetition brings the tough ones back.`;
+
+  const html = `
+    <div id="welcome-overlay">
+      <div class="welcome-card">
+        <button class="welcome-close" id="welcome-close" aria-label="Close">✕</button>
+        <h2>${greeting}</h2>
+        <p class="welcome-sub">${subtitle}</p>
+
+        <h3>Pick your starting point</h3>
+        <div class="welcome-actions">
+          <button class="welcome-btn primary" data-welcome="due">
+            <span class="wbtn-title">📚 Study due cards</span>
+            <span class="wbtn-sub">${due} due now${streak.today > 0 ? ` · ${streak.today} done today` : ''}</span>
+          </button>
+          <button class="welcome-btn" data-welcome="micro">
+            <span class="wbtn-title">🎯 Just 5 cards</span>
+            <span class="wbtn-sub">A micro-goal. One-and-done ≤ 5 min.</span>
+          </button>
+          <button class="welcome-btn" data-welcome="session15">
+            <span class="wbtn-title">⏱ 15-min focus session</span>
+            <span class="wbtn-sub">Countdown in header. End early anytime.</span>
+          </button>
+          <button class="welcome-btn" data-welcome="reading">
+            <span class="wbtn-title">📖 Read concept sheets</span>
+            <span class="wbtn-sub">No flashcards. Just the fix notes per OBJ.</span>
+          </button>
+          <button class="welcome-btn" data-welcome="stats">
+            <span class="wbtn-title">📊 See my progress</span>
+            <span class="wbtn-sub">Mastery by OBJ, streak, accessibility settings.</span>
+          </button>
+        </div>
+
+        <details class="welcome-help">
+          <summary>How the interface works</summary>
+          <ul>
+            <li><strong>Tap an option</strong> (A/B/C/D) to pick your answer — blue border shows your choice.</li>
+            <li><strong>Tap Reveal</strong> (or press <kbd>Space</kbd>) to check — correct answer highlights green, your wrong pick goes red.</li>
+            <li><strong>Rate</strong> Again / Hard / Good / Easy to schedule next review (spaced repetition).</li>
+            <li><strong>Swipe left</strong> on iPhone (or Skip →) to move on.</li>
+            <li><strong>✏️ Edit</strong> on each card to fix options or add a PBQ image.</li>
+            <li><strong>🔒 Focus Mode</strong> in header (or press <kbd>F</kbd>) hides chrome when overstimulated.</li>
+            <li><strong>🌓 Theme</strong> cycles auto / light / dark. Stats → Accessibility has text size, dyslexic fonts, anxiety mode (hides numbers), high contrast, and more.</li>
+            <li><strong>Apple Pencil</strong>: scratchpad auto-saves per card. On PBQ cards, draw on top of the image to label components from memory.</li>
+          </ul>
+        </details>
+
+        <label class="welcome-dismiss">
+          <input type="checkbox" id="welcome-dismiss-permanent">
+          Don't show this on every load
+        </label>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', html);
+
+  const overlay = $('#welcome-overlay');
+  const close = (action) => {
+    const dismissPerm = $('#welcome-dismiss-permanent')?.checked;
+    if (dismissPerm) localStorage.setItem('welcomeDismissed', '1');
+    overlay.remove();
+    if (action === 'due') { state.filter.due = true; setMode('study'); }
+    else if (action === 'micro') { startSession({ targetCards: 5 }); setMode('study'); }
+    else if (action === 'session15') { startSession({ minutes: 15 }); setMode('study'); }
+    else if (action === 'reading') { setMode('reading'); }
+    else if (action === 'stats') { setMode('stats'); }
+  };
+
+  $('#welcome-close').addEventListener('click', () => close(null));
+  $$('[data-welcome]').forEach(btn =>
+    btn.addEventListener('click', () => close(btn.dataset.welcome))
+  );
+  // Esc closes
+  document.addEventListener('keydown', function escClose(e) {
+    if (e.key === 'Escape' && $('#welcome-overlay')) {
+      close(null);
+      document.removeEventListener('keydown', escClose);
+    }
+  });
+}
+
 async function init() {
   // Prefs / theme / shuffle all load before any render so first paint is correct
   applyPrefs();
@@ -1803,6 +1898,7 @@ async function init() {
 
   $('#theme-btn')?.addEventListener('click', cycleTheme);
   $('#focus-btn')?.addEventListener('click', toggleFocus);
+  $('#help-btn')?.addEventListener('click', showWelcome);
 
   try {
     await loadData();
@@ -1814,6 +1910,12 @@ async function init() {
   installSwipe();
   installKeyboard();
   setMode('study');
+
+  // Show welcome on first visit (or every load until user ticks "don't show again").
+  // Skippable via ?skipWelcome=1 for tests.
+  if (!localStorage.getItem('welcomeDismissed') && !location.search.includes('skipWelcome')) {
+    showWelcome();
+  }
 
   // Register service worker for offline
   if ('serviceWorker' in navigator) {
