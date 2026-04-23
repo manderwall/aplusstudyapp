@@ -863,10 +863,10 @@ function renderStudy() {
       ${renderImageHTML(q)}
       ${renderOptionsHTML(q)}
       ${state.revealed ? `
-        ${renderWrongPickHTML(q, 'study')}
         <div class="card-section right">
           <div class="label">Correct answer & explanation</div>
           ${formatExplanation(q.explanation)}
+          ${renderPretestMissHTML(q)}
         </div>
         <div class="btn-row">
           <button class="action bad" data-rate="again">Again</button>
@@ -1016,10 +1016,10 @@ function renderQuiz() {
       ${renderImageHTML(q)}
       ${renderOptionsHTML(q)}
       ${state.revealed ? `
-        ${renderWrongPickHTML(q, 'quiz')}
         <div class="card-section right">
           <div class="label">Correct answer & explanation</div>
           ${formatExplanation(q.explanation)}
+          ${renderPretestMissHTML(q)}
         </div>
         <div class="btn-row">
           <button class="action bad" data-qa="wrong">I got it wrong</button>
@@ -1793,23 +1793,25 @@ function renderImageHTML(q) {
   return '';
 }
 
-// Render the "wrong pick" callout shown on reveal. Returns '' when there's
-// no wrong-pick data for this card (e.g. p1q36 has been deduped from five
-// pretest versions, so preserving a single per-version wrong pick would be
-// misleading). `mode` is 'study' | 'quiz' — changes the label wording.
-function renderWrongPickHTML(q, mode) {
+// Historical-miss footnote — what the user originally picked when taking
+// the pretest(s) that generated this card. Rendered as a small labeled
+// note AFTER the explanation, not a prominent box above it, so it doesn't
+// compete with "what did I just tap in this session" (which the option-row
+// state colors already show). Returns '' when there's no pretest-miss data.
+function renderPretestMissHTML(q) {
   const picks = Array.isArray(q.wrong_picks) ? q.wrong_picks.filter(Boolean) : [];
   const single = (q.wrong_pick || '').trim();
   if (picks.length === 0 && !single) return '';
-  const label = mode === 'quiz'
-    ? `Common wrong pick${picks.length > 1 ? `s (${picks.length})` : ''}`
-    : `You picked (wrong)${picks.length > 1 ? ` — ${picks.length} different ways` : ''}`;
+  const sources = q.sources || [{ pretest: q.pretest, qnum: q.qnum }];
+  const sourceLabel = sources.length > 1
+    ? `Missed ${sources.length} times — P${sources.map(s => s.pretest).join(', P')}`
+    : `Missed on P${sources[0].pretest}Q${sources[0].qnum}`;
   const body = picks.length > 1
-    ? `<ul class="wrong-picks">${picks.map(w => `<li>${escapeHtml(w)}</li>`).join('')}</ul>`
-    : `<p>${escapeHtml(picks[0] || single)}</p>`;
+    ? picks.map(p => `<span class="pretest-miss-item">${escapeHtml(p)}</span>`).join('')
+    : `<span class="pretest-miss-item">${escapeHtml(picks[0] || single)}</span>`;
   return `
-    <div class="card-section wrong">
-      <div class="label">${label}</div>
+    <div class="pretest-miss">
+      <span class="pretest-miss-label">${escapeHtml(sourceLabel)} — originally picked:</span>
       ${body}
     </div>`;
 }
