@@ -819,73 +819,114 @@ html[data-revealed] .scratchpad-wrap.overlay::before {
   font-size: 12px;
 }
 
-/* Multiple-choice option list (shown when q.options is present) */
+/* Multiple-choice option list. Each row is a flex layout of:
+   [letter badge] [option text, flex:1] [status icon, only after reveal].
+   Distinct visual states drive everything — no prefix text labels like
+   "Your pick ·" to clutter the reveal. */
 .q-options {
-  list-style-position: outside;
-  padding-left: 28px;
+  list-style: none;
+  padding: 0;
   margin: 4px 0 20px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
-.q-options li.q-option {
-  padding: 12px 16px;
+.q-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
   background: var(--surface-2);
   border: 2px solid var(--border);
-  border-radius: 10px;
-  line-height: 1.5;
-  font-size: 16px;
+  border-radius: 12px;
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-  transition: background 0.12s, border-color 0.12s, transform 0.08s;
-  position: relative;
-  min-height: 48px;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s, opacity 0.2s;
+  min-height: 56px;
 }
-.q-options li::marker { color: var(--accent); font-weight: 700; }
-
-/* Pre-reveal: hover + picked (blue) */
-.q-options li.q-option:hover:not(.correct):not(.wrong):not(.yours) {
+.q-option:hover:not(.correct):not(.wrong):not(.revealed-other) {
   border-color: var(--accent);
   background: var(--surface);
 }
-.q-options li.q-option:active { transform: scale(0.98); }
-.q-options li.q-option.picked {
-  border-color: var(--accent);
-  background: rgba(90, 166, 255, 0.16);
+.q-option:active { transform: scale(0.98); }
+
+.q-letter {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 15px;
+  display: grid;
+  place-items: center;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  font-variant-numeric: tabular-nums;
+}
+.q-text {
+  flex: 1;
+  line-height: 1.45;
+  font-size: 16px;
+  color: var(--text);
+  min-width: 0;
+}
+.q-status {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  font-weight: 800;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
-/* Post-reveal: correct (green) + wrong pick (red) */
-.q-options li.q-option.correct {
+/* Pre-reveal picked state — blue accent on both the row and the letter badge */
+.q-option.picked {
+  border-color: var(--accent);
+  background: rgba(90, 166, 255, 0.12);
+}
+.q-option.picked .q-letter {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* Post-reveal: correct answer — green row, green letter badge, ✓ on the right */
+.q-option.correct {
   border-color: var(--good);
-  background: rgba(74, 222, 128, 0.18);
-  color: var(--text);
-  font-weight: 500;
+  background: rgba(74, 222, 128, 0.14);
 }
-.q-options li.q-option.correct::after {
-  content: ' ✓';
-  color: var(--good);
-  font-weight: 700;
-  margin-left: 6px;
+.q-option.correct .q-letter {
+  background: var(--good);
+  border-color: var(--good);
+  color: #08210f;
 }
-.q-options li.q-option.wrong {
+.q-option.correct .q-status { opacity: 1; color: var(--good); }
+.q-option.correct .q-status::before { content: '✓'; }
+
+/* Post-reveal: your wrong pick — red row, red letter badge, ✕ on the right */
+.q-option.wrong {
   border-color: var(--bad);
-  background: rgba(248, 113, 113, 0.18);
+  background: rgba(248, 113, 113, 0.14);
 }
-.q-options li.q-option.wrong::after {
-  content: ' ✗';
-  color: var(--bad);
-  font-weight: 700;
-  margin-left: 6px;
+.q-option.wrong .q-letter {
+  background: var(--bad);
+  border-color: var(--bad);
+  color: #fff;
 }
-.q-options li.q-option.yours:not(.correct)::before {
-  content: 'Your pick · ';
-  font-size: 11px;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
-  margin-right: 4px;
+.q-option.wrong .q-status { opacity: 1; color: var(--bad); }
+.q-option.wrong .q-status::before { content: '✕'; }
+
+/* Post-reveal: the other options (not correct, not your pick) fade back so
+   the eye goes straight to the two that matter. */
+.q-option.revealed-other {
+  opacity: 0.55;
+  cursor: default;
 }
 
 /* Reading mode */
@@ -1307,9 +1348,11 @@ html[data-motion="reduced"] .mascot.celebrate { animation: none !important; }
   /* Prev button takes less room on narrow */
   #prev-btn { flex-basis: calc(50% - 4px); }
 
-  /* Options list: less indent, smaller text */
-  .q-options { padding-left: 22px; }
-  .q-options li { font-size: 15px; padding: 9px 12px; }
+  /* Options list: tighter padding + smaller text on narrow screens */
+  .q-option { padding: 11px 12px; gap: 11px; min-height: 50px; }
+  .q-letter { width: 30px; height: 30px; font-size: 14px; }
+  .q-text { font-size: 15px; }
+  .q-status { width: 22px; height: 22px; font-size: 16px; }
 
   /* Reading mode: less side padding */
   .reading-list .obj-section { padding: 16px; }

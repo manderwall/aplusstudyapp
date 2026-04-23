@@ -1827,31 +1827,42 @@ function renderOptionsHTML(q) {
   const isCorrect = (opt) => correctSet.has(norm(opt));
   const cls = (opt) => {
     const c = ['q-option'];
+    const correct = isCorrect(opt);
+    const isPicked = picked === opt;
     if (!state.revealed) {
-      if (picked === opt) c.push('picked');
+      if (isPicked) c.push('picked');
     } else {
-      if (isCorrect(opt)) c.push('correct');
-      else if (picked === opt) c.push('wrong');
-      if (picked === opt) c.push('yours');
+      if (correct) c.push('correct');
+      else if (isPicked) c.push('wrong');
+      if (!correct && !isPicked) c.push('revealed-other');
     }
     return c.join(' ');
   };
+  const LETTERS = 'ABCDEFGHIJ';
   // role=radio + aria-checked makes screen readers announce each option as a
   // choice; tabindex lets keyboard users focus the first option and arrow
-  // through the rest (see attachOptionEvents).
+  // through the rest (see attachOptionEvents). The letter badge + text +
+  // status icon are separate spans so the three regions can size and style
+  // independently without relying on ::marker / ::before pseudo-elements.
   return `
-    <ol class="q-options" type="A" role="radiogroup" aria-label="Answer choices">
+    <ol class="q-options" role="radiogroup" aria-label="Answer choices">
       ${q.options.map((opt, i) => {
         const checked = picked === opt;
         const tab = (picked ? checked : i === 0) ? 0 : -1;
+        const correct = isCorrect(opt);
         const describe = state.revealed
-          ? (isCorrect(opt) ? ' (correct answer)' : checked ? ' (your pick, incorrect)' : '')
+          ? (correct ? ' (correct answer)' : checked ? ' (your pick, incorrect)' : '')
           : '';
+        const letter = LETTERS[i] || String(i + 1);
         return `<li class="${cls(opt)}" role="radio"
             aria-checked="${checked ? 'true' : 'false'}"
             tabindex="${tab}"
             data-option="${escapeHtml(opt)}"
-            aria-label="${escapeHtml(opt + describe)}">${escapeHtml(opt)}</li>`;
+            aria-label="${escapeHtml(letter + '. ' + opt + describe)}">
+          <span class="q-letter" aria-hidden="true">${letter}</span>
+          <span class="q-text">${escapeHtml(opt)}</span>
+          <span class="q-status" aria-hidden="true"></span>
+        </li>`;
       }).join('')}
     </ol>`;
 }
