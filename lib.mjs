@@ -54,6 +54,27 @@ export function normalizeOption(s) {
   return (s || '').toLowerCase().trim().replace(/\s+/g, ' ');
 }
 
+// Return a stable shuffled copy of options for a given question ID.
+// Using the ID as a seed means the order is always the same for the same
+// card (so Prev → card looks the same as the first visit), but differs
+// between cards so the correct answer isn't always in the same slot.
+export function shuffleOptionsForCard(options, qid) {
+  if (!Array.isArray(options) || options.length < 2) return options;
+  // Hash the string ID into a 32-bit integer seed
+  let h = 0x811c9dc5;
+  for (let i = 0; i < qid.length; i++) {
+    h ^= qid.charCodeAt(i);
+    h = (Math.imul(h, 0x01000193) >>> 0);
+  }
+  const rng = rngFromSeed(h);
+  const out = options.slice();
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
 // Format a raw explanation blob into a scannable layout:
 // - Strip redundant "OBJ X.X:" prefix (already shown as a tag)
 // - Break into paragraphs (every 2 sentences) so it's not a wall of text

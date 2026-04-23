@@ -6,6 +6,7 @@ import {
   defaultProgress, migrateProgress, schedule,
   escapeHtml, normalizeOption, formatExplanation,
   orderDeck, nextIntervalLabel, recommendedRating,
+  shuffleOptionsForCard,
 } from './lib.mjs';
 import {
   randomSaltB64, deriveKey, encryptJSON, decryptJSON, isEncryptedBlob,
@@ -1862,6 +1863,9 @@ function renderRatingButtonsHTML(q) {
 
 function renderOptionsHTML(q) {
   if (!Array.isArray(q.options) || q.options.length === 0) return '';
+  // Shuffle options into a stable per-card order so the correct answer isn't
+  // always in the same slot, but the layout doesn't change on re-renders.
+  const options = shuffleOptionsForCard(q.options, q.id);
   const picked = state.selectedOption;
   const norm = (s) => (s || '').toLowerCase().trim().replace(/\s+/g, ' ');
   // Multiple Answer questions use correct_picks (array); single-answer uses correct_short.
@@ -1892,7 +1896,7 @@ function renderOptionsHTML(q) {
   // independently without relying on ::marker / ::before pseudo-elements.
   return `
     <ol class="q-options" role="radiogroup" aria-label="Answer choices">
-      ${q.options.map((opt, i) => {
+      ${options.map((opt, i) => {
         const checked = picked === opt;
         const tab = (picked ? checked : i === 0) ? 0 : -1;
         const correct = isCorrect(opt);

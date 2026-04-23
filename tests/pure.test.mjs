@@ -7,6 +7,7 @@ import {
   defaultProgress, migrateProgress, schedule,
   escapeHtml, normalizeOption, formatExplanation,
   orderDeck, nextIntervalLabel, recommendedRating,
+  shuffleOptionsForCard,
 } from '../lib.mjs';
 
 const NOW = 1_700_000_000_000;  // fixed for deterministic assertions
@@ -215,4 +216,35 @@ test('recommendedRating: wrong pick → again', () => {
 test('recommendedRating: no pick → hard', () => {
   assert.equal(recommendedRating({ picked: null, correct: 'Cable modem' }), 'hard');
   assert.equal(recommendedRating({ picked: '', correct: 'Cable modem' }), 'hard');
+});
+
+//─── shuffleOptionsForCard ──────────────────────────────────────────────
+
+test('shuffleOptionsForCard: preserves all options, no loss or duplication', () => {
+  const opts = ['Alpha', 'Beta', 'Gamma', 'Delta'];
+  const out = shuffleOptionsForCard(opts, 'p1q3');
+  assert.equal(out.length, 4);
+  assert.deepEqual(new Set(out), new Set(opts));
+});
+
+test('shuffleOptionsForCard: stable — same qid always produces same order', () => {
+  const opts = ['Alpha', 'Beta', 'Gamma', 'Delta'];
+  const a = shuffleOptionsForCard(opts, 'p1q3');
+  const b = shuffleOptionsForCard(opts, 'p1q3');
+  assert.deepEqual(a, b);
+});
+
+test('shuffleOptionsForCard: different qids produce different orders (for this set)', () => {
+  const opts = ['Alpha', 'Beta', 'Gamma', 'Delta'];
+  const a = shuffleOptionsForCard(opts, 'p1q3');
+  const b = shuffleOptionsForCard(opts, 'p1q7');
+  // While not guaranteed for all inputs, a 4-item shuffle has 23 other orderings
+  assert.notDeepEqual(a, b);
+});
+
+test('shuffleOptionsForCard: does not mutate the original array', () => {
+  const opts = ['Alpha', 'Beta', 'Gamma', 'Delta'];
+  const original = opts.slice();
+  shuffleOptionsForCard(opts, 'p1q3');
+  assert.deepEqual(opts, original);
 });
