@@ -4,7 +4,7 @@
 import {
   MIN, DAY, MAX_INTERVAL_DAYS,
   defaultProgress, migrateProgress, schedule,
-  escapeHtml, normalizeOption, formatExplanation,
+  escapeHtml, normalizeOption, formatExplanation, formatQuestion,
   orderDeck, nextIntervalLabel, recommendedRating,
   shuffleOptionsForCard,
 } from './lib.mjs';
@@ -859,8 +859,9 @@ function renderStudy() {
         ${prog.seen > 0 ? `<span class="tag numeric">Seen ${prog.seen}×</span>` : ''}
         ${edited ? '<span class="tag edited">✏️ Edited</span>' : ''}
         <button class="tag tag-btn" id="edit-btn" title="Add/edit options and image">✏️ Edit</button>
+        ${speechSupported() ? '<button class="tag tag-btn" id="speak-btn" aria-pressed="false" title="Read the question aloud">🔈 Listen</button>' : ''}
       </div>
-      <div class="card-question">${escapeHtml(q.question)}</div>
+      <div class="card-question">${formatQuestion(q.question)}</div>
       ${renderImageHTML(q)}
       ${renderOptionsHTML(q)}
       ${state.revealed ? `
@@ -886,10 +887,12 @@ function renderStudy() {
 }
 
 function attachStudyEvents(q) {
+  $('#speak-btn')?.addEventListener('click', () => speakCard(q, { revealed: state.revealed }));
   const reveal = $('#reveal-btn');
   if (reveal) reveal.addEventListener('click', () => {
     state.revealed = true;
     state._revealedAt = Date.now();  // timestamp so rating buttons ignore ghost clicks
+    stopSpeaking();
     renderStudy();
   });
   const skip = $('#skip-btn');
@@ -968,6 +971,7 @@ function recordRating(qid, rate) {
 function nextQuestion() {
   const qs = filteredQuestions();
   state.revealed = false;
+  stopSpeaking();
   state.selectedOption = null;
   state.selectedOptions = [];
   if (qs.length === 0) { renderStudy(); return; }
@@ -980,6 +984,7 @@ function nextQuestion() {
 function prevQuestion() {
   const qs = filteredQuestions();
   state.revealed = false;
+  stopSpeaking();
   state.selectedOption = null;
   state.selectedOptions = [];
   if (qs.length === 0) { renderStudy(); return; }
@@ -1034,8 +1039,9 @@ function renderQuiz() {
         ${accuracy !== null ? `<span class="tag numeric">${accuracy}% (${prog.correct}/${prog.seen})</span>` : ''}
         ${edited ? '<span class="tag edited">✏️ Edited</span>' : ''}
         <button class="tag tag-btn" id="edit-btn" title="Add/edit options and image">✏️ Edit</button>
+        ${speechSupported() ? '<button class="tag tag-btn" id="speak-btn" aria-pressed="false" title="Read the question aloud">🔈 Listen</button>' : ''}
       </div>
-      <div class="card-question">${escapeHtml(q.question)}</div>
+      <div class="card-question">${formatQuestion(q.question)}</div>
       ${renderImageHTML(q)}
       ${renderOptionsHTML(q)}
       ${state.revealed ? `
@@ -1062,8 +1068,9 @@ function renderQuiz() {
   `;
   renderFilterBar();
   updateHUD();
+  $('#speak-btn')?.addEventListener('click', () => speakCard(q, { revealed: state.revealed }));
   const reveal = $('#reveal-btn');
-  if (reveal) reveal.addEventListener('click', () => { state.revealed = true; renderQuiz(); });
+  if (reveal) reveal.addEventListener('click', () => { state.revealed = true; stopSpeaking(); renderQuiz(); });
   const skip = $('#skip-btn');
   if (skip) skip.addEventListener('click', () => { nextQuizQuestion(); });
   const prev = $('#prev-btn');
@@ -1088,6 +1095,7 @@ function renderQuiz() {
 function nextQuizQuestion() {
   const qs = filteredQuestions();
   state.revealed = false;
+  stopSpeaking();
   state.selectedOption = null;
   state.selectedOptions = [];
   if (qs.length === 0) { renderQuiz(); return; }
@@ -1100,6 +1108,7 @@ function nextQuizQuestion() {
 function prevQuizQuestion() {
   const qs = filteredQuestions();
   state.revealed = false;
+  stopSpeaking();
   state.selectedOption = null;
   state.selectedOptions = [];
   if (qs.length === 0) { renderQuiz(); return; }
@@ -2187,6 +2196,64 @@ function disableShake() {
   _shakeInstalled = false;
 }
 
+//─── READ ALOUD (Web Speech API) ─────────────────────────────
+// Speaks the question, lettered options, and — if revealed — the correct
+// answer + explanation. Toggles off on a second click. Cancels automatically
+// on card change. Hidden when speechSynthesis isn't available.
+const speech = {
+  supported: typeof window !== 'undefined' && 'speechSynthesis' in window,
+  speakingForQ: null,   // question id currently being read, or null
+};
+
+function speechSupported() {
+  return speech.supported && window.speechSynthesis;
+}
+
+function stopSpeaking() {
+  if (!speechSupported()) return;
+  window.speechSynthesis.cancel();
+  speech.speakingForQ = null;
+  const btn = document.querySelector('#speak-btn');
+  if (btn) { btn.textContent = '🔈 Listen'; btn.setAttribute('aria-pressed', 'false'); }
+}
+
+function speakCard(q, { revealed } = {}) {
+  if (!speechSupported()) return;
+  // Toggle off if tapping while speaking the same card
+  if (speech.speakingForQ === q.id) { stopSpeaking(); return; }
+  stopSpeaking();
+
+  const LETTERS = 'ABCDEFGHIJ';
+  const options = shuffleOptionsForCard(q.options || [], q.id);
+  const parts = [q.question];
+  if (options.length) {
+    parts.push(
+      options.map((o, i) => `Option ${LETTERS[i] || i + 1}: ${o}`).join('. ')
+    );
+  }
+  if (revealed) {
+    if (q.correct_short) parts.push(`Correct answer: ${q.correct_short}.`);
+    if (Array.isArray(q.correct_picks) && q.correct_picks.length) {
+      parts.push(`Correct answers: ${q.correct_picks.join(', ')}.`);
+    }
+    if (q.explanation) {
+      parts.push(q.explanation.replace(/^OBJ \d+\.\d+:\s*/i, '').trim());
+    }
+  }
+  const text = parts.join('. ');
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.rate = 1.0;
+  utter.pitch = 1.0;
+  utter.onend = () => {
+    if (speech.speakingForQ === q.id) stopSpeaking();
+  };
+  utter.onerror = () => stopSpeaking();
+  speech.speakingForQ = q.id;
+  window.speechSynthesis.speak(utter);
+  const btn = document.querySelector('#speak-btn');
+  if (btn) { btn.textContent = '⏹ Stop'; btn.setAttribute('aria-pressed', 'true'); }
+}
+
 //─── FOCUS MODE ──────────────────────────────────────────────
 function toggleFocus() {
   state.focus = !state.focus;
@@ -2194,8 +2261,10 @@ function toggleFocus() {
   haptic(5);
   const btn = $('#focus-btn');
   if (btn) {
-    btn.textContent = state.focus ? '🔓' : '🔒';
+    // Closed lock = focus mode engaged (chrome hidden); open lock = normal view.
+    btn.textContent = state.focus ? '🔒' : '🔓';
     btn.setAttribute('aria-pressed', state.focus ? 'true' : 'false');
+    btn.setAttribute('aria-label', state.focus ? 'Exit focus mode' : 'Enter focus mode');
   }
 }
 
@@ -2880,7 +2949,7 @@ function showWelcome() {
     else if (action === 'reading')   { setMode('reading'); }
     else if (action === 'stats')     { setMode('stats'); }
     // For Study-focused actions, auto-enter Focus Mode: hides tab bar, filter
-    // bar, HUD, and card meta so it's just the card. Exit with F or the 🔓 button.
+    // bar, HUD, and card meta so it's just the card. Exit with F or the 🔒 button.
     if (studyActions.has(action) && !state.focus) toggleFocus();
   };
 

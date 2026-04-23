@@ -553,7 +553,12 @@ html[data-motion="reduced"] .card.card-fresh { animation: none; }
   font-size: 19px;
   line-height: 1.55;
   margin-bottom: 20px;
-  white-space: pre-wrap;
+}
+.card-question .q-para {
+  margin: 0 0 12px;
+}
+.card-question .q-para:last-child {
+  margin-bottom: 0;
 }
 
 .card-section {

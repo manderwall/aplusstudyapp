@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import {
   MIN, DAY, MAX_INTERVAL_DAYS,
   defaultProgress, migrateProgress, schedule,
-  escapeHtml, normalizeOption, formatExplanation,
+  escapeHtml, normalizeOption, formatExplanation, formatQuestion,
   orderDeck, nextIntervalLabel, recommendedRating,
   shuffleOptionsForCard,
 } from '../lib.mjs';
@@ -247,4 +247,30 @@ test('shuffleOptionsForCard: does not mutate the original array', () => {
   const original = opts.slice();
   shuffleOptionsForCard(opts, 'p1q3');
   assert.deepEqual(opts, original);
+});
+
+//─── formatQuestion ──────────────────────────────────────────────────────
+
+test('formatQuestion: short question stays a single paragraph', () => {
+  const out = formatQuestion('What is DNS? It maps names to IPs.');
+  assert.equal(out.match(/<p class="q-para">/g).length, 1);
+  assert.ok(out.includes('What is DNS?'));
+});
+
+test('formatQuestion: long question splits into multiple paragraphs', () => {
+  const text = 'First sentence. Second sentence here. Third one follows. Fourth ends the thought.';
+  const out = formatQuestion(text);
+  const paras = out.match(/<p class="q-para">/g) || [];
+  assert.ok(paras.length >= 2, `expected ≥2 paragraphs, got ${paras.length}`);
+});
+
+test('formatQuestion: escapes HTML in the input', () => {
+  const out = formatQuestion('<script>alert(1)</script>');
+  assert.ok(out.includes('&lt;script&gt;'));
+  assert.ok(!out.includes('<script>'));
+});
+
+test('formatQuestion: empty input → empty output', () => {
+  assert.equal(formatQuestion(''), '');
+  assert.equal(formatQuestion(null), '');
 });

@@ -75,11 +75,6 @@ export function shuffleOptionsForCard(options, qid) {
   return out;
 }
 
-// Format a raw explanation blob into a scannable layout:
-// - Strip redundant "OBJ X.X:" prefix (already shown as a tag)
-// - Break into paragraphs (every 2 sentences) so it's not a wall of text
-// - Pull "For the exam..." into its own callout at the bottom
-// - Give the first paragraph a lead style so the answer stands out
 // Deterministic mulberry32 PRNG so a given seed produces the same card order
 // within a session (stable Prev/Next) but a different order next session.
 export function rngFromSeed(seed) {
@@ -187,4 +182,21 @@ export function formatExplanation(text) {
     body += `<div class="expl-tip"><strong>💡 For the exam</strong><p>${mdBold(tip)}</p></div>`;
   }
   return body;
+}
+
+// Break a long question into paragraphs every 2 sentences so it's scannable
+// rather than a wall of text. Short questions (≤2 sentences) are left as a
+// single block so they don't get unnecessary padding.
+export function formatQuestion(text) {
+  if (!text) return '';
+  const t = text.trim();
+  const sentences = t.split(/(?<=[.!?])\s+(?=[A-Z])/);
+  if (sentences.length <= 2) {
+    return `<p class="q-para">${escapeHtml(t)}</p>`;
+  }
+  const paras = [];
+  for (let i = 0; i < sentences.length; i += 2) {
+    paras.push(sentences.slice(i, i + 2).join(' ').trim());
+  }
+  return paras.map(p => `<p class="q-para">${escapeHtml(p)}</p>`).join('');
 }
