@@ -2159,7 +2159,7 @@
     "qtype": "Multiple Choice",
     "question": "Which of the following ports should you unblock at the firewall if your workstation cannot access diontraining.com but can access the website by its IP address?",
     "wrong_pick": "80",
-    "correct_short": "443",
+    "correct_short": "53",
     "explanation": "OBJ 2.1: The Domain Name System (DNS) servers provide resolution of host and domain names to their IP addresses and are essential for locating resources on the Internet. Most local networks also use DNS for name resolution. Typically, the DNS server would be the gateway address, though this may not be the case on all networks. Often two DNS server addresses (preferred and alternate) are specified for redundancy. DNS operates over TCP/UDP port 53, and if that is blocked, the client will be unable to convert the domain name (diontraining.com) to its IP address. The hypertext transfer protocol (HTTP) is a protocol used to provide web content to browsers using port 80. The hypertext transfer protocol secure (HTTPS) is a secure protocol used to provide web content to browsers using SSL/TLS encryption over port 443. The dynamic host control protocol (DHCP) is a protocol used to allocate IP addresses to a host when it joins a network. DHCP utilizes UDP ports 67 and 68.",
     "sources": [
       {
