@@ -1047,17 +1047,6 @@ html[data-revealed] .scratchpad-wrap.overlay::before {
 /* ─── Kawaii mascot ─── */
 .mascot { width: 96px; height: 96px; display: block; }
 .mascot .mascot-body { fill: #ffc9df; stroke: #ff87b2; stroke-width: 2.5; }
-/* Wave pivot is the bottom-left of the paw's bounding box (where it joins
-   the body). transform-box: fill-box makes transform-origin percentages
-   relative to the <circle>'s own box so Safari + Firefox agree. */
-.mascot .mascot-paw  {
-  fill: #ffc9df;
-  stroke: #ff87b2;
-  stroke-width: 2.5;
-  transform-box: fill-box;
-  transform-origin: 0% 100%;
-  animation: mascotWave 1.8s ease-in-out infinite;
-}
 .mascot .mascot-eye { fill: #3b2c3f; }
 .mascot .mascot-eye-happy { stroke: #3b2c3f; stroke-width: 2.2; stroke-linecap: round; }
 .mascot .mascot-eye-closed { stroke: #3b2c3f; stroke-width: 2; stroke-linecap: round; }
@@ -1080,16 +1069,11 @@ html[data-revealed] .scratchpad-wrap.overlay::before {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-4px) scale(1.03); }
 }
-@keyframes mascotWave {
-  0%, 100% { transform: rotate(-10deg); }
-  50%       { transform: rotate(20deg); }
-}
 /* Respect reduce-motion preference: mascot holds still */
 html[data-motion="reduced"] .mascot .mascot-sparkles path,
-html[data-motion="reduced"] .mascot .mascot-paw,
 html[data-motion="reduced"] .mascot.celebrate { animation: none !important; }
 @media (prefers-reduced-motion: reduce) {
-  .mascot .mascot-sparkles path, .mascot .mascot-paw, .mascot.celebrate { animation: none !important; }
+  .mascot .mascot-sparkles path, .mascot.celebrate { animation: none !important; }
 }
 
 /* Welcome-screen mascot: centered above title */

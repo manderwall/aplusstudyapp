@@ -451,19 +451,26 @@ function scheduleAutoSync() {
 const MASCOT_SVG = {
   wave: `<svg class="mascot" viewBox="0 0 120 120" aria-hidden="true">
     <g class="mascot-sparkles">
-      <path d="M14 28 L16 33 L21 35 L16 37 L14 42 L12 37 L7 35 L12 33 Z"/>
-      <path d="M102 22 L103 26 L107 27 L103 28 L102 32 L101 28 L97 27 L101 26 Z"/>
-      <path d="M98 96 L100 101 L105 103 L100 104 L98 109 L96 104 L91 103 L96 101 Z"/>
+      <path d="M10 26 L12 31 L17 33 L12 35 L10 40 L8 35 L3 33 L8 31 Z"/>
+      <path d="M106 26 L108 31 L113 33 L108 35 L106 40 L104 35 L99 33 L104 31 Z"/>
+      <path d="M60 6 L62 10 L66 11 L62 12 L60 16 L58 12 L54 11 L58 10 Z"/>
     </g>
-    <circle class="mascot-body" cx="56" cy="68" r="36"/>
-    <circle class="mascot-paw" cx="103" cy="44" r="11"/>
-    <circle class="mascot-eye" cx="44" cy="62" r="3.5"/>
-    <circle class="mascot-eye" cx="68" cy="62" r="3.5"/>
-    <circle class="mascot-shine" cx="45.2" cy="60.3" r="1.1"/>
-    <circle class="mascot-shine" cx="69.2" cy="60.3" r="1.1"/>
-    <ellipse class="mascot-blush" cx="38" cy="74" rx="5" ry="2.4"/>
-    <ellipse class="mascot-blush" cx="74" cy="74" rx="5" ry="2.4"/>
-    <path class="mascot-smile" d="M49 78 Q56 84 63 78" fill="none"/>
+    <!-- Left arm raised high — stroked path from shoulder to hand -->
+    <path d="M36 62 Q22 40 14 28" fill="none" stroke="#ffc9df" stroke-width="13" stroke-linecap="round"/>
+    <circle fill="#ffc9df" stroke="#ff87b2" stroke-width="2.5" cx="14" cy="28" r="8"/>
+    <!-- Right arm raised high — mirror of the left -->
+    <path d="M84 62 Q98 40 106 28" fill="none" stroke="#ffc9df" stroke-width="13" stroke-linecap="round"/>
+    <circle fill="#ffc9df" stroke="#ff87b2" stroke-width="2.5" cx="106" cy="28" r="8"/>
+    <!-- Body/head: one big friendly circle -->
+    <circle class="mascot-body" cx="60" cy="70" r="34"/>
+    <!-- Face sits centered on the body -->
+    <circle class="mascot-eye" cx="49" cy="66" r="3.5"/>
+    <circle class="mascot-eye" cx="71" cy="66" r="3.5"/>
+    <circle class="mascot-shine" cx="50.2" cy="64.3" r="1.1"/>
+    <circle class="mascot-shine" cx="72.2" cy="64.3" r="1.1"/>
+    <ellipse class="mascot-blush" cx="42" cy="76" rx="5" ry="2.4"/>
+    <ellipse class="mascot-blush" cx="78" cy="76" rx="5" ry="2.4"/>
+    <path class="mascot-smile" d="M52 80 Q60 86 68 80" fill="none"/>
   </svg>`,
 
   celebrate: `<svg class="mascot celebrate" viewBox="0 0 120 120" aria-hidden="true">
