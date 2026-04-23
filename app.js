@@ -235,7 +235,61 @@ function scheduleAutoSync() {
   }, 5000);
 }
 
-//─── INDEXEDDB (progress + overrides + drawings persistence) ──
+//─── KAWAII SVG MASCOTS (inline, so they work offline + theme-aware) ──
+// One tiny round creature in three moods. Colors pull from CSS vars so
+// they shift with theme/high-contrast/anxiety settings.
+const MASCOT_SVG = {
+  wave: `<svg class="mascot" viewBox="0 0 120 120" aria-hidden="true">
+    <g class="mascot-sparkles"><path d="M14 28 L16 34 L22 36 L16 38 L14 44 L12 38 L6 36 L12 34 Z"/><path d="M100 18 L101 22 L105 23 L101 24 L100 28 L99 24 L95 23 L99 22 Z"/><path d="M104 90 L106 96 L112 98 L106 100 L104 106 L102 100 L96 98 L102 96 Z"/></g>
+    <g class="mascot-body"><ellipse cx="60" cy="72" rx="32" ry="26"/><circle cx="36" cy="62" r="16"/><circle cx="84" cy="62" r="16"/><circle cx="60" cy="50" r="20"/></g>
+    <ellipse class="mascot-eye" cx="50" cy="62" rx="4" ry="5"/><ellipse class="mascot-eye" cx="70" cy="62" rx="4" ry="5"/>
+    <circle class="mascot-shine" cx="51" cy="59" r="1.5"/><circle class="mascot-shine" cx="71" cy="59" r="1.5"/>
+    <ellipse class="mascot-blush" cx="43" cy="72" rx="4.5" ry="2.2"/><ellipse class="mascot-blush" cx="77" cy="72" rx="4.5" ry="2.2"/>
+    <path class="mascot-smile" d="M54 74 Q60 79 66 74" fill="none"/>
+  </svg>`,
+
+  celebrate: `<svg class="mascot celebrate" viewBox="0 0 120 120" aria-hidden="true">
+    <g class="mascot-sparkles">
+      <path d="M14 28 L16 34 L22 36 L16 38 L14 44 L12 38 L6 36 L12 34 Z"/>
+      <path d="M100 18 L101 22 L105 23 L101 24 L100 28 L99 24 L95 23 L99 22 Z"/>
+      <path d="M104 90 L106 96 L112 98 L106 100 L104 106 L102 100 L96 98 L102 96 Z"/>
+      <path d="M20 92 L21 96 L25 97 L21 98 L20 102 L19 98 L15 97 L19 96 Z"/>
+    </g>
+    <g class="mascot-body"><ellipse cx="60" cy="72" rx="32" ry="26"/><circle cx="36" cy="62" r="16"/><circle cx="84" cy="62" r="16"/><circle cx="60" cy="50" r="20"/></g>
+    <path class="mascot-eye-happy" d="M46 62 Q50 57 54 62" fill="none"/>
+    <path class="mascot-eye-happy" d="M66 62 Q70 57 74 62" fill="none"/>
+    <ellipse class="mascot-blush" cx="43" cy="72" rx="4.5" ry="2.2"/><ellipse class="mascot-blush" cx="77" cy="72" rx="4.5" ry="2.2"/>
+    <path class="mascot-smile" d="M52 74 Q60 82 68 74" fill="none"/>
+    <!-- party confetti floating up -->
+    <rect x="28" y="14" width="3" height="6" fill="#ffd700" transform="rotate(15 29 17)"/>
+    <rect x="88" y="14" width="3" height="6" fill="#ff80ab" transform="rotate(-15 89 17)"/>
+    <circle cx="58" cy="12" r="2" fill="#80d8ff"/>
+  </svg>`,
+
+  sleep: `<svg class="mascot" viewBox="0 0 120 120" aria-hidden="true">
+    <text x="88" y="22" class="mascot-z">z</text><text x="96" y="34" class="mascot-z" font-size="10">z</text><text x="102" y="42" class="mascot-z" font-size="7">z</text>
+    <g class="mascot-body"><ellipse cx="60" cy="72" rx="32" ry="26"/><circle cx="36" cy="62" r="16"/><circle cx="84" cy="62" r="16"/><circle cx="60" cy="50" r="20"/></g>
+    <path class="mascot-eye-closed" d="M46 62 Q50 66 54 62" fill="none"/>
+    <path class="mascot-eye-closed" d="M66 62 Q70 66 74 62" fill="none"/>
+    <ellipse class="mascot-blush" cx="43" cy="72" rx="4.5" ry="2.2"/><ellipse class="mascot-blush" cx="77" cy="72" rx="4.5" ry="2.2"/>
+    <path class="mascot-smile" d="M55 74 Q60 76 65 74" fill="none"/>
+  </svg>`,
+};
+
+// Expose SVG fallbacks so `<img onerror>` handlers can reach them.
+window.__MASCOT_SVG__ = MASCOT_SVG;
+
+// Try a PNG at images/kawaii/{mood}.png first; fall back to inline SVG on error.
+// Drop a PNG with that name in the repo and it'll replace the SVG automatically.
+function MASCOT(mood) {
+  const key = mood in MASCOT_SVG ? mood : 'sleep';
+  const png = `images/kawaii/${key}.png`;
+  const fallback = MASCOT_SVG[key].replace(/"/g, '&quot;').replace(/\n\s*/g, ' ');
+  return `<img class="mascot mascot-png" src="${png}" alt="" aria-hidden="true"
+    onerror="const d=document.createElement('div');d.innerHTML=this.getAttribute('data-fallback');this.replaceWith(d.firstElementChild);"
+    data-fallback="${fallback}">`;
+}
+
 const DB_NAME = 'aplus-study';
 const DB_VERSION = 3;
 const STORE = 'progress';
@@ -439,7 +493,12 @@ function renderStudy() {
   $('#mode-title').textContent = 'Study';
   const qs = filteredQuestions();
   if (qs.length === 0) {
-    $('#main').innerHTML = emptyHTML('No questions', 'Pick an objective below or clear the filter.');
+    const msg = state.filter.due
+      ? ['✨ All caught up!', 'No cards due right now — come back later, or tap Due again to turn it off and study anything.', 'celebrate']
+      : state.filter.search
+      ? ['Hmm, nothing matches', `Nothing for "${escape(state.filter.search)}". Try a different word or clear the search.`, 'sleep']
+      : ['No questions', 'Pick an objective below or clear the filter.', 'sleep'];
+    $('#main').innerHTML = filterBarHTML() + emptyHTML(msg[0], msg[1], msg[2]);
     renderFilterBar();
     return;
   }
@@ -570,7 +629,12 @@ function renderQuiz() {
   $('#mode-title').textContent = 'Quiz';
   const qs = filteredQuestions();
   if (qs.length === 0) {
-    $('#main').innerHTML = emptyHTML('No questions', 'Pick an objective or clear the filter.');
+    const msg = state.filter.due
+      ? ['✨ All caught up!', 'Nothing due for Quiz — tap Due to turn it off and pick anything.', 'celebrate']
+      : state.filter.search
+      ? ['Hmm, nothing matches', `No match for "${escape(state.filter.search)}" — try another word.`, 'sleep']
+      : ['No questions', 'Pick an objective or clear the filter.', 'sleep'];
+    $('#main').innerHTML = filterBarHTML() + emptyHTML(msg[0], msg[1], msg[2]);
     renderFilterBar();
     return;
   }
@@ -1382,9 +1446,9 @@ function formatExplanation(text) {
   return body;
 }
 
-function emptyHTML(title, sub) {
+function emptyHTML(title, sub, mood = 'sleep') {
   return `<div class="empty-state">
-    <div class="icon">📭</div>
+    <div class="empty-mascot">${MASCOT(mood)}</div>
     <h3>${title}</h3>
     <p>${sub}</p>
   </div>`;
@@ -1809,6 +1873,7 @@ function showWelcome() {
     <div id="welcome-overlay">
       <div class="welcome-card">
         <button class="welcome-close" id="welcome-close" aria-label="Close">✕</button>
+        <div class="welcome-mascot">${MASCOT(returningUser && streak.count > 0 ? 'celebrate' : 'wave')}</div>
         <h2>${greeting}</h2>
         <p class="welcome-sub">${subtitle}</p>
 

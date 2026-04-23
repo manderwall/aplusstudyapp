@@ -935,12 +935,55 @@ button.action.bad { background: var(--bad); color: #fff; border-color: var(--bad
 /* Empty state */
 .empty-state {
   text-align: center;
-  padding: 60px 20px;
+  padding: 40px 20px;
   color: var(--text-dim);
 }
-
-.empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+.empty-state .empty-mascot { display: flex; justify-content: center; margin-bottom: 12px; }
+.empty-state .empty-mascot .mascot { width: 120px; height: 120px; }
 .empty-state h3 { font-size: 18px; margin-bottom: 8px; color: var(--text); }
+.empty-state p { max-width: 360px; margin: 0 auto; line-height: 1.5; }
+
+/* ─── Kawaii mascot ─── */
+.mascot { width: 96px; height: 96px; display: block; object-fit: contain; }
+img.mascot.mascot-png { background: transparent; }
+.mascot .mascot-body { fill: #ffc9df; stroke: #ff87b2; stroke-width: 2.5; }
+.mascot .mascot-eye { fill: #3b2c3f; }
+.mascot .mascot-eye-happy { stroke: #3b2c3f; stroke-width: 2.2; stroke-linecap: round; }
+.mascot .mascot-eye-closed { stroke: #3b2c3f; stroke-width: 2; stroke-linecap: round; }
+.mascot .mascot-shine { fill: #fff; }
+.mascot .mascot-blush { fill: #ff6b9a; opacity: 0.45; }
+.mascot .mascot-smile { stroke: #3b2c3f; stroke-width: 2; stroke-linecap: round; }
+.mascot .mascot-sparkles { fill: #ffd93d; }
+.mascot .mascot-sparkles path { animation: mascotSparkle 1.8s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+.mascot .mascot-sparkles path:nth-child(2) { animation-delay: 0.4s; }
+.mascot .mascot-sparkles path:nth-child(3) { animation-delay: 0.9s; }
+.mascot .mascot-sparkles path:nth-child(4) { animation-delay: 1.2s; }
+.mascot .mascot-z { fill: #a0a0a0; font-family: ui-rounded, system-ui, sans-serif; font-size: 14px; font-weight: 700; }
+.mascot.celebrate { animation: mascotBounce 1s ease-in-out infinite; transform-origin: center bottom; }
+
+@keyframes mascotSparkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.6); }
+  50% { opacity: 1; transform: scale(1); }
+}
+@keyframes mascotBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px) scale(1.03); }
+}
+/* Respect reduce-motion preference: mascot holds still */
+html[data-motion="reduced"] .mascot .mascot-sparkles path,
+html[data-motion="reduced"] .mascot.celebrate { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .mascot .mascot-sparkles path, .mascot.celebrate { animation: none !important; }
+}
+
+/* Welcome-screen mascot: centered above title */
+.welcome-mascot {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+  margin-top: -8px;
+}
+.welcome-mascot .mascot { width: 96px; height: 96px; }
 
 /* Utilities */
 .hidden { display: none !important; }
