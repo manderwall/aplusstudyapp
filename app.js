@@ -566,12 +566,7 @@ function renderStudy() {
       ${renderImageHTML(q)}
       ${renderOptionsHTML(q)}
       ${state.revealed ? `
-        <div class="card-section wrong">
-          <div class="label">You picked (wrong)${Array.isArray(q.wrong_picks) && q.wrong_picks.length > 1 ? ` — ${q.wrong_picks.length} different ways` : ''}</div>
-          ${Array.isArray(q.wrong_picks) && q.wrong_picks.length > 1
-            ? `<ul class="wrong-picks">${q.wrong_picks.map(w => `<li>${escapeHtml(w)}</li>`).join('')}</ul>`
-            : `<p>${escapeHtml(q.wrong_pick)}</p>`}
-        </div>
+        ${renderWrongPickHTML(q, 'study')}
         <div class="card-section right">
           <div class="label">Correct answer & explanation</div>
           ${formatExplanation(q.explanation)}
@@ -703,12 +698,7 @@ function renderQuiz() {
       ${renderImageHTML(q)}
       ${renderOptionsHTML(q)}
       ${state.revealed ? `
-        <div class="card-section wrong">
-          <div class="label">Common wrong pick${Array.isArray(q.wrong_picks) && q.wrong_picks.length > 1 ? `s (${q.wrong_picks.length})` : ''}</div>
-          ${Array.isArray(q.wrong_picks) && q.wrong_picks.length > 1
-            ? `<ul class="wrong-picks">${q.wrong_picks.map(w => `<li>${escapeHtml(w)}</li>`).join('')}</ul>`
-            : `<p>${escapeHtml(q.wrong_pick)}</p>`}
-        </div>
+        ${renderWrongPickHTML(q, 'quiz')}
         <div class="card-section right">
           <div class="label">Correct answer & explanation</div>
           ${formatExplanation(q.explanation)}
@@ -1342,6 +1332,27 @@ function renderImageHTML(q) {
     </div>`;
   }
   return '';
+}
+
+// Render the "wrong pick" callout shown on reveal. Returns '' when there's
+// no wrong-pick data for this card (e.g. p1q36 has been deduped from five
+// pretest versions, so preserving a single per-version wrong pick would be
+// misleading). `mode` is 'study' | 'quiz' — changes the label wording.
+function renderWrongPickHTML(q, mode) {
+  const picks = Array.isArray(q.wrong_picks) ? q.wrong_picks.filter(Boolean) : [];
+  const single = (q.wrong_pick || '').trim();
+  if (picks.length === 0 && !single) return '';
+  const label = mode === 'quiz'
+    ? `Common wrong pick${picks.length > 1 ? `s (${picks.length})` : ''}`
+    : `You picked (wrong)${picks.length > 1 ? ` — ${picks.length} different ways` : ''}`;
+  const body = picks.length > 1
+    ? `<ul class="wrong-picks">${picks.map(w => `<li>${escapeHtml(w)}</li>`).join('')}</ul>`
+    : `<p>${escapeHtml(picks[0] || single)}</p>`;
+  return `
+    <div class="card-section wrong">
+      <div class="label">${label}</div>
+      ${body}
+    </div>`;
 }
 
 function renderOptionsHTML(q) {

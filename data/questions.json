@@ -197,13 +197,7 @@
     "obj": "3.5",
     "qtype": "PBQ",
     "question": "Using the image of the motherboard, which of the following correctly indicates the circled area?",
-    "wrong_pick": "PCIe x4",
-    "wrong_picks": [
-      "PCIe x4",
-      "Mainboard power",
-      "PATA connector",
-      "PATA connection"
-    ],
+    "wrong_pick": "",
     "correct_short": "Memory slot",
     "explanation": "OBJ 3.3: The area circled indicates the memory slots that contain the RAM. These are also considered DDR3 memory slots based on the key/notch location. For the exam, it is important that you can identify the different parts of the motherboard by sight. (Note: p1q36 appeared on 5 pretests with different circled areas. This card shows the pretest 5 version where memory slots are circled. If you see a different circled area on a different attempt, the correct answer changes accordingly — common motherboard components: CMOS battery, PCIe x1/x4/x16, SATA connectors, PATA connector, CPU slot, port cluster, audio connector, reset jumper.)",
     "sources": [
