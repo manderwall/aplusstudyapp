@@ -5,6 +5,7 @@ import {
   MIN, DAY, MAX_INTERVAL_DAYS,
   defaultProgress, migrateProgress, schedule,
   escapeHtml, normalizeOption, formatExplanation,
+  orderDeck, nextIntervalLabel, recommendedRating,
 } from './lib.mjs';
 import {
   randomSaltB64, deriveKey, encryptJSON, decryptJSON, isEncryptedBlob,
@@ -65,8 +66,9 @@ const state = {
   editing: false,  // when true, render the edit form instead of the question card
   focus: false,    // Focus Mode: hides filter/meta chrome to show just the card
   history: [],     // stack of previous currentIndex values for Prev nav
-  shuffle: false,
-  _shuffleCache: null,  // { key, list }
+  order: 'smart',  // 'smart' | 'random' | 'sequential' — card ordering strategy
+  _orderSeed: null,    // stable per-session seed so Prev/Next don't reshuffle
+  _orderCache: null,   // { key, list }
   progress: {},    // { questionId: { status, seen, correct, lastSeen, ease, interval, due, updated_at } }
   overrides: {},   // { questionId: { options?, image?, images? } } — user-added content
   // Active study session (Pomodoro-style)
@@ -747,19 +749,15 @@ function filteredQuestions() {
       (x.explanation || '').toLowerCase().includes(q)
     );
   }
-  if (state.shuffle) {
-    const key = `${state.filter.obj}|${state.filter.due}|${state.filter.weakest}|${state.filter.search}|${qs.length}|${qs.map(x=>x.id).join(',').slice(0,40)}`;
-    if (!state._shuffleCache || state._shuffleCache.key !== key) {
-      const shuffled = qs.slice();
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      }
-      state._shuffleCache = { key, list: shuffled };
-    }
-    return state._shuffleCache.list;
+  // Order the deck via orderDeck() unless explicitly sequential. Cached per
+  // (filter × order × deck-identity) so Prev/Next don't reshuffle mid-session.
+  if (state._orderSeed === null) state._orderSeed = (Date.now() & 0x7fffffff) || 1;
+  const key = `${state.order}|${state.filter.obj}|${state.filter.due}|${state.filter.weakest}|${state.filter.search}|${qs.length}|${qs.map(x=>x.id).join(',').slice(0,40)}`;
+  if (!state._orderCache || state._orderCache.key !== key) {
+    const list = orderDeck(qs, state.progress, { mode: state.order, seed: state._orderSeed });
+    state._orderCache = { key, list };
   }
-  return qs;
+  return state._orderCache.list;
 }
 
 function dueCount() {
@@ -868,12 +866,7 @@ function renderStudy() {
           ${formatExplanation(q.explanation)}
           ${renderPretestMissHTML(q)}
         </div>
-        <div class="btn-row">
-          <button class="action bad" data-rate="again">Again</button>
-          <button class="action warn" data-rate="hard">Hard</button>
-          <button class="action good" data-rate="good">Good</button>
-          <button class="action primary" data-rate="easy">Easy</button>
-        </div>
+        ${renderRatingButtonsHTML(q)}
       ` : `
         <div class="btn-row">
           <button class="action" id="prev-btn" aria-label="Previous">← Prev</button>
@@ -1331,10 +1324,14 @@ function renderStats() {
 
       <h3 class="stats-h">Options</h3>
       <div class="settings-panel">
-        <label class="settings-row">
-          <span>🔀 Shuffle questions</span>
-          <input type="checkbox" id="shuffle-toggle" ${state.shuffle ? 'checked' : ''}>
-        </label>
+        <div class="settings-row" title="Smart: due cards first, then new, then learning — randomized within each tier. Random: pure shuffle. Sequential: pretest order.">
+          <span id="pref-order-label">🔀 Card order</span>
+          <span class="seg-control" id="order-control" role="radiogroup" aria-labelledby="pref-order-label">
+            <button data-val="smart" role="radio" aria-checked="${state.order==='smart'?'true':'false'}" class="${state.order==='smart'?'active':''}">Smart</button>
+            <button data-val="random" role="radio" aria-checked="${state.order==='random'?'true':'false'}" class="${state.order==='random'?'active':''}">Random</button>
+            <button data-val="sequential" role="radio" aria-checked="${state.order==='sequential'?'true':'false'}" class="${state.order==='sequential'?'active':''}">Sequential</button>
+          </span>
+        </div>
         <div class="settings-row">
           <span>💾 Progress</span>
           <span class="settings-actions">
@@ -1428,11 +1425,15 @@ function renderStats() {
   $('#import-btn')?.addEventListener('click', importProgress);
   $('#export-overrides-btn')?.addEventListener('click', exportOverrides);
   $('#import-overrides-btn')?.addEventListener('click', importOverrides);
-  $('#shuffle-toggle')?.addEventListener('change', (e) => {
-    state.shuffle = e.target.checked;
-    localStorage.setItem('shuffle', state.shuffle ? 'true' : 'false');
-    state._shuffleCache = null;
-  });
+  $$('#order-control button').forEach(btn => btn.addEventListener('click', () => {
+    state.order = btn.dataset.val;
+    localStorage.setItem('order', state.order);
+    state._orderCache = null;
+    state._orderSeed = (Date.now() & 0x7fffffff) || 1;
+    state.currentIndex = 0;
+    state.history = [];
+    renderStats();
+  }));
 
   // Accessibility: segmented controls (size / font / sound)
   $$('.seg-control[data-pref]').forEach(group => {
@@ -1565,7 +1566,7 @@ function renderFilterBar() {
     state.editing = false;
     state.selectedOption = null;
     state.history = [];
-    state._shuffleCache = null;
+    state._orderCache = null;
     if (state.mode === 'study') renderStudy();
     else if (state.mode === 'quiz') renderQuiz();
   }));
@@ -1584,7 +1585,7 @@ function renderFilterBar() {
         state.editing = false;
         state.selectedOption = null;
         state.history = [];
-        state._shuffleCache = null;
+        state._orderCache = null;
         if (state.mode === 'study') renderStudy();
         else if (state.mode === 'quiz') renderQuiz();
         // Restore focus + caret after rerender
@@ -1602,7 +1603,7 @@ function renderFilterBar() {
       state.editing = false;
       state.selectedOption = null;
       state.history = [];
-      state._shuffleCache = null;
+      state._orderCache = null;
       if (state.mode === 'study') renderStudy();
       else if (state.mode === 'quiz') renderQuiz();
     });
@@ -1816,6 +1817,40 @@ function renderPretestMissHTML(q) {
     </div>`;
 }
 
+// 4-button SM-2 rating row with resulting-interval labels and a recommended
+// default. The recommended button is picked from the user's MC performance
+// (right → good, wrong → again, no pick → hard) so the learner can just
+// accept the default instead of decoding the four labels each time.
+function renderRatingButtonsHTML(q) {
+  const p = state.progress[q.id] || {};
+  const now = Date.now();
+  const rec = recommendedRating({ picked: state.selectedOption, correct: q.correct_short });
+  const recLabel = state.selectedOption
+    ? (rec === 'good' ? '✓ You picked the right answer' : '✗ You missed this one')
+    : 'Tip: pick an answer next time for a smarter default';
+  const rates = [
+    { key: 'again', cls: 'bad',    label: 'Again' },
+    { key: 'hard',  cls: 'warn',   label: 'Hard' },
+    { key: 'good',  cls: 'good',   label: 'Good' },
+    { key: 'easy',  cls: 'primary',label: 'Easy' },
+  ];
+  return `
+    <div class="rate-header">
+      <div class="rate-title">How well did you know this?</div>
+      <div class="rate-sub">${recLabel} — <em>${rec}</em> is highlighted</div>
+    </div>
+    <div class="btn-row rate-row">
+      ${rates.map(r => `
+        <button class="action rate-btn ${r.cls}${r.key === rec ? ' recommended' : ''}"
+                data-rate="${r.key}"
+                aria-label="${r.label}, next review in ${nextIntervalLabel(p, r.key, now)}">
+          <span class="rate-label">${r.label}</span>
+          <span class="rate-interval">${nextIntervalLabel(p, r.key, now)}</span>
+        </button>
+      `).join('')}
+    </div>`;
+}
+
 function renderOptionsHTML(q) {
   if (!Array.isArray(q.options) || q.options.length === 0) return '';
   const picked = state.selectedOption;
@@ -1956,7 +1991,7 @@ async function switchExam(newExam) {
   state.editing = false;
   state.selectedOption = null;
   state.history = [];
-  state._shuffleCache = null;
+  state._orderCache = null;
   try { await loadData(); }
   catch (e) { toast('Couldn\'t load ' + examDef(newExam).label + ': ' + e.message, 'error', 5000); }
   toast('Switched to ' + examDef(newExam).label, 'info');
@@ -1972,7 +2007,7 @@ function setMode(mode) {
   state.editing = false;
   state.selectedOption = null;
   state.history = [];
-  state._shuffleCache = null;
+  state._orderCache = null;
   $$('.tab').forEach(t => {
     const active = t.dataset.mode === mode;
     t.classList.toggle('active', active);
@@ -2054,9 +2089,10 @@ function onShakeMotion(e) {
   if (mag > 25 && now - _shakeLastFire > 1200) {
     _shakeLastFire = now;
     haptic([20, 40, 20]);
-    state.shuffle = !state.shuffle;
-    localStorage.setItem('shuffle', state.shuffle ? 'true' : 'false');
-    state._shuffleCache = null;
+    // Shake reshuffles the current view (new seed) instead of flipping a boolean.
+    state._orderSeed = (Date.now() & 0x7fffffff) || 1;
+    state._orderCache = null;
+    state.currentIndex = 0;
     if (state.mode === 'study') renderStudy();
     else if (state.mode === 'quiz') renderQuiz();
   }
@@ -2819,7 +2855,15 @@ async function init() {
   const savedExam = localStorage.getItem('exam');
   if (EXAM_IDS.includes(savedExam)) state.exam = savedExam;
   setTheme(localStorage.getItem('theme') || 'auto');
-  state.shuffle = localStorage.getItem('shuffle') === 'true';
+  const savedOrder = localStorage.getItem('order');
+  if (savedOrder === 'smart' || savedOrder === 'random' || savedOrder === 'sequential') {
+    state.order = savedOrder;
+  } else if (localStorage.getItem('shuffle') === 'true') {
+    // Migrate prior Boolean shuffle flag → Random order
+    state.order = 'random';
+    localStorage.setItem('order', 'random');
+    localStorage.removeItem('shuffle');
+  }
   if (pref('sound') !== 'off') setSound(pref('sound'));  // ambient noise restores (needs gesture on some browsers)
   if (pref('shake') === 'on') enableShake().catch(() => {});
 

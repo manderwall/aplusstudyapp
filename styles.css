@@ -654,6 +654,87 @@ button.action.good { background: var(--good); color: #000; border-color: var(--g
 button.action.warn { background: var(--warn); color: #000; border-color: var(--warn); }
 button.action.bad { background: var(--bad); color: #fff; border-color: var(--bad); }
 
+/* SM-2 rating row (Again / Hard / Good / Easy) shown after reveal in Study. */
+.rate-header {
+  margin-top: 24px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+.rate-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.2px;
+}
+.rate-sub {
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.rate-sub em {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: capitalize;
+}
+.btn-row.rate-row {
+  margin-top: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+button.action.rate-btn {
+  flex: unset;
+  min-width: 0;
+  min-height: 64px;
+  padding: 8px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  opacity: 0.72;
+  position: relative;
+}
+button.action.rate-btn .rate-label {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+button.action.rate-btn .rate-interval {
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.85;
+  letter-spacing: 0.2px;
+}
+button.action.rate-btn.recommended {
+  opacity: 1;
+  box-shadow: 0 0 0 3px var(--accent), 0 4px 12px rgba(0, 0, 0, 0.18);
+  transform: translateY(-1px);
+}
+button.action.rate-btn.recommended::after {
+  content: '★';
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 11px;
+  color: var(--accent);
+  background: var(--surface);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 1px var(--accent);
+}
+@media (max-width: 480px) {
+  .btn-row.rate-row { gap: 6px; }
+  button.action.rate-btn { min-height: 58px; padding: 6px 4px; }
+  button.action.rate-btn .rate-label { font-size: 14px; }
+  button.action.rate-btn .rate-interval { font-size: 10px; }
+}
+
 /* Scratch pad (Apple Pencil) */
 .scratchpad-wrap {
   max-width: 760px;

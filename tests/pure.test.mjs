@@ -6,6 +6,7 @@ import {
   MIN, DAY, MAX_INTERVAL_DAYS,
   defaultProgress, migrateProgress, schedule,
   escapeHtml, normalizeOption, formatExplanation,
+  orderDeck, nextIntervalLabel, recommendedRating,
 } from '../lib.mjs';
 
 const NOW = 1_700_000_000_000;  // fixed for deterministic assertions
@@ -138,4 +139,80 @@ test('formatExplanation short input uses lead only (no paragraphing)', () => {
 test('formatExplanation empty input returns empty', () => {
   assert.equal(formatExplanation(''), '');
   assert.equal(formatExplanation(null), '');
+});
+
+//─── orderDeck ──────────────────────────────────────────────────────────
+
+test('orderDeck sequential: preserves input order', () => {
+  const qs = [{ id: 'a' }, { id: 'b' }, { id: 'c' }, { id: 'd' }];
+  const out = orderDeck(qs, {}, { mode: 'sequential', seed: 1 });
+  assert.deepEqual(out.map(x => x.id), ['a', 'b', 'c', 'd']);
+});
+
+test('orderDeck smart: due cards first, then new, then young', () => {
+  const qs = [
+    { id: 'new1' }, { id: 'due1' }, { id: 'young1' }, { id: 'new2' }, { id: 'due2' },
+  ];
+  const prog = {
+    due1:   { seen: 1, due: NOW - 10 * DAY },  // due, most overdue
+    due2:   { seen: 1, due: NOW - 1 * DAY },   // due
+    young1: { seen: 1, due: NOW + 5 * DAY },   // not due yet
+    // new1, new2: unseen → new
+  };
+  const out = orderDeck(qs, prog, { mode: 'smart', seed: 42, now: NOW });
+  const ids = out.map(x => x.id);
+  // due1 is most overdue so it comes first in the due tier
+  assert.equal(ids[0], 'due1');
+  assert.equal(ids[1], 'due2');
+  // tier 2: the new cards (in some order), tier 3: the young
+  assert.ok(ids.indexOf('new1') < ids.indexOf('young1'));
+  assert.ok(ids.indexOf('new2') < ids.indexOf('young1'));
+});
+
+test('orderDeck smart: stable for same seed, different for different seed', () => {
+  const qs = Array.from({ length: 12 }, (_, i) => ({ id: `q${i}` }));
+  const a = orderDeck(qs, {}, { mode: 'smart', seed: 7, now: NOW }).map(x => x.id);
+  const b = orderDeck(qs, {}, { mode: 'smart', seed: 7, now: NOW }).map(x => x.id);
+  const c = orderDeck(qs, {}, { mode: 'smart', seed: 999, now: NOW }).map(x => x.id);
+  assert.deepEqual(a, b);  // same seed = same order
+  assert.notDeepEqual(a, c);  // different seed = different order
+});
+
+test('orderDeck random: returns all input items (no loss/duplication)', () => {
+  const qs = Array.from({ length: 20 }, (_, i) => ({ id: `q${i}` }));
+  const out = orderDeck(qs, {}, { mode: 'random', seed: 123 });
+  assert.equal(out.length, 20);
+  assert.deepEqual(new Set(out.map(x => x.id)), new Set(qs.map(x => x.id)));
+});
+
+//─── nextIntervalLabel ──────────────────────────────────────────────────
+
+test('nextIntervalLabel: fresh card → again = 1 min, good = 1 day', () => {
+  const p = defaultProgress();
+  assert.equal(nextIntervalLabel(p, 'again', NOW), '1 min');
+  assert.equal(nextIntervalLabel(p, 'good', NOW), '1 day');
+  assert.equal(nextIntervalLabel(p, 'easy', NOW), '3 days');
+});
+
+test('nextIntervalLabel: does not mutate the input progress', () => {
+  const p = defaultProgress();
+  const snap = { ...p };
+  nextIntervalLabel(p, 'easy', NOW);
+  assert.deepEqual(p, snap);
+});
+
+//─── recommendedRating ──────────────────────────────────────────────────
+
+test('recommendedRating: matches correct answer → good', () => {
+  assert.equal(recommendedRating({ picked: 'Cable modem', correct: 'Cable modem' }), 'good');
+  assert.equal(recommendedRating({ picked: '  cable MODEM  ', correct: 'Cable modem' }), 'good');
+});
+
+test('recommendedRating: wrong pick → again', () => {
+  assert.equal(recommendedRating({ picked: 'DSL', correct: 'Cable modem' }), 'again');
+});
+
+test('recommendedRating: no pick → hard', () => {
+  assert.equal(recommendedRating({ picked: null, correct: 'Cable modem' }), 'hard');
+  assert.equal(recommendedRating({ picked: '', correct: 'Cable modem' }), 'hard');
 });

@@ -59,6 +59,79 @@ export function normalizeOption(s) {
 // - Break into paragraphs (every 2 sentences) so it's not a wall of text
 // - Pull "For the exam..." into its own callout at the bottom
 // - Give the first paragraph a lead style so the answer stands out
+// Deterministic mulberry32 PRNG so a given seed produces the same card order
+// within a session (stable Prev/Next) but a different order next session.
+export function rngFromSeed(seed) {
+  let t = seed >>> 0;
+  return function() {
+    t += 0x6D2B79F5;
+    let r = t;
+    r = Math.imul(r ^ (r >>> 15), r | 1);
+    r ^= r + Math.imul(r ^ (r >>> 7), r | 61);
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function shuffleInPlace(arr, rng) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// Smart SRS ordering: due cards first (most overdue first), then new cards,
+// then young/learning cards not yet due. Randomized within each tier so the
+// user doesn't memorize card position. `mode` = 'smart' | 'random' | 'sequential'.
+export function orderDeck(qs, progressById, { mode = 'smart', seed = 1, now = Date.now() } = {}) {
+  if (mode === 'sequential') return qs.slice();
+  const rng = rngFromSeed(seed);
+  if (mode === 'random') return shuffleInPlace(qs.slice(), rng);
+
+  const due = [];
+  const fresh = [];
+  const young = [];
+  for (const q of qs) {
+    const p = progressById[q.id] || {};
+    const seen = p.seen || 0;
+    const dueAt = p.due || 0;
+    if (seen === 0) fresh.push(q);
+    else if (dueAt <= now) due.push({ q, dueAt });
+    else young.push({ q, dueAt });
+  }
+  // Overdue-first: smaller due timestamp = more overdue. Random tiebreak.
+  due.sort((a, b) => (a.dueAt - b.dueAt) || (rng() - 0.5));
+  young.sort((a, b) => (a.dueAt - b.dueAt) || (rng() - 0.5));
+  shuffleInPlace(fresh, rng);
+  return [...due.map(x => x.q), ...fresh, ...young.map(x => x.q)];
+}
+
+// Human-readable label for what tapping each rating button will do.
+// Used in the rating UI so the learner knows "Good = 1 day" etc.
+export function nextIntervalLabel(p, rate, now = Date.now()) {
+  const sim = { ...p };
+  if (sim.ease === undefined) sim.ease = 2.5;
+  if (sim.interval === undefined) sim.interval = 0;
+  schedule(sim, rate, now);
+  const ms = sim.due - now;
+  if (ms < 60 * 1000) return '<1 min';
+  if (ms < 60 * MIN) return `${Math.round(ms / MIN)} min`;
+  const days = ms / DAY;
+  if (days < 1) return `${Math.round(ms / (60 * MIN))} hr`;
+  if (days < 1.5) return '1 day';
+  // Whole days render without a trailing ".0"; fractional < 10 keep one decimal.
+  if (days >= 10) return `${Math.round(days)} days`;
+  const rounded = Math.round(days * 10) / 10;
+  return Number.isInteger(rounded) ? `${rounded} days` : `${rounded.toFixed(1)} days`;
+}
+
+// Default rating recommendation based on how the learner did on the MC.
+// right → good, wrong → again, no pick (just revealed) → hard.
+export function recommendedRating({ picked, correct }) {
+  if (!picked) return 'hard';
+  return normalizeOption(picked) === normalizeOption(correct) ? 'good' : 'again';
+}
+
 export function formatExplanation(text) {
   if (!text) return '';
   text = text.replace(/^OBJ \d+\.\d+:\s*/i, '').trim();
