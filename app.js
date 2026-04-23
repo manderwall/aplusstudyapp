@@ -498,12 +498,10 @@ function renderStudy() {
         </div>
       `}
     </div>
-    ${renderScratchpadHTML(q)}
   `;
   renderFilterBar();
   updateHUD();
   attachStudyEvents(q);
-  attachScratchpadEvents(q);
   $('#edit-btn')?.addEventListener('click', () => { state.editing = true; renderStudy(); });
 }
 
@@ -632,7 +630,6 @@ function renderQuiz() {
         </div>
       `}
     </div>
-    ${renderScratchpadHTML(q)}
   `;
   renderFilterBar();
   updateHUD();
@@ -657,7 +654,6 @@ function renderQuiz() {
     onCardRated(q.id);
     nextQuizQuestion();
   }));
-  attachScratchpadEvents(q);
 }
 
 function nextQuizQuestion() {
@@ -1868,11 +1864,15 @@ function showWelcome() {
     const dismissPerm = $('#welcome-dismiss-permanent')?.checked;
     if (dismissPerm) localStorage.setItem('welcomeDismissed', '1');
     overlay.remove();
+    const studyActions = new Set(['due', 'micro', 'session15']);
     if (action === 'due') { state.filter.due = true; setMode('study'); }
     else if (action === 'micro') { startSession({ targetCards: 5 }); setMode('study'); }
     else if (action === 'session15') { startSession({ minutes: 15 }); setMode('study'); }
     else if (action === 'reading') { setMode('reading'); }
     else if (action === 'stats') { setMode('stats'); }
+    // For Study-focused actions, auto-enter Focus Mode: hides tab bar, filter
+    // bar, HUD, and card meta so it's just the card. Exit with F or the 🔓 button.
+    if (studyActions.has(action) && !state.focus) toggleFocus();
   };
 
   $('#welcome-close').addEventListener('click', () => close(null));
