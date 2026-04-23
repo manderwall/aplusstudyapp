@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax-check JS sources
+        run: |
+          node --check app.js
+          node --check lib.mjs
+          node --check sw.js
+      - name: Validate questions.json
+        run: node scripts/validate-questions.mjs
+      - name: Unit tests (lib.mjs)
+        run: node --test tests/pure.test.mjs

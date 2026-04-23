@@ -425,7 +425,7 @@
     "id": "p1q81",
     "pretest": 1,
     "qnum": 81,
-    "obj": "?",
+    "obj": "2.3",
     "qtype": "Multiple Choice",
     "question": "Which type of wireless network utilizes the 5 GHz frequency band and reaches speeds of up to 3.5 Gbps?",
     "wrong_pick": "802.11n",
@@ -433,7 +433,7 @@
       "802.11n"
     ],
     "correct_short": "802.11ac",
-    "explanation": "",
+    "explanation": "OBJ 2.3: 802.11ac (Wi-Fi 5) operates exclusively in the 5 GHz band and reaches roughly 3.5 Gbps using channels up to 160 MHz wide, up to 8 MIMO streams, and 256-QAM modulation. It was ratified in 2013 and replaced 802.11n as the speed leader. 802.11ax (Wi-Fi 6) is newer and tops out near 9.6 Gbps. 802.11n is dual-band (2.4 and 5 GHz) but peaks around 600 Mbps. 802.11a ran at 5 GHz but only 54 Mbps. For the exam: memorize the headline rates — 11a/g = 54 Mbps, 11n = 600 Mbps, 11ac = 3.5 Gbps, 11ax = 9.6 Gbps.",
     "sources": [
       {
         "pretest": 1,
@@ -1048,7 +1048,7 @@
     "question": "A technician is troubleshooting a virtual machine that is running in sandbox mode for testing software patches. The user reports that the patch installation caused the VM to crash. What should the technician do next to resolve the issue?",
     "wrong_pick": "Reset the VM to factory settings and reinstall the patch",
     "correct_short": "Revert the VM to a snapshot taken before the patch was applied",
-    "explanation": "",
+    "explanation": "OBJ 4.1: When a VM patch causes problems in a sandbox environment, the fastest and safest recovery is to revert the VM to a snapshot taken before the patch was applied. Snapshots capture the complete state of the VM (disk, memory, settings) at a point in time, so restoring one rolls back every change since then in seconds. Resetting to factory settings or increasing memory allocation will not undo whatever the bad patch changed. Disabling sandbox mode defeats the purpose of testing patches in isolation. For the exam: snapshots are the go-to VM rollback mechanism — know the difference between a snapshot (point-in-time VM state) and a full backup (independent copy).",
     "sources": [
       {
         "pretest": 2,
@@ -1664,7 +1664,7 @@
       "Restart the video-conferencing application"
     ],
     "correct_short": "Check the physical connection of the webcam",
-    "explanation": "",
+    "explanation": "OBJ 5.4: Built-in laptop webcams connect to the motherboard through a thin ribbon cable that runs along the display hinge, and that cable can loosen or fray after thousands of open/close cycles. When the operating system still recognizes the webcam (drivers present) but no image appears, CompTIA's troubleshooting methodology says to check the hardware path first. Replacing the entire screen assembly is a premature, expensive fix. Third-party software will not help if the hardware path is broken. Restarting the video-conferencing application is low-cost but you have already verified the webcam in Device Manager. For the exam: always check physical connections before escalating to component replacement.",
     "sources": [
       {
         "pretest": 3,
@@ -1691,7 +1691,7 @@
     "question": "Which type of microphone is most suitable for a conference room setup where sound needs to be captured from multiple directions?",
     "wrong_pick": "Cardioid",
     "correct_short": "Omnidirectional",
-    "explanation": "",
+    "explanation": "OBJ 1.1: An omnidirectional microphone picks up sound equally from every direction (a full sphere around the mic), which is exactly what you want when voices are coming from multiple seats around a conference table. Cardioid microphones reject sound from behind the mic and are designed for a single speaker (podium, podcast). Bidirectional mics capture sound only from the front and back (interview style). Unidirectional is a broader term that includes cardioid and is meant for a single source. For the exam: match the polar pattern to the source geometry — omni for rooms with multiple speakers, cardioid or unidirectional for a single speaker.",
     "sources": [
       {
         "pretest": 4,
@@ -1877,12 +1877,12 @@
     "id": "p4q39",
     "pretest": 4,
     "qnum": 39,
-    "obj": "?",
+    "obj": "2.3",
     "qtype": "Multiple Choice",
     "question": "Which of the following statements about the 5.0 GHz wireless frequency used by Wi-Fi is correct?",
     "wrong_pick": "The 5.0 GHz frequency has a longer wavelength that allows the signal to travel further than 2.4 GHz using the same power levels",
     "correct_short": "The 5.0 GHz frequency supports higher data rates than 2.4 GHz",
-    "explanation": "",
+    "explanation": "OBJ 2.3: 5 GHz Wi-Fi supports higher data rates than 2.4 GHz because it has many more non-overlapping channels (up to around 25 in the US vs. only 3 at 2.4 GHz) and wider channel-bandwidth options (40/80/160 MHz vs. 20/40 MHz). More channels plus more bandwidth equals more data. The trade-off: a shorter wavelength attenuates faster through walls and covers less area, so 5 GHz does NOT travel further and does NOT penetrate solid surfaces better than 2.4 GHz. For the exam: 5 GHz = faster and less crowded but shorter range; 2.4 GHz = slower and crowded but better range and wall penetration.",
     "sources": [
       {
         "pretest": 4,
@@ -1900,12 +1900,12 @@
     "id": "p4q40",
     "pretest": 4,
     "qnum": 40,
-    "obj": "?",
+    "obj": "2.3",
     "qtype": "Multiple Choice",
     "question": "Which type of wireless network utilizes the 5 GHz frequency band and reaches speeds of up to 9.6 Gbps?",
     "wrong_pick": "802.11n",
     "correct_short": "802.11ax",
-    "explanation": "",
+    "explanation": "OBJ 2.3: 802.11ax (Wi-Fi 6, extended to 6 GHz as Wi-Fi 6E) reaches up to roughly 9.6 Gbps in the 5 GHz band using OFDMA, 1024-QAM modulation, and up to 8 spatial streams. 802.11ac (Wi-Fi 5) tops out closer to 3.5 Gbps — also 5 GHz but an earlier generation. 802.11n is dual-band and peaks near 600 Mbps. 802.11a/b/g are older still. For the exam: a 9.6 Gbps hint is a dead giveaway for ax; 3.5 Gbps points to ac; ~600 Mbps points to n.",
     "sources": [
       {
         "pretest": 4,
