@@ -47,7 +47,11 @@ export function schedule(p, rate, now = Date.now()) {
 
 export function escapeHtml(s) {
   if (!s) return '';
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  // Escape quotes too — otherwise an option like 9.6" x 9.6" injected into
+  // data-option="..." terminates the attribute early and the click handler
+  // reads back a truncated value, breaking option matching.
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 export function normalizeOption(s) {

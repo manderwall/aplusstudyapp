@@ -96,6 +96,15 @@ test('escapeHtml escapes the angle brackets and ampersand', () => {
   assert.equal(escapeHtml('x>y && a<b'), 'x&gt;y &amp;&amp; a&lt;b');
 });
 
+test('escapeHtml escapes quotes so data-option="..." attributes survive', () => {
+  // Without quote escaping, an option like 9.6" x 9.6" would terminate the
+  // attribute early and the click handler would read back only "9.6",
+  // silently breaking grading on every question with a quote in its options.
+  assert.equal(escapeHtml('9.6" x 9.6"'), '9.6&quot; x 9.6&quot;');
+  assert.equal(escapeHtml("it's"), 'it&#39;s');
+  assert.equal(escapeHtml('"a" & \'b\''), '&quot;a&quot; &amp; &#39;b&#39;');
+});
+
 test('normalizeOption lowercases + collapses whitespace', () => {
   assert.equal(normalizeOption('  Cable Modem  '), 'cable modem');
   assert.equal(normalizeOption('Gigabit   NIC'), 'gigabit nic');
