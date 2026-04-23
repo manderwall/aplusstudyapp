@@ -204,8 +204,8 @@
       "PATA connector",
       "PATA connection"
     ],
-    "correct_short": "PCI",
-    "explanation": "OBJ 3.5: The area circled indicates the PCIe x1 slots. PCIe (peripheral component interconnect express) is an interface standard for connecting high-speed components. Every desktop PC motherboard has some PCIe slots you can use to add GPUs (video cards or graphics cards), RAID cards, network adapters, Wi-Fi cards, or SSD (solid-state drive) add-on cards. The types of PCIe slots available in your PC will depend on your motherboard and are designated as PCIe x1, x4, x8, and x16. PCIe x1 slots are usually used for external input/output devices such as network interface cards. For the exam, it is important that you can identify the different parts of the motherboard by sight.",
+    "correct_short": "Memory slot",
+    "explanation": "OBJ 3.3: The area circled indicates the memory slots that contain the RAM. These are also considered DDR3 memory slots based on the key/notch location. For the exam, it is important that you can identify the different parts of the motherboard by sight. (Note: p1q36 appeared on 5 pretests with different circled areas. This card shows the pretest 5 version where memory slots are circled. If you see a different circled area on a different attempt, the correct answer changes accordingly — common motherboard components: CMOS battery, PCIe x1/x4/x16, SATA connectors, PATA connector, CPU slot, port cluster, audio connector, reset jumper.)",
     "sources": [
       {
         "pretest": 1,
@@ -676,7 +676,7 @@
     "wrong_picks": [
       "20, 21"
     ],
-    "correct_short": "",
+    "correct_short": "21, 22",
     "explanation": "OBJ 2.1: FTP (File Transfer Protocol) uses ports 20 and 21. SFTP (Secure File Transfer Protocol) uses port 22. Port 23 is used by Telnet. If this were a question on the real exam, you would see a list of ports on one side and a list of protocols on the other, and you would drag and drop each one to match them up. (It might also have 4-6 different pairs to match up.)",
     "sources": [
       {
@@ -689,12 +689,10 @@
       }
     ],
     "options": [
-      "the real exam, you may be given a chart with numerous ports and protocols and be asked to",
-      "drag and drop them to match the ports with the protocols.)",
-      "21, 22",
-      "22, 23",
+      "21, 23",
       "20, 21",
-      "21, 23"
+      "21, 22",
+      "22, 23"
     ]
   },
   {
@@ -705,13 +703,19 @@
     "qtype": "Multiple Choice",
     "question": "You are currently conducting passive reconnaissance in preparation for an upcoming penetration test against Dion Training. You are reviewing the DNS records for the company and are trying to identify which third-party hosted services they may be using. Which of the following DNS records should you analyze to identify any human-readable records, domain verifications, and domain authentications",
     "wrong_pick": "NS",
-    "correct_short": "",
+    "correct_short": "TXT",
     "explanation": "OBJ 2.4: Text (TXT) records are used to provide information about a resource, such as a server, network, or service, in human-readable form. They often contain domain verification and domain authentications for third-party tools that can send information on behalf of a domain name. Mail Exchange (MX) records are used to provide the mail server that accepts email messages for a particular domain. Nameserver (NS) records are used to list the authoritative DNS server for a particular domain. Service (SRV) records are used to provide host and port information on services such as voice over IP (VoIP) and instant messaging (IM) applications.",
     "sources": [
       {
         "pretest": 2,
         "qnum": 23
       }
+    ],
+    "options": [
+      "SRV",
+      "TXT",
+      "MX",
+      "NS"
     ]
   },
   {
@@ -889,7 +893,7 @@
     "wrong_picks": [
       "USB 2.0"
     ],
-    "correct_short": "",
+    "correct_short": "USB 3.0",
     "explanation": "OBJ 3.2 - These ports are the USB 3.0 connections. The red coloring notates this. USB 3.0 ports are always shown as a different color to differentiate them from the older and slower USB 2.0 ports. Universal serial bus (USB) is the main type of connection interface used on desktops and laptops. A larger Type A connector attaches to a port on the host; Type B and Mini- or Micro-Type B connectors are used for devices. USB 1.1 supports 12 Mbps while USB 2.0 supports 480 Mbps and is backward compatible with 1.1 devices which run at a slower speed. USB devices are considered hot-swappable and each device can draw up to 2.5 W of power over a USB port. USB 3.0 and 3.1 define 5 Gbps (SuperSpeed) and 10 Gbps (SuperSpeed+) rates and can deliver up to 4.5 W of power. For the exam, it is important that you can identify the different parts of a motherboard's rear port cluster by sight.",
     "sources": [
       {
@@ -900,7 +904,14 @@
         "pretest": 3,
         "qnum": 64
       }
-    ]
+    ],
+    "options": [
+      "USB 2.0",
+      "FireWire",
+      "USB-C",
+      "USB 3.0"
+    ],
+    "image": "images/pretest2_q39_portG.png"
   },
   {
     "id": "p2q42",
@@ -943,7 +954,7 @@
     "wrong_picks": [
       "Unplug and reattach the printer cables and reboot the workstation"
     ],
-    "correct_short": "",
+    "correct_short": "Examine the workstation and printer for any obvious indicators of failure",
     "explanation": "OBJ 5.6: You should always question the obvious when establishing the theory of probable cause. In this case, you have not fully identified the problem yet, so you must establish a theory and test it. For the exam, it is important that you can list and identify the 6 steps of the CompTIA troubleshooting methodology in order. (1) Identify the problem. (2) Establish a theory of probable cause (question the obvious). (3) Test the theory to determine the cause. (4) Establish a plan of action to resolve the problem and then implement the solution. (5) Verify full system functionality and, if applicable, implement preventative measures. (6) Document findings, actions, and outcomes.",
     "sources": [
       {
@@ -1044,7 +1055,7 @@
     "qtype": "Multiple Choice",
     "question": "A technician is troubleshooting a virtual machine that is running in sandbox mode for testing software patches. The user reports that the patch installation caused the VM to crash. What should the technician do next to resolve the issue?",
     "wrong_pick": "Reset the VM to factory settings and reinstall the patch",
-    "correct_short": "",
+    "correct_short": "Revert the VM to a snapshot taken before the patch was applied",
     "explanation": "",
     "sources": [
       {
@@ -1268,13 +1279,19 @@
     "qtype": "Multiple Choice",
     "question": "Several users from the Sales & Marketing department have called the service desk complaining that they cannot access the internet from their workstations. You arrive at the salesperson's workstation, open the command prompt, and enter the command IPCONFIG. The command returns an IPv4 address of 10.1.2.3, a subnet mask of 255.255.255.0, and a default gateway of 10.1.2.1. You attempt to run the command \"ping 8.8.8.8\" but get the message \"Request timed out\" displayed four times on the screen. You attempt to ping the IP of the salesperson's workstation sitting next to this workstation and receive four successful replies from the command. You then try to ping the gateway (10.1.2.1) but again receive the message of \"Request timed out\" on your screen. Which of the following is MOST likely the problem with the salespeople's internet connectivity?",
     "wrong_pick": "This is a DNS issue since you cannot access the internet",
-    "correct_short": "",
+    "correct_short": "The router that connects the Sales & Marketing department to the rest of the company is not functioning properly",
     "explanation": "OBJ 5.5: Since you can ping other workstations within the Sales &amp; Marketing department, but you cannot successfully ping the gateway device (the router), this indicates that the router is non-functioning at this time. If the router is not functioning, the workstations will be unable to access any devices or servers outside of the Sales &amp; Marketing department since the router is necessary to connect them to those devices.",
     "sources": [
       {
         "pretest": 3,
         "qnum": 13
       }
+    ],
+    "options": [
+      "The router that connects the Sales & Marketing department to the rest of the company is not functioning properly",
+      "The salespeople are getting APIPA addresses from the DHCP server",
+      "The wireless access point in the Sales & Marketing department is not working properly",
+      "This is a DNS issue since you cannot access the internet"
     ]
   },
   {
@@ -1308,14 +1325,21 @@
     "qtype": "PBQ",
     "question": "Using the image, which of the following correctly indicates the port labeled as J?",
     "wrong_pick": "USB 3.0",
-    "correct_short": "",
+    "correct_short": "USB 2.0",
     "explanation": "OBJ 3.2 - These ports are the USB 2.0 connections. This is indicated by their black color (instead of being red or blue for USB 3.0 ports). Universal serial bus (USB) is the main type of connection interface used on desktops and laptops. A larger Type A connector attaches to a port on the host; Type B and Mini- or Micro-Type B connectors are used for devices. USB 1.1 supports 12 Mbps while USB 2.0 supports 480 Mbps and is backward compatible with 1.1 devices which run at a slower speed. USB devices are considered hot-swappable and each device can draw up to 2.5 W of power over a USB port. USB 3.0 and 3.1 define 5 Gbps (SuperSpeed) and 10 Gbps (SuperSpeed+) rates and can deliver up to 4.5 W of power. For the exam, it is important that you can identify the different parts of a motherboard's rear port cluster by sight.",
     "sources": [
       {
         "pretest": 3,
         "qnum": 18
       }
-    ]
+    ],
+    "options": [
+      "USB 2.0",
+      "USB 3.0",
+      "FireWire",
+      "eSATA"
+    ],
+    "image": "images/pretest3_q18_portJ.png"
   },
   {
     "id": "p3q21",
@@ -1658,7 +1682,7 @@
     "wrong_picks": [
       "Restart the video-conferencing application"
     ],
-    "correct_short": "",
+    "correct_short": "Check the physical connection of the webcam",
     "explanation": "",
     "sources": [
       {
@@ -1881,7 +1905,7 @@
     "qtype": "Multiple Choice",
     "question": "Which of the following statements about the 5.0 GHz wireless frequency used by Wi-Fi is correct?",
     "wrong_pick": "The 5.0 GHz frequency has a longer wavelength that allows the signal to travel further than 2.4 GHz using the same power levels",
-    "correct_short": "",
+    "correct_short": "The 5.0 GHz frequency supports higher data rates than 2.4 GHz",
     "explanation": "",
     "sources": [
       {
@@ -1890,10 +1914,10 @@
       }
     ],
     "options": [
-      "eSATA uses unshielded cables",
-      "eSATA is used to add additional internal storage devices",
-      "eSATA is slower than USB 3.0",
-      "eSATA is used to add additional external storage devices"
+      "The 5.0 GHz frequency has fewer channels available than 2.4 GHz",
+      "The 5.0 GHz frequency supports higher data rates than 2.4 GHz",
+      "The 5.0 GHz frequency has a longer wavelength that allows the signal to travel further than 2.4 GHz using the same power levels",
+      "The 5.0 GHz frequency is more effective at penetrating solid surfaces than 2.4 GHz"
     ]
   },
   {
@@ -1904,13 +1928,21 @@
     "qtype": "Multiple Choice",
     "question": "Which type of wireless network utilizes the 5 GHz frequency band and reaches speeds of up to 9.6 Gbps?",
     "wrong_pick": "802.11n",
-    "correct_short": "",
+    "correct_short": "802.11ax",
     "explanation": "",
     "sources": [
       {
         "pretest": 4,
         "qnum": 40
       }
+    ],
+    "options": [
+      "802.11n",
+      "802.11ac",
+      "802.11b",
+      "802.11ax",
+      "802.11g",
+      "802.11a"
     ]
   },
   {
@@ -1992,7 +2024,7 @@
     "qtype": "Multiple Choice",
     "question": "A network technician connects three temporary office trailers with a point-to-multipoint microwave radio solution in a wooded area. The microwave radios are up, and the network technician can ping network devices in all of the office trailers. However, users are complaining that they are experiencing sporadic connectivity. What is the MOST likely cause of this issue?",
     "wrong_pick": "Split horizon",
-    "correct_short": "",
+    "correct_short": "Interference",
     "explanation": "OBJ 5.5: Microwave links require a direct line of sight (LoS) between the antennas to maintain a strong and effective link. This line-of-sight microwave link uses highly directional transmitter and receiver antennas to communicate via a narrowly focused radio beam. Since this microwave-based network is being run in a wooded area, there are likely some trees or leaves that are blocking the line of sight between the antennas. To solve this issue, they should trim the trees and branches to provide a clear line of sight or move the antennas to reestablish a clear line of sight. Latency is the time delay between when a packet is sent and received. While latency will increase with an obstructed microwave line-of-sight link, latency is an effect of this issue and not the cause of the issue. Throttling is the intentional slowing or speeding of an internet service by an Internet service provider to regulate network traffic and minimize bandwidth congestion. This again is not a cause of intermittent connectivity but would instead occur if the microwave link was overutilized beyond its SLA contract limitations. Split horizon is a form of route advertisement that prohibits a router from advertising back a route to the same interface from which it learned it. This does not affect the issues experienced with the microwave line. Another way to approach this question is to use the process of elimination: throttling slows down the speed, and latency slows down speed even further. Split horizon prevents loops, so it only makes sense that interference is the correct choice since interference can cause drops in connections in many situations.",
     "sources": [
       {
@@ -2062,7 +2094,7 @@
     "qtype": "Multiple Choice",
     "question": "A technician is troubleshooting a newly installed WAP that is sporadically dropping connections to devices on the network. Which of the following should the technician check FIRST during troubleshooting?",
     "wrong_pick": "Bandwidth saturation",
-    "correct_short": "",
+    "correct_short": "WAP placement",
     "explanation": "OBJ 5.5: For optimal network performance, the placement of the Wireless Access Point (WAP) guidelines should be taken into consideration to ensure that the building's construction doesn't cause interference with the wireless signals. To determine if adequate coverage and signal strength is being received in the building, you can conduct a wireless site survey. The service set identifier (SSID) is a group of wireless network devices that share a common natural language label, such as a network name. The SSID would not affect the devices and cause sporadic connection drops. Bandwidth saturation is a phenomenon that occurs when all of a circuit's available bandwidth in a given direction is being utilized by a large upload or download, which can result in high latency and performance issues. Bandwidth saturation would not cause the wireless connection to drop, though. Encryption type refers to the type of security used on a wireless network, such as WEP, WPA, WPA2, or WPA3. The security type used on a network would not cause sporadic drops of the network connection, though.",
     "sources": [
       {
