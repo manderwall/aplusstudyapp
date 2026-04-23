@@ -7,13 +7,19 @@
     "qtype": "Multiple Choice",
     "question": "Which of the following types of networking hardware is used to deliver broadband internet access using a hybrid fiber-coaxial (HFC) infrastructure?",
     "wrong_pick": "Digital subscriber line",
-    "correct_short": "",
+    "correct_short": "Cable modem",
     "explanation": "OBJ 2.5: A cable modem is a type of network bridge that provides bi-directional data communication via radio frequency channels on a hybrid fiber-coaxial (HFC), radio frequency over glass (RFoG), and coaxial cable infrastructure. Cable modems are primarily used to deliver broadband internet access as cable internet, taking advantage of an HFC and RFoG network's high bandwidth. DSL is a technology used to transmit multimedia traffic at high-bit rates over twisted-pair copper wire (over ordinary telephone lines). This allows the telecommunications company to connect a user's home to the local switching center using normal telephone lines, then connect that local switching center (using a DSLAM to multiplex the connections) to the central office over a single high-speed cable (such as a fiber connection). An optical network terminal (ONT) is a device that connects fiber optics cables to other types of wiring such as Ethernet and phone lines by converting the signal from optical to electrical and vice versa. An ONT is commonly used with fiber to the house (FTTH) installations. Software-defined networking (SDN) is an approach to network management that enables dynamic, programmatically efficient network configuration to improve network performance and monitoring, making it more like cloud computing than traditional network management. Software-defined networking (SDN) uses Application Programming Interfaces (API) and compatible hardware that allows for the programming of network appliances and systems.",
     "sources": [
       {
         "pretest": 1,
         "qnum": 3
       }
+    ],
+    "options": [
+      "Optical network terminal",
+      "Software-defined networking",
+      "Cable modem",
+      "Digital subscriber line"
     ]
   },
   {
@@ -28,7 +34,7 @@
       "PaaS",
       "IaaS"
     ],
-    "correct_short": "",
+    "correct_short": "DaaS",
     "explanation": "OBJ 4.2: Desktop as a Service (DaaS) provides virtual desktop infrastructure hosted in the cloud, allowing employees to access their work environment remotely from any device. This model simplifies desktop management and enhances security by keeping data centralized in the cloud.",
     "sources": [
       {
@@ -43,6 +49,12 @@
         "pretest": 5,
         "qnum": 44
       }
+    ],
+    "options": [
+      "IaaS",
+      "DaaS",
+      "SaaS",
+      "PaaS"
     ]
   },
   {
@@ -53,13 +65,19 @@
     "qtype": "Multiple Choice",
     "question": "Your home network has a wireless access point (WAP) that allows your smartphone and tablet to connect to your internal network. The WAP is connected to a router and a cable modem to provide internet access. A coaxial cable carries the network traffic from the cable modem to the cable company’s central office for transmission to and from the internet. Which of the following types of networks would best describe this network configuration between your home network and the internet through your cable modem connection?",
     "wrong_pick": "LAN",
-    "correct_short": "",
+    "correct_short": "PAN",
     "explanation": "OBJ 2.7: A wide area network (WAN) is a network that spans multiple geographic locations, such as the internet. Wide area networks are often established with leased telecommunication circuits. This is usually a DSL, cable connection, fiber connection, or satellite connection in a home network. A local area network (LAN) is a network where all the nodes or hosts participating in the network are directly connected with cables or short-range wireless media. A personal area network (PAN) is a close-range network that is usually based on Bluetooth or NFC for communications between personal devices, such as smartphones, laptops, printers, and other peripheral devices. A metropolitan area network (MAN) is a computer network that interconnects users with computer resources in a geographic region of the size of a metropolitan or city area.",
     "sources": [
       {
         "pretest": 1,
         "qnum": 14
       }
+    ],
+    "options": [
+      "PAN",
+      "LAN",
+      "WAN",
+      "MAN"
     ]
   },
   {
@@ -70,13 +88,19 @@
     "qtype": "Multiple Choice",
     "question": "An employee is complaining that their workstation is not booting into Windows when they reboot their machine. You noticed that during the reboot, the system is loading into a PXE-based OS. What should you do next?",
     "wrong_pick": "Boot into recovery mode to fix the boot order",
-    "correct_short": "",
+    "correct_short": "Boot to BIOS and select the HDD from the boot order",
     "explanation": "OBJ 5.2: PXE (Preboot Execution Environment) is a network boot execution process allowing you to retrieve an image from a PXE server. It is often used for reimaging computers in corporate deployments. To boot from the hard drive instead, the BIOS's boot order should be changed from PXE to HDD. Rebooting the workstation will just reload the PXE-based OS again. Since the system is booting to the PXE environment, it is bypassing the internal hard drive's OS, making recovery mode an invalid choice.",
     "sources": [
       {
         "pretest": 1,
         "qnum": 16
       }
+    ],
+    "options": [
+      "Boot into recovery mode to fix the boot order",
+      "Boot to BIOS and select the HDD from the boot order",
+      "Press F12 to boot into boot mode and select the correct device",
+      "Reboot PC to determine if it will boot from the HDD"
     ]
   },
   {
@@ -90,7 +114,7 @@
     "wrong_picks": [
       "Establish a printer share on the network switch"
     ],
-    "correct_short": "",
+    "correct_short": "Establish a print share on the local host",
     "explanation": "OBJ 5.6: The simplest and most cost-efficient way to share a printer is to share the printer via the local host and allow sharing so everyone can access the printer. While this costs nothing to establish and requires no additional hardware, it does require that the local host remain on 24 hours a day so that others can print to it at any time. If you are willing to spend a little money, though, you can purchase a wireless print server or a new network-capable printer instead.",
     "sources": [
       {
@@ -105,6 +129,12 @@
         "pretest": 4,
         "qnum": 21
       }
+    ],
+    "options": [
+      "Order another printer with network capabilities and share it on the network",
+      "Order a printer port converter to share a non-networked printer",
+      "Establish a printer share on the network switch",
+      "Establish a print share on the local host"
     ]
   },
   {
@@ -122,6 +152,12 @@
         "pretest": 1,
         "qnum": 28
       }
+    ],
+    "options": [
+      "Cellular",
+      "Wi-Fi",
+      "Bluetooth",
+      "NFC"
     ]
   },
   {
@@ -135,7 +171,7 @@
     "wrong_picks": [
       "Spray the fan with compressed air to remove any dirt, debris, or dust"
     ],
-    "correct_short": "",
+    "correct_short": "Replace the power supply",
     "explanation": "OBJ 5.1: If the fan in the power supply is faulty, replace the entire power supply. You should never attempt to repair or fix a broken power supply or broken power supply cooling fan due to the power supply's high-voltage electrical components. When a fan creates a grinding sound, this is evidence of an impending failure, and the device needs to be replaced. Technicians should never open a power supply or replace any of its internal components; therefore, the entire power supply should be replaced in this scenario.",
     "sources": [
       {
@@ -146,6 +182,12 @@
         "pretest": 4,
         "qnum": 6
       }
+    ],
+    "options": [
+      "Replace the power supply",
+      "Spray a little bit of WD-40 into the fan to lubricate it",
+      "Replace the power supply's fan",
+      "Spray the fan with compressed air to remove any dirt, debris, or dust"
     ]
   },
   {
@@ -162,7 +204,7 @@
       "PATA connector",
       "PATA connection"
     ],
-    "correct_short": "PCIe x1",
+    "correct_short": "PCI",
     "explanation": "OBJ 3.5: The area circled indicates the PCIe x1 slots. PCIe (peripheral component interconnect express) is an interface standard for connecting high-speed components. Every desktop PC motherboard has some PCIe slots you can use to add GPUs (video cards or graphics cards), RAID cards, network adapters, Wi-Fi cards, or SSD (solid-state drive) add-on cards. The types of PCIe slots available in your PC will depend on your motherboard and are designated as PCIe x1, x4, x8, and x16. PCIe x1 slots are usually used for external input/output devices such as network interface cards. For the exam, it is important that you can identify the different parts of the motherboard by sight.",
     "sources": [
       {
@@ -187,12 +229,12 @@
       }
     ],
     "options": [
-      "PCIe x1",
-      "PCIe x4",
-      "PCIe x8",
-      "PCIe x16"
+      "Memory slot",
+      "PCI",
+      "PCIe x16",
+      "CPU slot"
     ],
-    "image": "images/pretest1_q36.png"
+    "image": "images/pretest5_p59.png"
   },
   {
     "id": "p1q37",
@@ -202,13 +244,19 @@
     "qtype": "Multiple Choice",
     "question": "A customer's system clock is continually resetting itself, causing discrepancies with the date and time. Which of the following components of the system should you investigate as the root cause of this issue?",
     "wrong_pick": "CPU",
-    "correct_short": "",
+    "correct_short": "BIOS",
     "explanation": "OBJ 5.1: The BIOS (basic input/output system) is the program that a computer's microprocessor uses to get the computer system started after you turn it on. The BIOS settings are stored in the CMOS (complementary metal-oxide-semiconductor). Some of these BIOS settings include the system time and date as well as hardware settings and configurations. If the CMOS battery dies or the BIOS becomes faulty, then the system time and date will be affected. The power supply, RAM, and CPU do not affect the system clock of the workstation.",
     "sources": [
       {
         "pretest": 1,
         "qnum": 37
       }
+    ],
+    "options": [
+      "BIOS",
+      "CPU",
+      "RAM",
+      "Power supply"
     ]
   },
   {
@@ -219,13 +267,19 @@
     "qtype": "Multiple Choice",
     "question": "Which of the following technologies combines the functionality of a firewall, malware scanner, and other security appliances into one device?",
     "wrong_pick": "IPS",
-    "correct_short": "",
+    "correct_short": "UTM",
     "explanation": "OBJ 2.3: A Unified Threat Management (UTM) appliance enforces a variety of security-related measures, combining the work of a firewall, malware scanner, and intrusion detection/prevention. A UTM centralizes the threat management service, providing simpler configuration and reporting than isolated applications spread across several servers or devices. An intrusion detection system (IDS) is a device or software application that monitors a network or system for malicious activity or policy violations. Any malicious activity or violation is typically reported to an administrator or collected centrally using a security information and event management system. Unlike an IPS, which can stop malicious activity or policy violations, an IDS can only log these issues and not stop them. An intrusion prevention system (IPS) conducts the same functions as an IDS but can also block or take actions against malicious events. A Syslog server is a server that collects diagnostic and monitoring data from the hosts and network devices across a given network.",
     "sources": [
       {
         "pretest": 1,
         "qnum": 45
       }
+    ],
+    "options": [
+      "UTM",
+      "Syslog",
+      "IDS",
+      "IPS"
     ]
   },
   {
@@ -236,13 +290,19 @@
     "qtype": "Multiple Choice",
     "question": "Of the following laptop display types, which of them requires an inverter?",
     "wrong_pick": "Plasma",
-    "correct_short": "",
+    "correct_short": "LCD",
     "explanation": "OBJ 3.1: An inverter supplies the correct AC voltage to the LCD's fluorescent backlight from the laptop's DC power circuits. An LCD (TFT) with fluorescent backlight has been the standard display technology for the last few years. The backlight is a fluorescent bulb that illuminates the image, making it bright and clear. A light-emitting diode (LED) display is an LCD panel that uses a LED backlight instead of a CCFL backlight to provide its light source. An organic light-emitting diode (OLED) display is a type of LED flat panel display device that uses organic compounds that emit light when subjected to an electric current. An OLED display works without a backlight because it emits visible light. Thus, it can display deep black levels and be thinner and lighter than a liquid crystal display (LCD). In low ambient light conditions (such as in a dark room), an OLED screen can achieve a higher contrast ratio than an LCD, regardless of whether the LCD uses cold cathode fluorescent lamps or an LED backlight. A plasma display is a type of flat panel display that uses small cells containing plasma with ionized gas that responds to electric fields. Plasma displays create excessive heat and are not as energy efficient as an LCD, LED, or OLED display.",
     "sources": [
       {
         "pretest": 1,
         "qnum": 56
       }
+    ],
+    "options": [
+      "OLED",
+      "Plasma",
+      "LCD",
+      "LED"
     ]
   },
   {
@@ -253,13 +313,19 @@
     "qtype": "Multiple Choice",
     "question": "Which of the following BEST describes how a DHCP reservation works?",
     "wrong_pick": "By leasing a set of reserved IP addresses according to their category",
-    "correct_short": "",
+    "correct_short": "By matching a MAC address to an IP address within the DHCP scope",
     "explanation": "OBJ 2.4: When the client requests an IP address by sending a message on the network to the DHCP server, the DHCP server will assign an IP from its DHCP scope to the client and reserve it based on its MAC address. DHCP reservations allow the DHCP server to pre-set an IP address for a specific client based on its MAC address. This ensures that the client will always get the same IP address from the DHCP server when it connects to the network. DHCP reservations are usually used with servers or printers on your internal network and are rarely used with end-user or client devices.",
     "sources": [
       {
         "pretest": 1,
         "qnum": 57
       }
+    ],
+    "options": [
+      "By letting the network switches assign IP addresses from a reserved pool",
+      "By leasing a set of reserved IP addresses according to their category",
+      "By matching a MAC address to an IP address within the DHCP scope",
+      "By assigning options to the computers on the network by priority"
     ]
   },
   {
@@ -270,13 +336,19 @@
     "qtype": "Multiple Choice",
     "question": "Which cellular technology utilizes new frequency bands to reach proposed speeds of up to 70 Gbps?",
     "wrong_pick": "LTE",
-    "correct_short": "",
+    "correct_short": "5G",
     "explanation": "OBJ 1.3: 5G cellular technology is made up of three different types: low-band, mid-band, and high-band mmWave technology. Low-band 5G reaches an average speed of 55 Mbps with a theoretical speed of 150 Mbps. Mid-band 5G reaches an average speed of 150 Mbps with a theoretical speed of 1.5 Gbps. High-band 5G reaches an average speed of 3 Gbps with a theoretical speed of up to 70 Gbps. 4G cellular technology is made up of LTE and LTA-A. Long Term Evolution (LTE) is a packet data communications specification providing an upgrade path for both GSM and CDMA2000 cellular networks. LTE has a theoretical speed of 150 Mbps and a real-world speed of around 20 Mbps. LTE Advanced (LTE-A) has a theoretical speed of 300 Mbps and a real-world speed of around 40 Mbps.",
     "sources": [
       {
         "pretest": 1,
         "qnum": 63
       }
+    ],
+    "options": [
+      "4G",
+      "5G",
+      "LTE",
+      "3G"
     ]
   },
   {
@@ -290,7 +362,7 @@
     "wrong_picks": [
       "PaaS"
     ],
-    "correct_short": "",
+    "correct_short": "DaaS",
     "explanation": "OBJ 4.2: Desktop as a Service (DaaS) is a cloud computing offering where a service provider delivers virtual desktops to end-users over the Internet, licensed with a per-user subscription. DaaS is often combined with Virtual Desktop Infrastructure. Platform as a Service (PaaS) is a complete development and deployment environment in the cloud, with resources that enable you to deliver everything from simple cloud-based apps to sophisticated, cloud-enabled enterprise applications. Infrastructure as a Service (IaaS) is a type of cloud computing service that offers essential compute, storage, and networking resources on-demand, on a pay-as-you-go basis. Software as a Service (SaaS) allows users to connect to and use cloud-based apps over the Internet. Common examples are email, calendaring, and office tools (such as Microsoft Office 365). SaaS provides a complete software solution that you purchase on a pay-as-you-go basis from a cloud service provider.",
     "sources": [
       {
@@ -301,6 +373,12 @@
         "pretest": 3,
         "qnum": 75
       }
+    ],
+    "options": [
+      "IaaS",
+      "SaaS",
+      "DaaS",
+      "PaaS"
     ]
   },
   {
@@ -311,13 +389,19 @@
     "qtype": "Multiple Choice",
     "question": "What describes how many times the image on the monitor changes per second?",
     "wrong_pick": "Frame rate",
-    "correct_short": "",
+    "correct_short": "Refresh rate",
     "explanation": "OBJ 3.1 - Refresh rate is defined by the vertical scan frequency of a monitor and how many times in one second an image can be redrawn on the screen. LCD monitors have a fixed refresh rate based on the specifications of their panel. Generally, a monitor is rated with a refresh rate of 60 Hz, 72 Hz, or 120 Hz, with the higher refresh rate being considered better quality and easier on the user's eyes. For high-performance gaming systems, a 120 Hz monitor is desired for smoother motion and graphics. The aspect ratio is defined as the ratio of width to height in a display. The frame rate is defined as the number of times the image in a video stream changes per second as expressed in Hertz (Hz) or Frames per Second (fps). The yaw rate is a made-up term for the exam and is used as a distractor in this question. The resolution is the measure of the number of picture elements (pixels) that an imaging device can use to sample or display the image as measured in pixels per inch (PPI).",
     "sources": [
       {
         "pretest": 1,
         "qnum": 74
       }
+    ],
+    "options": [
+      "Refresh rate",
+      "Frame rate",
+      "Aspect ratio",
+      "Resolution"
     ]
   },
   {
@@ -328,13 +412,19 @@
     "qtype": "Multiple Choice",
     "question": "You have been asked to replace the wireless 802.11ac card in an employee's laptop.\n\nWhich of the following types of expansion cards is this?",
     "wrong_pick": "SODIMM",
-    "correct_short": "",
+    "correct_short": "PCIe",
     "explanation": "OBJ 1.1: Mini PCIe (mPCIe) are smaller form factor versions of standard PCI Express expansions cards used with laptops and other small form factor computing devices. Mini PCIe expansion cards provide the ability to add wireless networking or cellular data cards to a laptop. Non-volatile memory express (NVMe) is an interface for connecting flash memory devices, such as SSDs, directly to a PCI Express bus. NVMe allows much higher transfer rates than SATA/AHCI. PCI Express (PCIe) is an expansion bus standard using serial communications. Each device on the bus can create a point-to-point link with the I/O controller or another device. The link comprises one or more lanes (x1, x2, x4, x8, x12, x16, or x32). Each lane supports a full-duplex transfer rate of 250 MBps (v1.0), 500 MBps (v2.0), or 1 GBps (v3.0). A small outline dual inline memory module (SODIMM) can be purchased in various types and sizes to fit any laptop, router, or other small form factor computing device.",
     "sources": [
       {
         "pretest": 1,
         "qnum": 78
       }
+    ],
+    "options": [
+      "PCIe",
+      "miniPCIe",
+      "NVMe",
+      "SODIMM"
     ]
   },
   {
@@ -362,11 +452,11 @@
     ],
     "options": [
       "802.11a",
-      "802.11ac",
-      "802.11ax",
+      "802.11n",
       "802.11b",
-      "802.11g",
-      "802.11n"
+      "802.11ax",
+      "802.11ac",
+      "802.11g"
     ]
   },
   {
@@ -391,7 +481,14 @@
         "pretest": 4,
         "qnum": 67
       }
-    ]
+    ],
+    "options": [
+      "Reduces network dependency issues",
+      "Simplifies software installation on devices",
+      "Increases local processing speeds",
+      "Enhances desktop security and control"
+    ],
+    "correct_short": "Enhances desktop security and control"
   },
   {
     "id": "p1q89",
@@ -401,13 +498,19 @@
     "qtype": "Multiple Choice",
     "question": "Which cellular technology is comprised of LTE and LTE-A to provide higher data speeds than previous cellular data protocols?",
     "wrong_pick": "5G",
-    "correct_short": "",
+    "correct_short": "4G",
     "explanation": "OBJ 1.3: 4G cellular technology is made up of LTE and LTA-A. Long Term Evolution (LTE) is a packet data communications specification providing an upgrade path for both GSM and CDMA2000 cellular networks. LTE has a theoretical speed of 150 Mbps and a real-world speed of around 20 Mbps. LTE Advanced (LTE-A) has a theoretical speed of 300 Mbps and a real-world speed of around 40 Mbps. 5G cellular technology is made up of three different types: low-band, mid-band, and high-band mmWave technology. Low-band 5G reaches an average speed of 55 Mbps with a theoretical speed of 150 Mbps. Mid-band 5G reaches an average speed of 150 Mbps with a theoretical speed of 1.5 Gbps. High-band 5G reaches an average speed of 3 Gbps with a theoretical speed of up to 70 Gbps. 3G cellular technology is made up of two different technologies: HSPA+ and EV-DO. HSPA+ (Evolved High-Speed Packet Access) is a 3G standard used for GSM cellular networks and can support up to a theoretical download speed of 168 Mbps and a theoretical upload speed of 34 Mbps. In the real world, though, HSPA+ normally reaches speeds around 20 Mbps. EV-DO (Evolution-Data Optimized) is a 3G standard used for CDMA cellular networks and can support up to 3.1 Mbps downloads. A wireless mesh network (WMN) is a wireless network topology where all nodes, including client stations, can provide forwarding and path discovery to improve coverage and throughput compared to using just fixed access points and extenders.",
     "sources": [
       {
         "pretest": 1,
         "qnum": 89
       }
+    ],
+    "options": [
+      "5G",
+      "WMN",
+      "3G",
+      "4G"
     ]
   },
   {
@@ -418,13 +521,19 @@
     "qtype": "Multiple Choice",
     "question": "Which of the following components of a laser printer is used to apply an electric charge to the paper so that the paper attracts toner to it during the imaging process?",
     "wrong_pick": "Fuser assembly",
-    "correct_short": "",
+    "correct_short": "Pickup roller",
     "explanation": "OBJ 3.8: The transfer roller is the component in a laser printer that applies an electric charge to the paper to attract toner from the photoconductor during the imaging process. The pickup roller is the component in a laser printer that turns above a stack of paper to feed a sheet into the feed roller. The separation pad is the component in a laser printer that acts as a stationary pad in the paper tray to push the stack of paper backward to allow only a single sheet to be fed into the printer. The fuser assembly is the component in a laser printer that fixes toner to media. This is typically a combination of a heat and pressure roller, though non-contact flash fusing using xenon lamps is found on some high-end printers.",
     "sources": [
       {
         "pretest": 1,
         "qnum": 90
       }
+    ],
+    "options": [
+      "Pickup roller",
+      "Separation pad",
+      "Fuser assembly",
+      "Transfer roller"
     ]
   },
   {
@@ -435,13 +544,19 @@
     "qtype": "Multiple Choice",
     "question": "You want to play computer-based video games from anywhere in the world using your laptop or tablet. You heard about a new product called a Shadow PC that is a virtualized Windows 10 Home gaming PC in the cloud. Which of the following best describes this type of service?",
     "wrong_pick": "PaaS",
-    "correct_short": "",
+    "correct_short": "DaaS",
     "explanation": "OBJ 4.1: Desktop as a Service (DaaS) provides a full virtualized desktop environment from within a cloud-based service. This is also known as VDI (Virtualized Desktop Infrastructure) and is coming in large enterprise businesses focused on increasing their security and minimizing their operational expenses. Shadow PC (shadow.tech) provides a version of DaaS for home users who want to have a gaming PC without all the upfront costs. Software as a Service (SaaS) is a cloud computing service that enables a service provider to make applications available over the Internet to end-users. This can be a calendar, scheduling, invoicing, word processor, database, or other programs. For example, Google Docs and Office 365 are both word processing SaaS solutions. Platform as a Service (PaaS) is a cloud computing service that enables consumers to rent fully configured systems that are set up for specific purposes. Infrastructure as a Service (IaaS) is a cloud computing service that enables a consumer to outsource computing equipment purchases and running their own data center.",
     "sources": [
       {
         "pretest": 2,
         "qnum": 4
       }
+    ],
+    "options": [
+      "DaaS",
+      "IaaS",
+      "PaaS",
+      "SaaS"
     ]
   },
   {
@@ -452,13 +567,19 @@
     "qtype": "Multiple Choice",
     "question": "Dion Training has just installed a web server for a new domain name. Which of the following DNS records would need to be created to allow users to reach the website using its domain name and then redirect them to the proper IPv4 address for the server?",
     "wrong_pick": "MX",
-    "correct_short": "",
+    "correct_short": "AAAA",
     "explanation": "OBJ 2.4: An A record associates your domain name with an IPv4 address. An AAAA record associates your domain name with an IPv6 address. An MX record is used for outgoing (SMTP) and incoming (POP3/IMAP) traffic. A Start of Authority (SOA) resource record indicates which Domain Name Server (DNS) is the best source of information for the specified domain.",
     "sources": [
       {
         "pretest": 2,
         "qnum": 9
       }
+    ],
+    "options": [
+      "SOA",
+      "A",
+      "MX",
+      "AAAA"
     ]
   },
   {
@@ -469,13 +590,19 @@
     "qtype": "Multiple Choice",
     "question": "Jason wants to order a new gaming laptop for his son for his birthday. The laptop display must support a high refresh rate of 120 Hz or 144 Hz. Which of the following types of laptop displays should Jason purchase to meet this requirement?",
     "wrong_pick": "IPS",
-    "correct_short": "",
+    "correct_short": "TN",
     "explanation": "OBJ 3.1 - A twisted nematic (TN) LCD panel uses technology where the panel is black when no electric current is running through the liquid crystal cells because the cells align themselves in a twisted state. When an electric current is applied, the liquid crystal cells untwist, allowing light to pass through, resulting in a white display screen. TN displays can be made with high refresh rates of 120 Hz or 144 Hz which makes them popular with gamers. An in-plane switching (IPS) LCD panel uses technology designed to resolve the quality issues inherent in TN panel technology, including strong viewing angle dependence and low-quality color reproduction. IPS displays have great color accuracy, but they do not support higher refresh rates sought after by gamers. A vertical alignment (VA) LCD panel uses technology designed to have liquid crystals lay perpendicular to the glass substrate when power is removed and in a vertical position when voltage is applied. This allows light to move through the liquid pixels when voltage is applied and the image is then produced. VA displays are a good middle-ground between IPS and TN panel displays. A plasma display is a type of flat panel display that uses small cells containing plasma with ionized gas that responds to electric fields. Plasma displays create excessive heat and are not as energy efficient as an LCD, LED, or OLED display.",
     "sources": [
       {
         "pretest": 2,
         "qnum": 10
       }
+    ],
+    "options": [
+      "Plasma",
+      "VA",
+      "TN",
+      "IPS"
     ]
   },
   {
@@ -489,7 +616,7 @@
     "wrong_picks": [
       "Latency"
     ],
-    "correct_short": "",
+    "correct_short": "Jitter",
     "explanation": "OBJ 5.5: Jitter is a network condition that occurs when a time delay in the sending of data packets over a network connection occurs. Jitter is a big problem for any real-time applications you may be supporting on your networks, like video conferences, voice-over IP, and virtual desktop infrastructure clients. A jitter is simply a variation in the delay of the packets, and this can cause some strange side effects, especially for voice and video calls. If you have ever been in a video conference where someone was speaking and then their voice started speeding up for 5 or 10 seconds and then returned to normal speed, you have been on the receiving end of their network’s jitter. Latency is the measure of time that it takes for data to reach its destination across a network. Usually, we measure network latency as the round-trip time from a workstation to the distant end and back. Throughput is an actual measure of how much data is successfully transferred from the source to a destination. Bandwidth is the maximum rate of data transfer across a given network. Now, bandwidth is more of a theoretical concept that measures how much data could be transferred from a source to a destination under ideal conditions. Therefore, we often measure throughput, instead of bandwidth, to monitor our network performance.",
     "sources": [
       {
@@ -500,6 +627,12 @@
         "pretest": 4,
         "qnum": 20
       }
+    ],
+    "options": [
+      "Latency",
+      "Bandwidth",
+      "Throughput",
+      "Jitter"
     ]
   },
   {
@@ -513,7 +646,7 @@
     "wrong_picks": [
       "SMB"
     ],
-    "correct_short": "",
+    "correct_short": "NetBIOS",
     "explanation": "OBJ 2.1: The network basic input/output system (NetBIOS)/NetBIOS over TCP/IP (NetBT) is a session management protocol used to provide name registration and resolution services on legacy Microsoft networks and those using WINS. NetBIOS/NetBT operates on TCP/UDP ports 137 and 139. The internet message access protocol (IMAP) is a TCP/IP application protocol that provides a means for a client to access email messages stored in a mailbox on a remote server using TCP port number 143. Unlike POP3, messages persist on the server after the client has downloaded them. IMAP also supports mailbox management functions, such as creating subfolders and access to the same mailbox by more than one client at the same time. The hypertext transfer protocol secure (HTTPS) is a secure protocol used to provide web content to browsers using SSL/TLS encryption over port 443. The server message block (SMB)/common internet file system (CIFS) is a protocol used for requesting files from Windows servers and delivering them to clients. SMB allows machines to share files and printers, thereby making them available for other machines to use. Samba software allows UNIX and Linux servers or NAS appliances to run SMB services for Windows clients. SMB operates on port 445.",
     "sources": [
       {
@@ -524,6 +657,12 @@
         "pretest": 5,
         "qnum": 18
       }
+    ],
+    "options": [
+      "SMB",
+      "NetBIOS",
+      "IMAP",
+      "HTTPS"
     ]
   },
   {
@@ -548,6 +687,14 @@
         "pretest": 5,
         "qnum": 12
       }
+    ],
+    "options": [
+      "the real exam, you may be given a chart with numerous ports and protocols and be asked to",
+      "drag and drop them to match the ports with the protocols.)",
+      "21, 22",
+      "22, 23",
+      "20, 21",
+      "21, 23"
     ]
   },
   {
@@ -579,7 +726,7 @@
       "802.11a",
       "802.11b"
     ],
-    "correct_short": "",
+    "correct_short": "802.11b",
     "explanation": "OBJ 2.2: The 802.11g (Wireless G) standard utilizes a 2.4 GHz frequency to provide wireless networking at speeds up to 54 Mbps. The 802.11a (Wireless A) standard utilizes a 5 GHz frequency to provide wireless networking at speeds up to 54 Mbps. The 802.11b (Wireless B) standard utilizes a 2.4 GHz frequency to provide wireless networking at speeds up to 11 Mbps. The 802.11n (Wireless N) standard utilizes a 2.4 GHz frequency to provide wireless networking at speeds up to 108 Mbps or a 5.0 GHz frequency to provide wireless networking at speeds up to 600 Mbps. Wireless N supports the use of multiple-input-multiple-output (MIMO) technology to use multiple antennas to transmit and receive data at higher speeds. Wireless N supports channel bonding by combining two 20 MHz channels into a single 40 MHz channel to provide additional bandwidth. The 802.11ac (Wireless AC or Wi-Fi 5) standard utilizes a 5 GHz frequency to provide wireless networking at theoretical speeds up to 3.5 Gbps. Wireless AC uses channel bonding to create a single channel of up to 160 MHz to provide additional bandwidth. Wireless AC uses multi-user multiple-input-multiple-output (MU-MIMO) technology to use multiple antennas to transmit and receive data at higher speeds. The 802.11ax (Wireless AX or Wi-Fi 6) standard utilizes 2.4 GHz and 5.0 GHz frequencies to provide wireless networking at theoretical speeds up to 9.6 Gbps. Wireless AX uses orthogonal frequency-division multiple access (OFDMA) to conduct multiplexing of the frequencies transmitted and received to each client to provide additional bandwidth. Wireless AX uses channel bonding to create a single channel of up to 160 MHz to provide additional bandwidth. Wireless AX uses multi-user multiple-input-multiple-output (MU-MIMO) technology to use multiple antennas to transmit and receive data at higher speeds. Wireless AX also has a version called Wi-Fi 6E that supports the 6 6GHz frequency instead of the 2.4 GHz and 5.0 GHz frequencies used in Wi-Fi 6. The 802.11g (Wireless G) standard utilizes a 2.4 GHz frequency to provide wireless networking at speeds up to 54 Mbps. The 802.11a (Wireless A) standard utilizes a 5 GHz frequency to provide wireless networking at speeds up to 54 Mbps. The 802.11b (Wireless B) standard utilizes a 2.4 GHz frequency to provide wireless networking at speeds up to 11 Mbps. The 802.11n (Wireless N) standard utilizes a 2.4 GHz frequency to provide wireless networking at speeds up to 108 Mbps or a 5.0 GHz frequency to provide wireless networking at speeds up to 600 Mbps. Wireless N supports the use of multiple-input-multiple-output (MIMO) technology to use multiple antennas to transmit and receive data at higher speeds. Wireless N supports channel bonding by combining two 20 MHz channels into a single 40 MHz channel to provide additional bandwidth. The 802.11ac (Wireless AC or Wi-Fi 5) standard utilizes a 5 GHz frequency to provide wireless networking at theoretical speeds up to 3.5 Gbps. Wireless AC uses channel bonding to create a single channel of up to 160 MHz to provide additional bandwidth. Wireless AC uses multi-user multiple-input-multiple-output (MU-MIMO) technology to use multiple antennas to transmit and receive data at higher speeds. The 802.11ax (Wireless AX or Wi-Fi 6) standard utilizes 2.4 GHz and 5.0 GHz frequencies to provide wireless networking at theoretical speeds up to 9.6 Gbps. Wireless AC uses orthogonal frequency-division multiple access (OFDMA) to conduct multiplexing of the frequencies transmitted and received to each client to provide additional bandwidth. Wireless AC uses channel bonding to create a single channel of up to 160 MHz to provide additional bandwidth. Wireless AC uses multi-user multiple-input-multiple-output (MU-MIMO) technology to use multiple antennas to transmit and receive data at higher speeds. Wireless AC also has a version called Wi-Fi 6E that supports the 6 6GHz frequency instead of the 2.4 GHz and 5.0 GHz frequencies used in Wi-Fi 6.",
     "sources": [
       {
@@ -594,6 +741,14 @@
         "pretest": 5,
         "qnum": 40
       }
+    ],
+    "options": [
+      "802.11ax",
+      "802.11ac",
+      "802.11b",
+      "802.11n",
+      "802.11a",
+      "802.11g"
     ]
   },
   {
@@ -604,13 +759,21 @@
     "qtype": "Multiple Choice",
     "question": "Dion Training wants to order some new laptops for their video editors. The video editors want to ensure the display has the best color accuracy when using a 60 Hz refresh rate. Which of the following types of displays should the company purchase to meet this requirement?",
     "wrong_pick": "TN",
-    "correct_short": "",
+    "correct_short": "IPS",
     "explanation": "OBJ 3.1: An in-plane switching (IPS) LCD panel uses technology designed to resolve the quality issues inherent in TN panel technology, including strong viewing angle dependence and low-quality color reproduction. IPS displays have great color accuracy, but they do not support higher refresh rates sought after by gamers. A twisted nematic (TN) LCD panel uses technology where the panel is black when no electric current is running through the liquid crystal cells because the cells align themselves in a twisted state. When an electric current is applied, the liquid crystal cells untwist, allowing light to pass through, resulting in a white display screen. TN displays can be made with high refresh rates of 120 Hz or 144 Hz which makes them popular with gamers. A vertical alignment (VA) LCD panel uses technology designed to have liquid crystals lay perpendicular to the glass substrate when power is removed and in a vertical position when voltage is applied. This allows light to move through the liquid pixels when voltage is applied and the image is then produced. VA displays are a good middle-ground between IPS and TN panel displays. A plasma display is a type of flat panel display that uses small cells containing plasma with ionized gas that responds to electric fields. Plasma displays create excessive heat and are not as energy efficient as an LCD, LED, or OLED display.",
     "sources": [
       {
         "pretest": 2,
         "qnum": 26
       }
+    ],
+    "options": [
+      "Which of the following types of displays should the company purchase to meet this",
+      "requirement?",
+      "IPS",
+      "TN",
+      "Plasma",
+      "VA"
     ]
   },
   {
@@ -625,7 +788,7 @@
       "VGA",
       "DVI-I"
     ],
-    "correct_short": "",
+    "correct_short": "F",
     "explanation": "OBJ 3.2 - This port is the DVI-D connection. This is not a DVI-I since there is only a dash and not a cross on the right side of the port. This means it only supports digital and not analog connections. The digital video interface (DVI) came in three models: DVI-A (analog), DVI-D (digital), and DVI-D (analog and digital known as integrated). DVI adapters were designed to replace the VGA ports used in legacy CRT monitors but they were themselves replaced by HDMI. While this is an older technology, you will still see them commonly used in corporate environments. For the exam, it is important that you can identify the different parts of a motherboard's rear port cluster by sight.",
     "sources": [
       {
@@ -636,7 +799,15 @@
         "pretest": 3,
         "qnum": 62
       }
-    ]
+    ],
+    "options": [
+      "cluster.)",
+      "FireWire",
+      "SPDIF",
+      "USB",
+      "PS/2"
+    ],
+    "image": "images/pretest5_p35.png"
   },
   {
     "id": "p2q34",
@@ -646,13 +817,19 @@
     "qtype": "Multiple Choice",
     "question": "You have been asked to run to the store and purchase a network cable for your boss's new laptop. They need a network cable that supports at least 750 Mbps. Which of the following network cables should you purchase to meet the bandwidth required at the lowest price?",
     "wrong_pick": "CAT 6",
-    "correct_short": "",
+    "correct_short": "CAT 5e",
     "explanation": "OBJ 3.2 - You should purchase a CAT 5e cable since it can support up to 1000 Mbps (1 Gbps) of bandwidth and is the cheapest option provided that will meet your boss' bandwidth requirements. CAT 5 cables only support 100 Mbps. Therefore, it won't meet the requirements. CAT 6 and CAT 7 cables will support 1 Gbps and 10 Gbps, respectively, but they are more expensive than CAT 5e cables. Therefore, the CAT 5e cable is the best choice for the requirements provided.",
     "sources": [
       {
         "pretest": 2,
         "qnum": 34
       }
+    ],
+    "options": [
+      "CAT 6",
+      "CAT 7",
+      "CAT 5e",
+      "CAT 5"
     ]
   },
   {
@@ -663,13 +840,19 @@
     "qtype": "Multiple Choice",
     "question": "A penetration tester wants to build a workstation that will be used to brute-force hash digests. Which of the following is the BEST option to ensure sufficient power and speed to crack them?",
     "wrong_pick": "Multi-core CPU",
-    "correct_short": "",
+    "correct_short": "Dedicated GPU",
     "explanation": "OBJ 3.5: Dedicated GPUs are designed to conduct complex mathematical functions extremely quickly. If you want to build a system to perform the cracking of a password, hash, or encryption algorithm, it is important to have a high-speed, dedicated GPU. The reason to use a GPU instead of a CPU for password cracking is that it is much faster for this mathematically intensive type of work. Cracking passwords, hashes, and encryption is a lot like mining cryptocurrency in that using dedicated GPUs will give you the best performance.",
     "sources": [
       {
         "pretest": 2,
         "qnum": 36
       }
+    ],
+    "options": [
+      "Multi-core CPU",
+      "Integrated GPU",
+      "Dedicated GPU",
+      "7200-RPM HDD"
     ]
   },
   {
@@ -680,13 +863,20 @@
     "qtype": "Multiple Choice",
     "question": "A user wants to print 2 copies of a 3-page report at once. The user would like the pages to come out of the printer in the order of pages 1, 2, 3, 1, 2, 3 instead of pages 1, 1, 2, 2, 3, 3. What printer setting should the user enable for this print job to achieve this result?",
     "wrong_pick": "Duplex",
-    "correct_short": "",
+    "correct_short": "Collate",
     "explanation": "OBJ 3.7: The collate setting allows the gathering and arranging of individual sheets or other printed components into a predetermined sequence. Collating creates consistent, logical sets from multiple parts, such as printing a series of pages in a report like pages 1, 2, and 3 before printing the second copy. This makes it easier to staple and distribute to people after coming out of the printer. Duplex printing is a feature of some computer printers, multi-function printers (MFPs), and copy machines that allows the printing of a sheet of paper on both sides automatically. Without this capability, print devices can only print on a single side of the paper, sometimes called single-sided printing or simplex printing. With duplex printing, information is printed on the front side of a piece of paper, and then the paper is automatically fed back through the printer to print the information on the backside of the paper. Page orientation is how a rectangular page is oriented for normal viewing. The two most common types of orientation are portrait and landscape. The term transparency was made up as a distractor for this question.",
     "sources": [
       {
         "pretest": 2,
         "qnum": 37
       }
+    ],
+    "options": [
+      "What printer setting should the user enable for this print job to achieve this result?",
+      "Orientation",
+      "Collate",
+      "Transparency",
+      "Duplex"
     ]
   },
   {
@@ -724,7 +914,7 @@
     "wrong_picks": [
       "The graphic designer is not printing using PCL"
     ],
-    "correct_short": "",
+    "correct_short": "The printer is running out of memory",
     "explanation": "OBJ 5.6: The most likely reason for this failure is a lack of memory in the printer. A laser printer must load the entire image into memory before it can process it and print the image to the page. If the laser printer runs out of memory, it will print the part of the image it has processed in memory to the page and then fail. ;For example, if this printer only has 256 MB of RAM, then it will be able to print the vector graphics without any issues and will fail when trying to print full-size high-resolution photos that are 400 MB to 800 MB in size. There is no indication that there is fading in the printed images to indicate the toner is low. Whether using PCL or PostScript, the lack of memory will still cause the print job to fail. The print server is not timing out since the printer can load most of the image to its memory before failing.",
     "sources": [
       {
@@ -735,6 +925,12 @@
         "pretest": 4,
         "qnum": 25
       }
+    ],
+    "options": [
+      "The connection to the print server is timing out",
+      "The graphic designer is not printing using PCL",
+      "The printer is low on black toner",
+      "The printer is running out of memory"
     ]
   },
   {
@@ -759,6 +955,12 @@
         "pretest": 4,
         "qnum": 78
       }
+    ],
+    "options": [
+      "Examine the workstation and printer for any obvious indicators of failure",
+      "Unplug and reattach the printer cables and reboot the workstation",
+      "Update the print drivers on the Windows workstation",
+      "Replace the printer with a new model and dispose of the broken printer"
     ]
   },
   {
@@ -769,13 +971,19 @@
     "qtype": "Multiple Choice",
     "question": "A company is transitioning to a cloud-based infrastructure and wants to implement a pay-as-you-go model for its IT services. Which cloud deployment model should they choose?",
     "wrong_pick": "Community cloud",
-    "correct_short": "",
+    "correct_short": "Public cloud",
     "explanation": "OBJ 4.2: The public cloud model allows organizations to pay only for the resources they use, making it a cost-effective solution for businesses that want to scale their IT services without heavy upfront investments. Public cloud providers offer shared infrastructure, which reduces costs but may have security and compliance considerations.",
     "sources": [
       {
         "pretest": 2,
         "qnum": 48
       }
+    ],
+    "options": [
+      "Public cloud",
+      "Community cloud",
+      "Private cloud",
+      "Hybrid cloud"
     ]
   },
   {
@@ -786,13 +994,19 @@
     "qtype": "Multiple Choice",
     "question": "Which of the following is a proprietary wireless communication protocol operating in the 800 MHz to 900 MHz frequency band and is primarily used for home automation?",
     "wrong_pick": "Zigbee",
-    "correct_short": "",
+    "correct_short": "Z-Wave",
     "explanation": "OBJ 2.2: Z-Wave is a wireless communications protocol used primarily for home automation. Z-Wave creates a mesh network topology, using low-energy radio waves to communicate from one appliance to another. Devices can be configured to work as repeaters to extend the network, but there is a limit of four hops between a controller device and an endpoint. This allows for wireless control of residential appliances and other devices, such as lighting control, security systems, thermostats, windows, locks, swimming pools, and garage door openers. Zigbee is a low-power wireless communications open-source protocol used primarily for home automation. Zigbee uses radio frequencies in the 2.4 GHz band and a mesh topology. Near-field communication (NFC) is a set of communication protocols that enable two electronic devices, one of which is usually a portable device such as a smartphone, to establish communication by bringing them within 4 cm of each other. This is commonly used for contactless payment systems, transferring contacts, or transferring a file from one device to another. Bluetooth is a wireless technology standard used for exchanging data between fixed and mobile devices over short distances using UHF radio waves in the industrial, scientific, and medical radio bands from 2.402 GHz to 2.480 GHz and building a personal area network (PAN). Bluetooth is commonly used when connecting wireless devices like mice, trackpads, headphones, and other devices.",
     "sources": [
       {
         "pretest": 2,
         "qnum": 49
       }
+    ],
+    "options": [
+      "Z-Wave",
+      "Bluetooth",
+      "NFC",
+      "Zigbee"
     ]
   },
   {
@@ -803,13 +1017,24 @@
     "qtype": "Multiple Answer",
     "question": "You have been asked by Dion Training to build a network-attached storage (NAS) device that will be used exclusively as a file server for the company's internal network. Which of the following are most important to install to BEST meet the company's needs? (Select TWO.)",
     "wrong_pick": "1 TB SSD",
-    "correct_short": "",
+    "correct_short": "Gigabit NIC",
     "explanation": "OBJ 3.4: According to CompTIA, the five main things you need to include for network-attached storage (NAS) devices are (1) media streaming capabilities, (2) file-sharing capabilities, (3) Gigabit NIC, (4) RAID array, and (5) hard drives. Based on the options provided, you should pick the RAID 5 and Gigabit NIC for this device's configuration. The RAID 5 will provide both speed and redundancy to the NAS device, whereas the RAID 0 would provide only speed without redundancy. The Gigabit NIC will provide 1 Gbps (1000 Mbps) of network speed instead of the 100 Mbps provided by a FastEthernet NIC. For a NAS device, you should use multiple hard disk drives in a RAID, not a single 1 TB HDD or 1 TB SSD. For a NAS, it is preferred to choose hard drives over solid-state drives because of the increased storage capacity and lower cost.",
     "sources": [
       {
         "pretest": 2,
         "qnum": 52
       }
+    ],
+    "options": [
+      "will be used exclusively as a file server for the company's internal network. Which of the",
+      "following are most important to install to BEST meet the company's needs? (Select TWO.)",
+      "Gigabit NIC",
+      "RAID 0",
+      "1 TB HDD (5400 RPM)",
+      "RAID 5",
+      "FastEthernet NIC",
+      "1 TB SSD",
+      "Selected Answer - Incorrect"
     ]
   },
   {
@@ -827,6 +1052,12 @@
         "pretest": 2,
         "qnum": 53
       }
+    ],
+    "options": [
+      "Reset the VM to factory settings and reinstall the patch",
+      "Revert the VM to a snapshot taken before the patch was applied",
+      "Increase the VM's memory allocation and reinstall the patch",
+      "Disable the sandbox mode and apply the patch again"
     ]
   },
   {
@@ -837,13 +1068,19 @@
     "qtype": "Multiple Choice",
     "question": "You are investigating a network connectivity issue that is affecting two workstations. When you check the network ports that these clients are connected to, you observe that the switch’s physical interfaces are continually going up and down. Which of the following is the most likely cause of the port flapping being observed?",
     "wrong_pick": "Collisions",
-    "correct_short": "",
+    "correct_short": "Duplicate MAC address",
     "explanation": "OBJ 5.5: A duplicate MAC address occurs when two or more devices are responding to data requests as if they are the only device on the network with that physical address. One indication of this occurring is when a switch continually changes the port assignments for that address as it updates its content-addressable memory (CAM) table to reflect the physical address and switch port bindings. This will cause the switch ports to continually flap by going up and down as the assignments are updated within the CAM table. A collision is the result of two devices on the same Ethernet network attempting to transmit data at the same time. Collisions are a common occurrence in half-duplex networks but should not occur in a full-duplex switched environment. Interference occurs when electrical signals are sent and received in the same frequency band as your network traffic. Duplicate IP addresses occur when two devices are issued the same IP by a DHCP server or are using identical static IP addresses. Duplicate IP addresses will cause routing issues, but they will not cause port flapping on a switch.",
     "sources": [
       {
         "pretest": 2,
         "qnum": 57
       }
+    ],
+    "options": [
+      "Collisions",
+      "Duplicate IP address",
+      "Interference",
+      "Duplicate MAC address"
     ]
   },
   {
@@ -857,7 +1094,7 @@
     "wrong_picks": [
       "Throughput"
     ],
-    "correct_short": "",
+    "correct_short": "Bandwidth",
     "explanation": "OBJ 5.5: Latency is the measure of time that it takes for data to reach its destination across a network. Usually, we measure network latency as the round-trip time from a workstation to the distant end and back. Bandwidth is the maximum rate of data transfer across a given network. Now, bandwidth is more of a theoretical concept that measures how much data could be transferred from a source to a destination under ideal conditions. Throughput is an actual measure of how much data is successfully transferred from the source to a destination. Therefore, we often measure throughput, instead of bandwidth, to monitor our network performance. Jitter is a network condition that occurs when a time delay in the sending of data packets over a network connection occurs. Jitter is a big problem for any real-time applications you may be supporting on your networks, like video conferences, voice-over IP, and virtual desktop infrastructure clients.",
     "sources": [
       {
@@ -868,6 +1105,12 @@
         "pretest": 5,
         "qnum": 60
       }
+    ],
+    "options": [
+      "Bandwidth",
+      "Throughput",
+      "Jitter",
+      "Latency"
     ]
   },
   {
@@ -878,13 +1121,19 @@
     "qtype": "Multiple Choice",
     "question": "Which storage solution provides the most flexibility and scalability for a virtualized environment?",
     "wrong_pick": "Local solid-state drive",
-    "correct_short": "",
+    "correct_short": "Local solid-state drive",
     "explanation": "OBJ 4.1: Network-attached storage (NAS) provides a centralized and scalable storage solution that allows multiple virtual machines to access data over the network efficiently. Direct-attached storage (DAS) is directly connected to a single server and lacks flexibility. A local solid-state drive (SSD) offers high speed but lacks network-wide scalability. An external USB drive is not suitable for enterprise-level virtualization due to limited scalability, accessibility, and speed.",
     "sources": [
       {
         "pretest": 2,
         "qnum": 62
       }
+    ],
+    "options": [
+      "Direct-attached storage",
+      "Network-attached storage",
+      "Local solid-state drive",
+      "External USB drive"
     ]
   },
   {
@@ -895,13 +1144,19 @@
     "qtype": "Multiple Choice",
     "question": "Which of the following technologies is commonly used to inventory the organization's equipment by attaching a tag to the device containing a chip programmed with the asset's data, allowing one-way communication to occur from the tag to the reader?",
     "wrong_pick": "NFC",
-    "correct_short": "",
+    "correct_short": "RFID",
     "explanation": "OBJ 2.2: An RFID tag contains an RFID chip programmed with the asset data. This is read wirelessly by an RFID (radio frequency identification) reader. RFID is a one-way communication mechanism, whereas NFC is two-way communication. Near-field communication (NFC) is a set of communication protocols that enable two electronic devices, one of which is usually a portable device such as a smartphone, to establish communication by bringing them within 4 cm of each other. This is commonly used for contactless payment systems, transferring contacts, or transferring a file from one device to another. Zigbee is a low-power wireless communications open-source protocol used primarily for home automation. Zigbee uses radio frequencies in the 2.4 GHz band and a mesh topology. Z-wave is a low-power wireless communications protocol used primarily for home automation. Z-wave uses radio frequencies in the 800 MHz and 900 MHz frequency ranges.",
     "sources": [
       {
         "pretest": 2,
         "qnum": 68
       }
+    ],
+    "options": [
+      "Zigbee",
+      "RFID",
+      "Z-Wave",
+      "NFC"
     ]
   },
   {
@@ -915,7 +1170,7 @@
     "wrong_picks": [
       "mATX"
     ],
-    "correct_short": "",
+    "correct_short": "mITX",
     "explanation": "OBJ 3.5: The mITX (Mini-ITX) form factor is 6.7\" x 6.7\" in size (17 cm x 17cm). The mITX is commonly used in smaller computer systems with a small form factor (SFF) case. These motherboards are usually used in computers designed for passive cooling and a low power consumption architecture, such as a home theater PC system. The mATX (microATX) motherboard's form factor is 9.6\" x 9.6\" in size (24 cm x 24 cm). The mATX form factor is commonly used in smaller computer systems with a small form factor (SFF) case. An mATX motherboard is backward-compatible with the larger ATX motherboard since it contains the same mounting point locations as the full-size board. An ATX motherboard's form factor is 12\" x 9.6\" in size (305mm x 244mm). ITX is a series of form factors that began with the mini-ITX, but there is no specific size called ITX.",
     "sources": [
       {
@@ -926,6 +1181,12 @@
         "pretest": 4,
         "qnum": 88
       }
+    ],
+    "options": [
+      "ATX",
+      "mITX",
+      "mATX",
+      "ITX"
     ]
   },
   {
@@ -936,13 +1197,19 @@
     "qtype": "Multiple Choice",
     "question": "Dion Training has a single switch that services every room within its offices. The switch contains 48 ports, but Jason wants to divide the ports based on functional areas, such as web development, instruction support, and administration. Which technology should Jason utilize to divide the physical switch into three logically divided areas?",
     "wrong_pick": "NAT",
-    "correct_short": "",
+    "correct_short": "VLAN",
     "explanation": "OBJ 2.4: A VLAN (virtual LAN) allows a single physical switch to be divided into logical networks. VLANs are only supported on managed switches, but they allow for a different logical subnetwork address to be assigned to various ports on the switch. This requires that communications between different VLANs must go through a router, just as if you had multiple switches. A virtual private network (VPN) extends a private network across a public network and enables users to send and receive data across shared or public networks as if their computing devices were directly connected to the private network. A digital subscriber line (DSL) modem is a device used to connect a computer or router to a telephone line, which provides the digital subscriber line service for connection to the Internet. Dynamic NAT is a many-to-one mapping of a private IP address or subnets inside a local area network to a public IP address or subnet outside the local area network. The traffic from different zones and subnets over trusted (inside) IP addresses in the LAN segment is sent over a single public (outside) IP address.",
     "sources": [
       {
         "pretest": 2,
         "qnum": 83
       }
+    ],
+    "options": [
+      "VPN",
+      "DSL",
+      "VLAN",
+      "NAT"
     ]
   },
   {
@@ -953,13 +1220,20 @@
     "qtype": "Multiple Choice",
     "question": "Jason has connected a new Roku media player to his high-definition television using an HDMI cable. When he attempts to turn on the Roku device, he sees a message stating \"Unauthorized content\" on his television. Which of the following should Jason do to fix this issue?",
     "wrong_pick": "Turn off the Roku and turn it back on",
-    "correct_short": "",
+    "correct_short": "Unplug and replug the HDMI cable from the Roku and television",
     "explanation": "OBJ 5.3: HDMI devices support the use of digital rights management (DRM) using the high-bandwidth digital content protection (HDCP) standard. Sometimes, televisions and displays can fail to properly authenticate themselves with the playback source, such as this Roku device. When this occurs, the best thing to do is shut off both devices, unplug the HDMI cable from both devices, reconnect the HDMI cable to both devices, then turn on the devices one at a time. If this fails to correct the issue, try replacing the HDMI cable with a higher quality cable, as lower quality cables have more issues with allowing the proper authentication to occur.",
     "sources": [
       {
         "pretest": 3,
         "qnum": 2
       }
+    ],
+    "options": [
+      "Turn off the television and Roku, unplug and replug the HDMI cable, and then restart",
+      "both units",
+      "Turn off the Roku and turn it back on",
+      "Turn off the television and turn it back on",
+      "Unplug and replug the HDMI cable from the Roku and television"
     ]
   },
   {
@@ -976,7 +1250,16 @@
         "pretest": 3,
         "qnum": 3
       }
-    ]
+    ],
+    "options": [
+      "asked to click on the appropriate device in a network diagram to see and modify its",
+      "configuration.)",
+      "AP1",
+      "AP2",
+      "SW1",
+      "AP3"
+    ],
+    "correct_short": "AP2"
   },
   {
     "id": "p3q13",
@@ -1003,13 +1286,19 @@
     "qtype": "Multiple Choice",
     "question": "A computer technician is configuring a NAS for a company to store their corporate data. The technician has installed four 10 TB hard drives operating at 5400 RPM in a RAID 10 configuration. How much usable storage space is contained in this NAS?",
     "wrong_pick": "10 TB",
-    "correct_short": "",
+    "correct_short": "10 TB",
     "explanation": "OBJ 3.4: A RAID 10 combines disk mirroring and disk striping to protect data stored in the array and requires a minimum of four disks. Since the NAS uses a RAID 10 configuration, it is a stripped and mirrored array. When all four 10 TB HDDs are installed, half of the capacity is used by the mirroring functionality of the RAID 10. Therefore, only 20 TB is available as the usable storage capacity. This configuration will give the array higher speed/performance (due to the stripping) and increase redundancy (due to the mirroring).",
     "sources": [
       {
         "pretest": 3,
         "qnum": 15
       }
+    ],
+    "options": [
+      "1.5 TB",
+      "2 TB",
+      "0.5 TB",
+      "1 TB"
     ]
   },
   {
@@ -1037,13 +1326,19 @@
     "qtype": "Multiple Choice",
     "question": "Which of the following is an advantage of using a hybrid cloud model?",
     "wrong_pick": "Unlimited scalability without additional on-premises infrastructure",
-    "correct_short": "",
+    "correct_short": "Enhanced security by keeping sensitive data on-premises",
     "explanation": "OBJ 4.2: A hybrid cloud model combines both private and public cloud environments, allowing organizations to keep sensitive data and critical workloads on-premises while leveraging the scalability of public cloud services for less sensitive operations. This model offers better control over security and compliance.",
     "sources": [
       {
         "pretest": 3,
         "qnum": 21
       }
+    ],
+    "options": [
+      "Unlimited scalability without additional on-premises infrastructure",
+      "Completely managed and insured by a third-party provider",
+      "Lower operational costs compared to public cloud",
+      "Enhanced security by keeping sensitive data on-premises"
     ]
   },
   {
@@ -1054,13 +1349,19 @@
     "qtype": "Multiple Choice",
     "question": "You are looking for a device that will proactively stop outside attackers from reaching your internal network. Which of the following devices would be the BEST for you to select?",
     "wrong_pick": "Proxy server",
-    "correct_short": "",
+    "correct_short": "IPS",
     "explanation": "OBJ 2.5: An intrusion prevention system (IPS) is a form of network security that detects and prevents identified threats. Intrusion prevention systems continuously monitor your network, looking for possible malicious incidents and capturing information about them. An IPS can block malicious network traffic, unlike an IDS, which can only log them. A proxy server is a server application that acts as an intermediary between a client requesting a resource and the server providing that resource. System Logging Protocol (Syslog) uses port 514 and is a way network devices can use a standard message format to communicate with a logging server. It was designed specifically to make it easy to monitor network devices. Devices can use a Syslog agent to send out notification messages under a wide range of specific conditions.",
     "sources": [
       {
         "pretest": 3,
         "qnum": 22
       }
+    ],
+    "options": [
+      "IPS",
+      "Proxy server",
+      "IDS",
+      "Authentication server"
     ]
   },
   {
@@ -1071,13 +1372,20 @@
     "qtype": "Multiple Choice",
     "question": "Which of the following best describes a Type I hypervisor?",
     "wrong_pick": "It requires a host operating system to function and manage virtualized environments",
-    "correct_short": "",
+    "correct_short": "environments",
     "explanation": "OBJ 4.1: A Type I hypervisor, also known as a \"bare-metal\" hypervisor, is installed directly on the physical hardware, providing better performance and security by eliminating the need for an underlying operating system. Running on top of an existing operating system describes a Type II hypervisor. Type I hypervisors are typically used in enterprise and data center environments and are not primarily used for desktop virtualization. They also do not rely on an OS to function, so they do not require a host operating system.",
     "sources": [
       {
         "pretest": 3,
         "qnum": 26
       }
+    ],
+    "options": [
+      "It is primarily used for desktop virtualization and testing environments",
+      "It requires a host operating system to function and manage virtualized",
+      "environments",
+      "It runs on top of an existing operating system to create and manage virtual machines",
+      "It is installed directly on the hardware, offering better performance and security"
     ]
   },
   {
@@ -1088,13 +1396,19 @@
     "qtype": "Multiple Choice",
     "question": "What type of connector provides power to an internal hard drive from the computer's power supply using a 4-pin connector?",
     "wrong_pick": "SATA",
-    "correct_short": "",
+    "correct_short": "Molex",
     "explanation": "OBJ 3.2 - A Molex connector provides DC power to the various drives inside a computer case. Molex and Mini-Molex are both 4-pins connectors, with Mini-Molex only being used to support floppy disk drives. The large-sized one is used for hard disk drives, CD-ROM drives, and DVD drives. SATA connectors have 15 pin and 7 pin varieties. Thunderbolt has 20 and 24 pin varieties. SCSI has 50 and 36 pin varieties.",
     "sources": [
       {
         "pretest": 3,
         "qnum": 27
       }
+    ],
+    "options": [
+      "Thunderbolt",
+      "SATA",
+      "SCSI",
+      "Molex"
     ]
   },
   {
@@ -1105,13 +1419,24 @@
     "qtype": "Multiple Choice",
     "question": "You are configuring a new printer for a small real estate office. There are only 4 computers in the network, and they are all connected to a single 4-port switch/router/cable modem device. There are no additional open ports on the device and no servers configured within the network. All the computers operate as part of a single workgroup with no domain controller. You need to configure the printer to allow all 4 computers to print to it as long as they are connected to the switch. Which of the following methods would BEST allow the users to print to the printer based on this network's configuration?",
     "wrong_pick": "Configure a print server and connect the printer to it",
-    "correct_short": "",
+    "correct_short": "connected to the switch. Which of the following methods would BEST allow the users to print",
     "explanation": "OBJ 3.7: Due to the small size of the network and the lack of additional open switch ports, it would be BEST to connect the printer to one of the workstations and configure it as a shared printer. This will allow any of the other workstations to print to the shared printer via the connected workstation. This allows the workstation to act as a print server, which means that the computer must always be left on or the rest of the users would be unable to print. Bluetooth printing is set up as a one-to-one pairing between a single computer and a single printer that is located within 10 feet. Since this is a small office, they do not have a dedicated server to configure for use as a print server. Cloud printing is only supported by some printers, and the question doesn't specify if this printer supports this feature.",
     "sources": [
       {
         "pretest": 3,
         "qnum": 37
       }
+    ],
+    "options": [
+      "There are no additional open ports on the device and no servers configured within the",
+      "network. All the computers operate as part of a single workgroup with no domain controller.",
+      "You need to configure the printer to allow all 4 computers to print to it as long as they are",
+      "connected to the switch. Which of the following methods would BEST allow the users to print",
+      "to the printer based on this network's configuration?",
+      "Configure the printer to support cloud printing",
+      "Configure the printer to support Bluetooth printing",
+      "Configure it as a shared printer connected to one of the four workstations",
+      "Configure a print server and connect the printer to it"
     ]
   },
   {
@@ -1122,13 +1447,19 @@
     "qtype": "Multiple Choice",
     "question": "Dion Training wants to replace any remaining old CRT displays used in the company with a type of screen that produces less voltage and is more energy-efficient. Additionally, the new screen type selected should not contain a backlight. What type of display technology should they select?",
     "wrong_pick": "LCD",
-    "correct_short": "",
+    "correct_short": "OLED",
     "explanation": "OBJ 3.1 - An organic light-emitting diode (OLED) display is a type of LED flat panel display device that uses organic compounds that emit light when subjected to an electric current. An OLED display works without a backlight because it emits visible light. Thus, it can display deep black levels and be thinner and lighter than a liquid crystal display (LCD). In low ambient light conditions (such as a darker room), an OLED screen can achieve a higher contrast ratio than an LCD, regardless of whether the LCD uses cold cathode fluorescent lamps or an LED backlight. An OLED will consume around 40% of an LCD's power, displaying a primarily black image. For most images, it will consume 60–80% of the power of an LCD. A liquid crystal display (LCD) panel is a type of display technology where the image is made up of liquid crystal cells controlled using electrical charges. The LCD panel is backlight by a cold cathode fluorescent (CCFL) bulb. LCD panels are used on laptops and have replaced CRT monitors as the main type of computer display screen for desktops, as well. A light-emitting diode (LED) display is an LCD panel that uses a LED backlight instead of a CCFL backlight to provide its light source. A plasma display is a type of flat panel display that uses small cells containing plasma with ionized gas that responds to electric fields. Plasma displays create excessive heat and are not as energy efficient as an LCD, LED, or OLED display.",
     "sources": [
       {
         "pretest": 3,
         "qnum": 40
       }
+    ],
+    "options": [
+      "LCD",
+      "LED",
+      "Plasma",
+      "OLED"
     ]
   },
   {
@@ -1139,13 +1470,19 @@
     "qtype": "Multiple Choice",
     "question": "Dion Training just installed a file server in VLAN 101 and their user workstations in VLAN 102. The users are unable to access the new file server from their workstations. Which of the following devices needs to be installed to allow users in VLAN 102 to access the resources in VLAN 101?",
     "wrong_pick": "Hub",
-    "correct_short": "",
+    "correct_short": "Router",
     "explanation": "OBJ 5.5: A router or other gateway device must be installed between two VLANs to allow connections to be routed between them. A Virtual LAN (VLAN) is a logically separate network that is created using switching technology. Even though hosts on two VLANs may be physically connected to the same cabling, local traffic is isolated to each VLAN, so they must use a router to communicate. A hub provides no intelligence in its interconnection functions so that whatever is received on one port is repeated out every other port. A wireless access point (WAP), or access point, connects directly to a wired local area network, and the AP then provides wireless connections using Wi-Fi for other devices to use that wired connection. An unmanaged switch operates out-of-the-box without any setup or configuration by switching network traffic based on MAC addresses and putting each switch port into its own collision domain. A hub, access point, and unmanaged switch are unable to route traffic and therefore would be unable to connect the two VLANs.",
     "sources": [
       {
         "pretest": 3,
         "qnum": 42
       }
+    ],
+    "options": [
+      "Router",
+      "Wireless access point",
+      "Unmanaged switch",
+      "Hub"
     ]
   },
   {
@@ -1156,13 +1493,19 @@
     "qtype": "Multiple Choice",
     "question": "What type of cloud service provides instant access to servers and switches, is quickly provisioned, and is available for management over the internet?",
     "wrong_pick": "PaaS",
-    "correct_short": "",
+    "correct_short": "IaaS",
     "explanation": "OBJ 4.2: Infrastructure as a service (IaaS) is an instant computing infrastructure provisioned and managed over the internet. Infrastructure as a Service (IaaS) is a cloud computing service that enables a consumer to outsource computing equipment purchases and running their own data center. IaaS quickly scales up and down with demand, letting you pay only for what you use. It helps you avoid the expense and complexity of buying and managing your physical servers and other data center infrastructure. Each resource is offered as a separate service component, and you only need to rent a particular one for as long as you need it. A cloud computing service provider manages the infrastructure while you purchase, install, configure, and manage your software. Platform as a Service (PaaS) is a cloud computing service that enables consumers to rent fully configured systems that are set up for specific purposes. Software as a Service (SaaS) is a cloud computing service that enables a service provider to make applications available over the Internet to end-users. This can be a calendar, scheduling, invoicing, word processor, database, or other programs. For example, Google Docs and Office 365 are both word processing SaaS solutions. Desktop as a Service (DaaS) provides a full virtualized desktop environment from within a cloud-based service. This is also known as VDI (Virtualized Desktop Infrastructure) and is coming in large enterprise businesses focused on increasing their security and minimizing their operational expenses.",
     "sources": [
       {
         "pretest": 3,
         "qnum": 61
       }
+    ],
+    "options": [
+      "IaaS",
+      "SaaS",
+      "DaaS",
+      "PaaS"
     ]
   },
   {
@@ -1173,13 +1516,19 @@
     "qtype": "Multiple Choice",
     "question": "A repeat customer is back with their laptop again. This is the third time they have dropped their laptop and caused their hard disk's internal platter to fail. Which of the following devices should you replace their internal hard drive with to prevent this issue from occurring again?",
     "wrong_pick": "Hybrid HDD/SSD",
-    "correct_short": "",
+    "correct_short": "NVMe",
     "explanation": "OBJ 5.2: Since this customer is accident-prone, you should recommend they install an NVMe or SSD device. These solid-state devices are more resistant to drops since they have no moving parts or platters in them. A hybrid or HDD solution would not be effective, as they both have moving platters in them that can be destroyed by a drop.",
     "sources": [
       {
         "pretest": 3,
         "qnum": 63
       }
+    ],
+    "options": [
+      "NVMe",
+      "5400 RPM HDD",
+      "Hybrid HDD/SSD",
+      "7200 RPM HDD"
     ]
   },
   {
@@ -1190,13 +1539,19 @@
     "qtype": "Multiple Choice",
     "question": "Which of the following technologies is often used indoors by companies to locate a shopper's position in a store and provide them time-sensitive offers or discounts?",
     "wrong_pick": "RFID",
-    "correct_short": "",
+    "correct_short": "Cellular",
     "explanation": "OBJ 2.2: A mobile device can use its internal GPS, cellular, Bluetooth, or Wi-Fi radios to identify its location. When indoors, the devices can use either Bluetooth or Wi-Fi to determine their location. Bluetooth can be used within a building to provide an accurate location of the device within 3-4 meters. Bluetooth location services are often used to identify where in a store a customer is located and present them with targeted offers. For example, if the store identified that you were in the frozen foods section, they might send you a push notification offering you a discount on a pint of ice cream. Wi-Fi positioning systems use the signal strength or angle of arrival of a signal to determine the device’s location within 1-4 meters. The use of Bluetooth and Wi-Fi to determine the device’s location is known as an internal positioning system (IPS). Cellular radios can provide an approximate location based upon the triangulation of your position between different cellular towers. A GPS (global positioning system) device is used to determine a receiver's position on the Earth based on information received from 24 GPS satellites, which operate in a constellation in Medium Earth Orbit (MEO). The receiver must have a line-of-sight to four of the GPS satellites continuously to accurately determine its position on the earth (latitude, longitude, and altitude). The device’s GPS receiver can provide an accurate location up to 10 meters.",
     "sources": [
       {
         "pretest": 3,
         "qnum": 65
       }
+    ],
+    "options": [
+      "RFID",
+      "GPS",
+      "Cellular",
+      "Bluetooth"
     ]
   },
   {
@@ -1207,13 +1562,19 @@
     "qtype": "Multiple Choice",
     "question": "Which of the following metrics should you consider to compare the performance of an SSD or HDD?",
     "wrong_pick": "Seek time",
-    "correct_short": "",
+    "correct_short": "Seek time",
     "explanation": "OBJ 5.2: The input/output operations per second (IOPS) is a measurement of performance used to compare a hard disk drive (HDD) and solid-state device (SSD). The IOPS is calculated based on the physical constraints of the media being used. For a hard disk drive, the IOPS is calculated by dividing 1000 milliseconds by the combined average seek time and average latency. The seek time only applies to a traditional hard drive since it calculates the time it takes to move the head to the proper storage location on the platter. For an SSD, there is no seek time used since it can instantly access any portion of the memory without physically moving a read head.",
     "sources": [
       {
         "pretest": 3,
         "qnum": 74
       }
+    ],
+    "options": [
+      "Latency",
+      "Seek time",
+      "IOPS",
+      "Bandwidth"
     ]
   },
   {
@@ -1224,13 +1585,20 @@
     "qtype": "Multiple Choice",
     "question": "A client has asked you to build a computer to use as part of their home theater (HTPC) system. The HTPC will be used primarily to stream videos in their living room and must have a small form factor to fit into their entertainment center next to their surround sound system. Which of the following motherboards would be the BEST choice for an HTPC system?",
     "wrong_pick": "Micro-ATX",
-    "correct_short": "",
+    "correct_short": "Mini-ITX",
     "explanation": "OBJ 3.5: A form factor means the physical dimensions of a system, and the motherboard form factor defines the size of the case you can use. There is no performance difference between different motherboard form factors, except for the size and number of expansion slots. Mini-ITX is the most commonly used form factor with HTPC systems because they require the smallest fans or passive cooling, which minimizes the noise produced by the system. A micro-ATX motherboard produces more heat and is larger than a mini-ITX motherboard. Micro-ATX motherboards also require a larger (and louder) fan to keep the system cooled, so it is a poor choice for an HTPC. An ATX or ITX motherboard is a bad choice since they are larger and would not fit into a traditional HTPC case.",
     "sources": [
       {
         "pretest": 3,
         "qnum": 76
       }
+    ],
+    "options": [
+      "Which of the following motherboards would be the BEST choice for an HTPC system?",
+      "ITX",
+      "Micro-ATX",
+      "Mini-ITX",
+      "ATX"
     ]
   },
   {
@@ -1241,13 +1609,19 @@
     "qtype": "Multiple Choice",
     "question": "Which type of internet connection allows for high-speed, bidirectional data communication over a hybrid fiber-coaxial (HFC) connection?",
     "wrong_pick": "DSL",
-    "correct_short": "",
+    "correct_short": "Fiber",
     "explanation": "OBJ 2.7: A cable modem is a type of network bridge that provides bi-directional data communication via radio frequency channels on a hybrid fiber-coaxial (HFC), radio frequency over glass (RFoG), and coaxial cable infrastructure. Cable modems are primarily used to deliver broadband internet access as cable internet, taking advantage of an HFC and RFoG network's high bandwidth. \"Fiber to the X\" (FTTx) is commonly used to describe where the fiber connection ends between the service and the subscriber. The closer the fiber is to the user's network, the faster the service. FTTH (fiber to the house) provides fiber directly to the user's home network, making it the fastest option. Traditionally, you will find a 1 Gbps connection or higher with FTTH. FTTN (fiber to the node) or FTTC (fiber to the curb/cabinet) provides fiber only to the local area or neighborhood but then uses copper cabling from the node/cabinet/curb to the home network, which slows down the network (generally, 100-200 Mbps). Satellite systems provide far bigger areas of coverage than can be achieved using other technologies. A Very Small Aperture Terminal (VSAT) microwave antenna is aligned to an orbital satellite that can either relay signals between sites directly or via another satellite. DSL is a technology used to transmit multimedia traffic at high-bit rates over twisted-pair copper wire (over ordinary telephone lines). This allows the telecommunications company to connect a user's home to the local switching center using normal telephone lines, then connect that local switching center (using a DSLAM to multiplex the connections) to the central office over a single high-speed cable (such as a fiber connection).",
     "sources": [
       {
         "pretest": 3,
         "qnum": 77
       }
+    ],
+    "options": [
+      "Fiber",
+      "Satellite",
+      "DSL",
+      "Cable"
     ]
   },
   {
@@ -1258,13 +1632,20 @@
     "qtype": "Multiple Choice",
     "question": "You have been assigned a trouble ticket for a workstation that is unable to boot. When you arrive at the workstation, you recognize an error message on the screen that reads, \"Error loading operating system, BOOTMGR is missing, Press Ctrl+Alt+Del to restart.\" Which of the following actions should you take first?",
     "wrong_pick": "Reboot the computer into the BIOS to see if the boot order is set to HDD",
-    "correct_short": "",
+    "correct_short": "Reboot the computer into the Windows 10 repair console and enter \"Bootrec /fixmbr\" at",
     "explanation": "OBJ 5.2: To troubleshoot the failed boot, you must reboot the computer and enter into recovery mode. In Windows 10, you will need to boot from the installation disc, select “Repair your computer,” and then enter the command-line interface (CLI). From the CLI, enter the command \"bootrec /fixmbr\" to repair the master boot record. Once completed, reboot the computer and allow it to load into Windows.",
     "sources": [
       {
         "pretest": 3,
         "qnum": 84
       }
+    ],
+    "options": [
+      "Reboot the computer into recovery mode and initiate the disk restoral process",
+      "Reboot the computer into the Windows 10 repair console and enter \"Bootrec /fixmbr\" at",
+      "the command prompt",
+      "Reboot the computer into the BIOS to see if the boot order is set to HDD",
+      "Reboot the computer and allow it to load back into Windows"
     ]
   },
   {
@@ -1289,6 +1670,12 @@
         "pretest": 4,
         "qnum": 66
       }
+    ],
+    "options": [
+      "Install third-party software to force the webcam to work",
+      "Restart the video-conferencing application",
+      "Replace the laptop screen assembly",
+      "Check the physical connection of the webcam"
     ]
   },
   {
@@ -1306,6 +1693,12 @@
         "pretest": 4,
         "qnum": 2
       }
+    ],
+    "options": [
+      "Cardioid",
+      "Bidirectional",
+      "Omnidirectional",
+      "Unidirectional"
     ]
   },
   {
@@ -1316,13 +1709,19 @@
     "qtype": "Multiple Choice",
     "question": "Which of the following types of networking hardware is used to deliver broadband internet access using a fiber connection to the user's home or office?",
     "wrong_pick": "Cable modem",
-    "correct_short": "",
+    "correct_short": "Optical network terminal",
     "explanation": "OBJ 2.5: An optical network terminal (ONT) is a device that connects fiber optics cables to other types of wiring such as Ethernet and phone lines by converting the signal from optical to electrical and vice versa. An ONT is commonly used with fiber to the house (FTTH) installations. A cable modem is a type of network bridge that provides bi-directional data communication via radio frequency channels on a hybrid fiber-coaxial (HFC), radio frequency over glass (RFoG), and coaxial cable infrastructure. Cable modems are primarily used to deliver broadband internet access as cable internet, taking advantage of an HFC and RFoG network's high bandwidth. DSL is a technology used to transmit multimedia traffic at high-bit rates over twisted-pair copper wire (over ordinary telephone lines). This allows the telecommunications company to connect a user's home to the local switching center using normal telephone lines, then connect that local switching center (using a DSLAM to multiplex the connections) to the central office over a single high-speed cable (such as a fiber connection). Software-defined networking (SDN) is an approach to network management that enables dynamic, programmatically efficient network configuration to improve network performance and monitoring, making it more like cloud computing than traditional network management. Software-defined networking (SDN) uses Application Programming Interfaces (API) and compatible hardware that allows for the programming of network appliances and systems.",
     "sources": [
       {
         "pretest": 4,
         "qnum": 4
       }
+    ],
+    "options": [
+      "Cable modem",
+      "Software-defined networking",
+      "Digital subscriber line",
+      "Optical network terminal"
     ]
   },
   {
@@ -1333,13 +1732,19 @@
     "qtype": "Multiple Choice",
     "question": "Dion Training wants to install a new accounting system and is considering moving to a cloud-based solution to reduce cost, reduce the information technology overhead costs, improve reliability, and improve availability. Your Chief Information Officer is supportive of this move since it will be more fiscally responsible. Still, the Chief Risk Officer is concerned with housing all of the company’s confidential financial data in a cloud provider’s network that might be shared with other companies. Since the Chief Information Officer is determined to move to the cloud, what type of cloud-based solution would you recommend to account for the Chief Risk Officer’s concerns?",
     "wrong_pick": "PaaS in a hybrid cloud",
-    "correct_short": "",
+    "correct_short": "SaaS in a private cloud",
     "explanation": "OBJ 4.2: A SaaS (Software as a Service) solution best describes an accounting system or software used as part of a cloud service. This meets the CIO's requirements. To mitigate the concerns of the Chief Risk Officer, you should use a private cloud solution. This type of solution ensures that the cloud provider does not comingle your data with other customers' data and provides dedicated servers and resources for your company's use only.",
     "sources": [
       {
         "pretest": 4,
         "qnum": 17
       }
+    ],
+    "options": [
+      "SaaS in a private cloud",
+      "SaaS in a public cloud",
+      "PaaS in a community cloud",
+      "PaaS in a hybrid cloud"
     ]
   },
   {
@@ -1350,13 +1755,19 @@
     "qtype": "Multiple Choice",
     "question": "A customer contacts the service desk because their laptop will not power on when plugged in, and the battery is dead. The service desk replaces its battery, connects it to a different power adapter, and the laptop works all day until the battery runs out. Now, the laptop won't turn on, and the battery won't charge. Which of the following do you recommend to solve this issue?",
     "wrong_pick": "Replace the power adapter",
-    "correct_short": "",
+    "correct_short": "Replace the power adapter",
     "explanation": "OBJ 5.4: This scenario indicates that the DC jack is faulty. Since the battery was replaced and the laptop continues to work, this indicates it isn't a battery issue but is, instead, most likely a DC jack issue. The DC jack often gets broken on a laptop, and if the jack is broken, the device cannot charge or receive power from the power adapter or wall outlet.",
     "sources": [
       {
         "pretest": 4,
         "qnum": 22
       }
+    ],
+    "options": [
+      "Connect the laptop to a 220v outlet",
+      "Replace the battery",
+      "Replace the DC jack",
+      "Replace the power adapter"
     ]
   },
   {
@@ -1367,13 +1778,19 @@
     "qtype": "Multiple Choice",
     "question": "Jay is complaining that the speed at which the cursor moves across his laptop's screen when using his trackpad makes it difficult to properly control. Which setting could he use to slow down the cursor in Windows 10?",
     "wrong_pick": "Settings > Devices > Touchpad > Touchpad sensitivity",
-    "correct_short": "",
+    "correct_short": "Settings > Devices > Touchpad > Touchpad sensitivity",
     "explanation": "OBJ 1.3: If the speed of the pointer or cursor moving across the screen is difficult to control, a technician can reduce the touchpad's speed in Windows 10 under Settings. To open settings, press the Windows key and the \"i\" key. Next, open Settings and click/tap on the Devices icon. Then, click/tap on Touchpad in the left-hand column. On the right-hand of the screen, adjust the slider labeled “Change the cursor speed” to a speed that is more comfortable to use. The touchpad sensitivity setting is used to control the amount of pressure needed before the touchpad registers a click as input from the user.",
     "sources": [
       {
         "pretest": 4,
         "qnum": 23
       }
+    ],
+    "options": [
+      "Settings > Devices > Mouse > Speed",
+      "Settings > Devices > Mouse > Touchpad sensitivity",
+      "Settings > Devices > Touchpad > Touchpad sensitivity",
+      "Settings > Devices > Touchpad > Speed"
     ]
   },
   {
@@ -1384,13 +1801,19 @@
     "qtype": "Multiple Choice",
     "question": "John connected his MacBook to the corporate network and is trying to print to the office's large network printer. John notices that the print job is failing to print. The other employees in the office are having no issues printing from their Windows workstations. Which of the following should be done to resolve John's issue?",
     "wrong_pick": "Restart the print spooler on the print server",
-    "correct_short": "",
+    "correct_short": "Install the print drivers for OS X on the print server",
     "explanation": "OBJ 3.7: You should install the print drivers for OS X (macOS) on the print server to ensure compatibility with MacBooks and iMac devices. Since the Windows users can print to the network printer without any issues, the printer and the network are working properly. Instead, the most likely explanation is that the print server does not have the print drivers for OS X (macOS) installed on it.",
     "sources": [
       {
         "pretest": 4,
         "qnum": 27
       }
+    ],
+    "options": [
+      "Restart the print spooler on the print server",
+      "Enable Bonjour on John's MacBook",
+      "Install the print drivers for OS X on the print server",
+      "Install and enable the OS X printing option on the network printer"
     ]
   },
   {
@@ -1404,7 +1827,7 @@
     "wrong_picks": [
       "Hold down power and volume up buttons simultaneously for 10 seconds, then slide to power off"
     ],
-    "correct_short": "",
+    "correct_short": "off.",
     "explanation": "OBJ 5.4: Smartphones can become frozen, hung up, or locked up to the point they are unresponsive to touch or some button presses. The best solution is to hold down the power and volume down buttons simultaneously on an iPhone until it turns off.",
     "sources": [
       {
@@ -1415,6 +1838,15 @@
         "pretest": 5,
         "qnum": 79
       }
+    ],
+    "options": [
+      "Hold down power and volume down buttons simultaneously for 10 seconds until it turns",
+      "off.",
+      "Hold down the power button and then the sleep/wake button simultaneously for about",
+      "10 seconds",
+      "Hold down power and volume up buttons simultaneously for 10 seconds, then",
+      "slide to power off",
+      "Hold down the home button for 10 seconds, then slide to power off"
     ]
   },
   {
@@ -1425,13 +1857,21 @@
     "qtype": "Multiple Choice",
     "question": "You are working as part of a PC refresh team installing 150 desktop computers in Dion Training's new offices. When you boot up the 72nd desktop you installed, you smell a foul-smelling chemical odor. You sniff the air again and confirm the smell isn't a burning smell. Upon opening the case, which component should you inspect for damage and expect to replace?",
     "wrong_pick": "Power supply",
-    "correct_short": "",
+    "correct_short": "Motherboard",
     "explanation": "OBJ 5.1: A foul smell is usually indicative of a distended capacitor. Capacitors are small electrical components on the motherboard. Therefore, you should inspect the motherboard for replacement. If there is a burning smell, then the power supply should be the first component inspected.",
     "sources": [
       {
         "pretest": 4,
         "qnum": 38
       }
+    ],
+    "options": [
+      "Upon opening the case, which component should you inspect for damage and expect to",
+      "replace?",
+      "System fan",
+      "GPU",
+      "Motherboard",
+      "Power supply"
     ]
   },
   {
@@ -1449,6 +1889,12 @@
         "pretest": 4,
         "qnum": 39
       }
+    ],
+    "options": [
+      "eSATA uses unshielded cables",
+      "eSATA is used to add additional internal storage devices",
+      "eSATA is slower than USB 3.0",
+      "eSATA is used to add additional external storage devices"
     ]
   },
   {
@@ -1476,13 +1922,19 @@
     "qtype": "Multiple Choice",
     "question": "You and your friends are hanging out in a bar downtown and notice that the entire area around the bar has a great wireless network called \"Downtown Metro.\" This wireless network was built by the city and currently covers about 5 square blocks of the downtown area. What type of network best classifies this wireless network?",
     "wrong_pick": "WAN",
-    "correct_short": "",
+    "correct_short": "MAN",
     "explanation": "OBJ 2.7: A metropolitan area network (MAN) is a computer network that interconnects users with computer resources in a geographic region of the size of a metropolitan or city area. This usually works by providing municipal broadband via Wi-Fi to large parts or all of a municipal area by deploying a wireless mesh network. A wireless mesh network (WMN) is a wireless network topology where all nodes, including client stations, can provide forwarding and path discovery to improve coverage and throughput compared to using just fixed access points and extenders. The typical deployment design uses hundreds of wireless access points deployed outdoors, often on poles. A local area network (LAN) is a network where all the nodes or hosts participating in the network are directly connected with cables or short-range wireless media. A personal area network (PAN) is a close-range network that is usually based on Bluetooth or NFC for communications between personal devices, such as smartphones, laptops, printers, and other peripheral devices. A wide area network (WAN) is a network that spans multiple geographic locations, such as the internet. Wide area networks are often established with leased telecommunication circuits.",
     "sources": [
       {
         "pretest": 4,
         "qnum": 50
       }
+    ],
+    "options": [
+      "LAN",
+      "WAN",
+      "PAN",
+      "MAN"
     ]
   },
   {
@@ -1493,13 +1945,19 @@
     "qtype": "Multiple Choice",
     "question": "Which of the following types of authentication devices is being used in this picture?",
     "wrong_pick": "Somewhere you are",
-    "correct_short": "",
+    "correct_short": "Something you know",
     "explanation": "OBJ 1.1: There are five types of authentication factors: something you know, something you have, something you are, something you do, and somewhere you are. In this picture, the user is being authenticated using their fingerprint, which is considered something you are or a biometric factor of authentication. Something you are refers to biometric authentication and includes fingerprints, retina scans, and facial scans. Something you know is a knowledge factor that includes usernames, passwords, and other non-tangible facts. Something you have is a possession factor that includes a physical token, key fob, or smart card. Somewhere you are is a location factor that includes your GPS coordinates or the location of your IP address. Something you do is an action factor that includes the way you sign your name, the way you say a passphrase, and other actionable items.",
     "sources": [
       {
         "pretest": 4,
         "qnum": 55
       }
+    ],
+    "options": [
+      "Something you know",
+      "Somewhere you are",
+      "Something you are",
+      "Something you have"
     ]
   },
   {
@@ -1510,13 +1968,21 @@
     "qtype": "Multiple Choice",
     "question": "Your company has decided to upgrade its legacy phone system to use VoIP devices instead. The new phones will download the configurations from a server each time they boot up. Which of the following ports need to be opened on the firewall to ensure the phones can communicate with the TFTP server and download their boot-up configurations?",
     "wrong_pick": "21",
-    "correct_short": "",
+    "correct_short": "69",
     "explanation": "OBJ 2.1: Trivial File Transfer Protocol (TFTP) is a simple protocol that provides a basic file transfer function with no user authentication. TFTP uses port 69 to communicate. TFTP is intended for applications that do not need the sophisticated interactions that File Transfer Protocol (FTP) provides. The File Transfer Protocol is a standard communication protocol used for the transfer of computer files from a server to a client on a computer network. FTP uses port 21 to communicate. The Domain Name System (DNS) is used to translate requests for names into IP addresses, controlling which server an end-user will reach when they type a domain name into their web browser. DNS uses port 53 to communicate. The Simple Network Management Protocol (SNMP) is a networking protocol used for the management and monitoring of network-connected devices in Internet Protocol networks. SNMP uses port 161 to communicate.",
     "sources": [
       {
         "pretest": 4,
         "qnum": 58
       }
+    ],
+    "options": [
+      "Which of the following ports need to be opened on the firewall to ensure the phones can",
+      "communicate with the TFTP server and download their boot-up configurations?",
+      "69",
+      "21",
+      "161",
+      "53"
     ]
   },
   {
@@ -1534,6 +2000,12 @@
         "pretest": 4,
         "qnum": 59
       }
+    ],
+    "options": [
+      "Split horizon",
+      "Latency",
+      "Throttling",
+      "Interference"
     ]
   },
   {
@@ -1544,7 +2016,7 @@
     "qtype": "Multiple Choice",
     "question": "Which of the following must be enabled on a mobile device to allow internet access when cellular data is unavailable, such as in an airplane?",
     "wrong_pick": "Bluetooth",
-    "correct_short": "Wi-Fi",
+    "correct_short": "SIM card locking",
     "explanation": "OBJ 1.3: When cellular data is unavailable, enabling Wi-Fi allows the device to connect to available wireless networks to access the internet. Bluetooth and GPS services do not provide internet connectivity, and SIM card locking is a security feature.",
     "sources": [
       {
@@ -1553,10 +2025,10 @@
       }
     ],
     "options": [
-      "Bluetooth",
-      "GPS services",
       "SIM card locking",
-      "Wi-Fi"
+      "Bluetooth",
+      "Wi-Fi",
+      "GPS services"
     ]
   },
   {
@@ -1567,13 +2039,20 @@
     "qtype": "Multiple Choice",
     "question": "John is setting up 100 Windows 10 computers for a new corporate office. He wants to ensure that no one can change the boot order and boot from an unauthorized operating system. What feature should he ensure is enabled?",
     "wrong_pick": "Secure Boot",
-    "correct_short": "",
+    "correct_short": "Full disk encryption",
     "explanation": "OBJ 3.5: John should utilize the BIOS to set up a password to prevent unauthorized access to the Basic Input/Output System (BIOS) by other users. The BIOS is software that utilizes a small memory chip on the motherboard to hold the settings specialized for an organization to prevent access and tampering, thus reducing the workstations' overall attack surface and the network. Full disk encryption is used to encrypt the user and system data stored in the device’s internal storage. RAM integrity checking is conducted by default on most systems during the initial boot process, but it doesn't prevent a user from booting the system or changing the boot order. The purpose of Secure Boot is to prevent malicious and unauthorized apps from loading into the operating system (OS) during the startup process. Secure Boot is enabled by default in Windows 10. When the PC starts, the firmware checks the signature of each piece of boot software, including UEFI firmware drivers (also known as Option ROMs), EFI applications, and the operating system. If the signatures are valid, the PC boots and the firmware gives control to the operating system.",
     "sources": [
       {
         "pretest": 4,
         "qnum": 75
       }
+    ],
+    "options": [
+      "What feature should he ensure is enabled?",
+      "RAM integrity checking",
+      "Full disk encryption",
+      "Secure Boot",
+      "BIOS password required"
     ]
   },
   {
@@ -1591,6 +2070,12 @@
         "pretest": 4,
         "qnum": 83
       }
+    ],
+    "options": [
+      "Bandwidth saturation",
+      "Encryption type",
+      "WAP placement",
+      "WAP SSID"
     ]
   },
   {
@@ -1601,13 +2086,19 @@
     "qtype": "Multiple Choice",
     "question": "You are currently conducting passive reconnaissance in preparation for an upcoming penetration test against Dion Training. You are reviewing the DNS records for the company and are trying to identify which server is their authoritative DNS server to plan an attack against it. Which of the following DNS records should you analyze?",
     "wrong_pick": "SRV",
-    "correct_short": "",
+    "correct_short": "TXT",
     "explanation": "OBJ 2.4: Nameserver (NS) records are used to list the authoritative DNS server for a particular domain. Mail Exchange (MX) records are used to provide the mail server that accepts email messages for a particular domain. Text (TXT) records are used to provide information about a resource such as a server, network, or service in human-readable form. They often contain domain verification and domain authentications for third-party tools that can send information on behalf of a domain name. Service (SRV) records are used to provide host and port information on services such as voice over IP (VoIP) and instant messaging (IM) applications.",
     "sources": [
       {
         "pretest": 5,
         "qnum": 11
       }
+    ],
+    "options": [
+      "TXT",
+      "MX",
+      "SRV",
+      "NS"
     ]
   },
   {
@@ -1618,13 +2109,19 @@
     "qtype": "Multiple Choice",
     "question": "Which mobile device accessory includes a small, pressure-sensitive nub that is commonly used as a pointing device on laptops?",
     "wrong_pick": "Trackpad",
-    "correct_short": "",
+    "correct_short": "Track point",
     "explanation": "OBJ 1.2: A track point is a pressure-sensitive pointing device that appears as a small nub, typically located between the keys of a laptop's keyboard. It allows precise control of the cursor without requiring a separate external mouse or the use of a touchpad. A trackpad is a touch-sensitive surface used for cursor control, but it is not a small nub-like device. A drawing pad is used for digital drawing or handwriting, often with a stylus, and does not function as a pointing device. A stylus is a pen-like device for interacting with touchscreens, not a pointing device integrated into a laptop keyboard.",
     "sources": [
       {
         "pretest": 5,
         "qnum": 19
       }
+    ],
+    "options": [
+      "Stylus",
+      "Track point",
+      "Drawing pad",
+      "Trackpad"
     ]
   },
   {
@@ -1642,6 +2139,12 @@
         "pretest": 5,
         "qnum": 20
       }
+    ],
+    "options": [
+      "192.168.0.2",
+      "172.30.15.12",
+      "11.120.32.41",
+      "169.254.12.64"
     ]
   },
   {
@@ -1659,6 +2162,12 @@
         "pretest": 5,
         "qnum": 38
       }
+    ],
+    "options": [
+      "53",
+      "80",
+      "67",
+      "443"
     ]
   },
   {
@@ -1669,13 +2178,19 @@
     "qtype": "Multiple Choice",
     "question": "What are the dimensions of a MicroATX motherboard?",
     "wrong_pick": "6.7\" x 6.7\"",
-    "correct_short": "",
+    "correct_short": "9.6\" x 9.6\"",
     "explanation": "OBJ 3.5: The mATX (microATX) motherboard's form factor is 9.6\" x 9.6\" in size (24 cm x 24 cm). The mATX form factor is commonly used in smaller computer systems with a small form factor (SFF) case. An mATX motherboard is backward-compatible with the larger ATX motherboard since it contains the same mounting point locations as the full-size board. An ATX motherboard's form factor is 12\" x 9.6\" in size (305mm x 244mm). ITX is a series of form factors that began with the mini-ITX, but there is no specific size called ITX. The mITX (Mini-ITX) form factor is 6.7\" x 6.7\" in size (17 cm x 17cm). The mITX is commonly used in smaller computer systems with a small form factor (SFF) case. These motherboards are usually used in computers designed for passive cooling and a low power consumption architecture, such as a home theater PC system.",
     "sources": [
       {
         "pretest": 5,
         "qnum": 43
       }
+    ],
+    "options": [
+      "9.6\" x 9.6\"",
+      "11\" x 9.6\"",
+      "3.6\" x 2.9\"",
+      "6.7\" x 6.7\""
     ]
   },
   {
@@ -1686,13 +2201,19 @@
     "qtype": "Multiple Choice",
     "question": "On Tuesday evening, the company just pushed a new Windows 10 security update to all of its workstations. On Wednesday morning, the help desk receives numerous complaints about the network being slower than normal. Previously, the network was baselined at 1 Gbps, as each workstation uses a wired CAT 6 connection. Today, a technician ran a speed test and saw the network was only reaching speeds of 100 Mbps. Which of the following is the MOST likely cause of the network slowdown?",
     "wrong_pick": "The incorrect DNS server configuration is being used",
-    "correct_short": "",
+    "correct_short": "The network card drivers were updated last night",
     "explanation": "OBJ 5.5: Often, security updates, patches, and upgrades will reconfigure a network card's drivers during a Windows security update. If this happens, the system may revert to a more generic version of the driver, decreasing speeds from 1 Gbps to 100 Mbps. The network card's drivers should be rolled back to the previous driver to restore functionality and correct it. If there were configuration changes to the DNS or DHCP server, it would limit connectivity completely instead of simply slowing down the connection. If the network changed from DHCP to static assignments, the workstations would not get an APIPA address and would not have connected to the network at a slower speed.",
     "sources": [
       {
         "pretest": 5,
         "qnum": 59
       }
+    ],
+    "options": [
+      "The network card drivers were updated last night",
+      "The incorrect DHCP server configuration is being used",
+      "The incorrect DNS server configuration is being used",
+      "The network was reconfigured from DHCP to static"
     ]
   },
   {
@@ -1703,13 +2224,19 @@
     "qtype": "Multiple Choice",
     "question": "What is an advantage of using the 5 GHz wireless band over the 2.4 GHz band?",
     "wrong_pick": "Lower power consumption and longer range capabilities",
-    "correct_short": "",
+    "correct_short": "More available non-overlapping channels and less interference",
     "explanation": "OBJ 2.2: The 5 GHz band provides more available non-overlapping channels and experiences less interference compared to the 2.4 GHz band, making it ideal for high-density environments with multiple devices. While the 2.4 GHz band offers better wall penetration and compatibility with older devices, the 5 GHz band is preferred for faster speeds and reduced congestion. The range of the 5 GHz band is shorter, and it typically consumes more power compared to 2.4 GHz.",
     "sources": [
       {
         "pretest": 5,
         "qnum": 65
       }
+    ],
+    "options": [
+      "Better penetration through interference such as walls and obstacles",
+      "Lower power consumption and longer range capabilities",
+      "More available non-overlapping channels and less interference",
+      "Compatibility with older wireless devices and technology"
     ]
   },
   {
@@ -1720,13 +2247,19 @@
     "qtype": "Multiple Choice",
     "question": "A workstation in Dion Training’s conference room is experiencing an issue when trying to boot up. When the workstation is powered on, the workstation displays an error stating that a bootable device cannot be found. The technician enters the UEFI environment and sees that the hard disk drive is no longer being recognized by the system. The technician shut down the workstation, opened the case, and verified that the memory modules and cables are properly connected to the internal hard disk drive. Which of the following is the MOST likely reason for the workstation’s failure to recognize the internal hard disk drive?",
     "wrong_pick": "The boot order of the devices is incorrect",
-    "correct_short": "",
+    "correct_short": "The workstation’s hard drive is failing",
     "explanation": "OBJ 5.2: If the hard drive fails, the workstation will experience data loss or fail to boot up. Since the BIOS/UEFI does not recognize the internal hard disk drive, it has either failed or is disconnected. Since the technician verified the hard drive was properly cabled, the drive itself must have failed. If the boot order of the devices is incorrect, the system would still try to boot from each connected drive before issuing the no bootable device error message. If the system was overheating, it would cause intermittent reboots instead of failing to find a bootable device. Each motherboard will only support certain types of memory modules, so it is not possible to use both DDR3 and DDR4 in the same workstation. DDR3 and DDR4 are two different form factors that use different notches; therefore, they will physically not fit into a different type of slot.",
     "sources": [
       {
         "pretest": 5,
         "qnum": 78
       }
+    ],
+    "options": [
+      "There is a mix of DDR3 and DDR4 modules installed",
+      "The workstation’s hard drive is failing",
+      "The workstation is overheating",
+      "The boot order of the devices is incorrect"
     ]
   },
   {
@@ -1737,13 +2270,19 @@
     "qtype": "Multiple Choice",
     "question": "Which of the following cable types can support speeds of up to 10 Gbps for up to 100 meters?",
     "wrong_pick": "Cat 6",
-    "correct_short": "",
+    "correct_short": "Cat 6a",
     "explanation": "OBJ 3.2 - Only Cat 6a can support 10 Gbps for up to 100 meters in length. While Cat 6 can support 10 Gbps, it can only support it up to 55 meters before the signal attenuation becomes too great to use reliably.",
     "sources": [
       {
         "pretest": 5,
         "qnum": 80
       }
+    ],
+    "options": [
+      "Cat 6a",
+      "Cat 5",
+      "Cat 6",
+      "Cat 5e"
     ]
   },
   {
@@ -1754,13 +2293,19 @@
     "qtype": "Multiple Choice",
     "question": "You work as a computer technician for a production company that travels worldwide while filming and editing music videos. Due to the nature of video editing, you will be building a video production workstation for the company that will have the maximum amount of RAM, an 8-core CPU, a dedicated GPU, and a redundant array of solid-state devices for storage. You are now determining which power supply to install in the system. What is the MOST important characteristic to consider when choosing a power supply?",
     "wrong_pick": "Amperage of 12V rail",
-    "correct_short": "",
+    "correct_short": "Input voltage",
     "explanation": "OBJ 3.6: This question provides you with many details, but the key phrase in finding the answer is in the first sentence. This computer will be traveling worldwide, and the most important consideration will be the input voltage. If you choose a 120-volt power supply, it would be destroyed if plugged into a 240-volt outlet (commonly used outside the United States). Conversely, if you use a 240-volt power supply and plug it into a 120-volt outlet, it will not function due to the lower voltage. Therefore, you need to pick a power supply with dual voltage selection capability for maximum compatibility worldwide.",
     "sources": [
       {
         "pretest": 5,
         "qnum": 84
       }
+    ],
+    "options": [
+      "Amperage of 12V rail",
+      "Input voltage",
+      "Number of SATA connectors",
+      "Efficiency rating"
     ]
   },
   {
@@ -1771,13 +2316,19 @@
     "qtype": "Multiple Choice",
     "question": "You are working as a laptop repair technician. You just received a laptop that was reported to have a glass of water spilled on it. You want to examine the components in the laptop to begin troubleshooting it. What are the first steps you should take as part of your troubleshooting process?",
     "wrong_pick": "Submerge the laptop in a large bowl of rice to fully dry out the inner components",
-    "correct_short": "",
+    "correct_short": "Remove the external casing of the laptop and document the screw locations",
     "explanation": "OBJ 5.4: When you are taking apart a laptop, it is important to keep track of each of the screws and the location that they were removed from. Many of the screws may appear to be the same height or width, but they may be different. One easy way to keep track of these parts is to create a grid on a sheet of printer paper and place the screws on this makeshift diagram. While the other options may be useful, the question asks you what you should do first to examine the laptop components. To perform that examination, you must remove the external casing and its screws.",
     "sources": [
       {
         "pretest": 5,
         "qnum": 86
       }
+    ],
+    "options": [
+      "Submerge the laptop in a large bowl of rice to fully dry out the inner components",
+      "Consult your coworkers for suggestions and advice",
+      "Watch a YouTube video for tutorials on how to fix this model of laptop",
+      "Remove the external casing of the laptop and document the screw locations"
     ]
   }
 ]
