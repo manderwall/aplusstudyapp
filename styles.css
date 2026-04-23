@@ -463,6 +463,19 @@ header h1 {
   margin: 0 auto 20px;
   position: relative;
 }
+/* Subtle fade-and-lift when a new card loads. Only applied when the question
+   actually changes — reveal-toggle rerenders keep the existing card in place. */
+.card.card-fresh {
+  animation: cardEnter 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes cardEnter {
+  0%   { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+html[data-motion="reduced"] .card.card-fresh { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .card.card-fresh { animation: none; }
+}
 
 .card-meta {
   display: flex;
@@ -1007,9 +1020,9 @@ html[data-revealed] .scratchpad-wrap.overlay::before {
 
 .obj-bar .bar-fill {
   height: 100%;
-  background: var(--accent);
+  background: linear-gradient(90deg, var(--accent) 0%, var(--good) 100%);
   border-radius: 4px;
-  transition: width 0.3s;
+  transition: width 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .obj-bar .obj-count {
@@ -1393,6 +1406,87 @@ html[data-motion="reduced"] .mascot.celebrate { animation: none !important; }
   padding: 6px;
 }
 .lock-forgot:hover { color: var(--bad); }
+
+/* ─── Confetti (celebration bursts) ─── */
+.confetti-host {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1500;
+  width: 0;
+  height: 0;
+}
+.confetti-piece {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  opacity: 0;
+  animation: confettiFly forwards ease-out;
+  --dx: 0px;
+  --dy: 0px;
+  --rot: 360deg;
+}
+@keyframes confettiFly {
+  0%   { transform: translate(-50%, -50%) rotate(0deg); opacity: 1; }
+  80%  { opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy) + 160px)) rotate(var(--rot)); opacity: 0; }
+}
+html[data-motion="reduced"] .confetti-host { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .confetti-host { display: none; }
+}
+
+/* ─── 90-day activity heatmap ─── */
+.heatmap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.heatmap-grid {
+  display: flex;
+  gap: 3px;
+  min-width: min-content;
+}
+.heatmap-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.heatmap-cell {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--surface-2);
+  flex-shrink: 0;
+  display: inline-block;
+}
+.heatmap-cell-empty { background: transparent; }
+.heatmap-cell[data-lvl="0"] { background: var(--surface-2); }
+.heatmap-cell[data-lvl="1"] { background: rgba(74, 222, 128, 0.25); }
+.heatmap-cell[data-lvl="2"] { background: rgba(74, 222, 128, 0.50); }
+.heatmap-cell[data-lvl="3"] { background: rgba(74, 222, 128, 0.75); }
+.heatmap-cell[data-lvl="4"] { background: var(--good); }
+.heatmap-legend {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  color: var(--text-dim);
+  font-size: 12px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.heatmap-scale {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.heatmap-scale .heatmap-cell { width: 10px; height: 10px; }
 
 /* ─── Toast (non-blocking notice) ─── */
 #toast-host {

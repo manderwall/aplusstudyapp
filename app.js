@@ -133,6 +133,164 @@ function haptic(pattern = 10) {
   if (navigator.vibrate) navigator.vibrate(pattern);
 }
 
+//─── CONFETTI (celebration bursts) ───────────────────────────
+// Tiny DOM-based confetti so it works offline without canvas bookkeeping.
+// Honors reduce-motion (OS setting + the app's own toggle).
+const CONFETTI_COLORS = ['#ffd700', '#ff80ab', '#80d8ff', '#4ade80', '#fbbf24', '#c084fc', '#ff87b2'];
+function celebrate({ sourceEl = null, intensity = 30, duration = 1400 } = {}) {
+  if (pref('motion') === 'reduced') return;
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+  const host = document.createElement('div');
+  host.className = 'confetti-host';
+  host.setAttribute('aria-hidden', 'true');
+  let x = window.innerWidth / 2, y = 100;
+  if (sourceEl) {
+    const r = sourceEl.getBoundingClientRect();
+    x = r.left + r.width / 2;
+    y = r.top + r.height / 2;
+  }
+  host.style.left = `${x}px`;
+  host.style.top  = `${y}px`;
+  document.body.appendChild(host);
+  for (let i = 0; i < intensity; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 60 + Math.random() * 120;
+    p.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+    p.style.setProperty('--dx', `${Math.cos(angle) * dist}px`);
+    p.style.setProperty('--dy', `${Math.sin(angle) * dist}px`);
+    p.style.setProperty('--rot', `${(Math.random() - 0.5) * 720}deg`);
+    p.style.animationDuration = `${duration + Math.random() * 400}ms`;
+    p.style.animationDelay = `${Math.random() * 80}ms`;
+    host.appendChild(p);
+  }
+  setTimeout(() => host.remove(), duration + 800);
+}
+
+//─── DAILY ACTIVITY (heatmap source) ─────────────────────────
+function bumpActivity() {
+  try {
+    const a = getActivity();
+    const k = todayKey();
+    a[k] = (a[k] || 0) + 1;
+    // Prune anything older than 180 days — the heatmap only shows 90
+    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 180);
+    const cutoffKey = `${cutoff.getFullYear()}-${String(cutoff.getMonth()+1).padStart(2,'0')}-${String(cutoff.getDate()).padStart(2,'0')}`;
+    for (const key of Object.keys(a)) if (key < cutoffKey) delete a[key];
+    localStorage.setItem('activity', JSON.stringify(a));
+  } catch {}
+}
+function getActivity() {
+  try { return JSON.parse(localStorage.getItem('activity') || '{}'); }
+  catch { return {}; }
+}
+
+//─── CELEBRATION TRIGGERS (objective mastery + streak milestones) ───
+const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100];
+
+function celebratedFlag(key) {
+  try { return !!JSON.parse(localStorage.getItem('celebrated') || '{}')[key]; }
+  catch { return false; }
+}
+function markCelebrated(key) {
+  try {
+    const c = JSON.parse(localStorage.getItem('celebrated') || '{}');
+    c[key] = true;
+    localStorage.setItem('celebrated', JSON.stringify(c));
+  } catch {}
+}
+
+function checkObjectiveMastered(obj) {
+  if (!obj || obj === '?') return false;
+  const qs = state.questions.filter(q => q.obj === obj);
+  if (qs.length === 0) return false;
+  return qs.every(q => state.progress[q.id]?.status === 'good');
+}
+
+function maybeFireObjectiveCelebration(obj) {
+  if (!obj) return;
+  const key = `obj:${state.exam}:${obj}`;
+  if (celebratedFlag(key)) return;
+  if (!checkObjectiveMastered(obj)) return;
+  markCelebrated(key);
+  celebrate({ intensity: 45, duration: 1700 });
+  toast(`🎉 Objective ${obj} mastered — every card rated Good.`, 'success', 5000);
+}
+
+function maybeFireStreakCelebration(newCount) {
+  for (const n of STREAK_MILESTONES) {
+    if (newCount !== n) continue;
+    const key = `streak:${n}`;
+    if (celebratedFlag(key)) return;
+    markCelebrated(key);
+    celebrate({ intensity: 50, duration: 1800 });
+    toast(`🔥 ${n}-day streak. You keep showing up.`, 'success', 5500);
+    return;
+  }
+}
+
+// GitHub-style heatmap of daily cards-rated for the last 90 days. Columns
+// are weeks; rows are days of the week. Color intensity bands mirror the
+// GitHub scale so it feels familiar.
+function renderHeatmapHTML() {
+  const activity = getActivity();
+  const DAYS = 90;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  // Align the last column to today; walk backwards by `DAYS` days, padding
+  // with blank cells so the first column is a full Sun–Sat.
+  const cells = [];
+  for (let i = DAYS - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const count = activity[key] || 0;
+    cells.push({ key, count, d });
+  }
+  // Pad at the start so the first cell lands on a Sunday column
+  const firstDow = cells[0].d.getDay();
+  const padded = Array.from({ length: firstDow }, () => null).concat(cells);
+  // Break into columns of 7
+  const cols = [];
+  for (let i = 0; i < padded.length; i += 7) cols.push(padded.slice(i, i + 7));
+
+  const level = (n) =>
+    n === 0 ? 0 :
+    n < 3   ? 1 :
+    n < 8   ? 2 :
+    n < 20  ? 3 : 4;
+
+  const total = Object.values(activity).reduce((s, n) => s + n, 0);
+  const activeDays = Object.values(activity).filter(n => n > 0).length;
+
+  return `
+    <div class="heatmap">
+      <div class="heatmap-grid" role="img" aria-label="${total} cards rated across ${activeDays} active days in the last 90 days">
+        ${cols.map(col => `
+          <div class="heatmap-col">
+            ${col.map(cell => cell
+              ? `<div class="heatmap-cell" data-lvl="${level(cell.count)}" title="${cell.key} · ${cell.count} card${cell.count === 1 ? '' : 's'}"></div>`
+              : `<div class="heatmap-cell heatmap-cell-empty" aria-hidden="true"></div>`
+            ).join('')}
+          </div>
+        `).join('')}
+      </div>
+      <div class="heatmap-legend">
+        <span>${total} cards · ${activeDays} active day${activeDays === 1 ? '' : 's'}</span>
+        <span class="heatmap-scale">
+          less
+          <span class="heatmap-cell" data-lvl="0"></span>
+          <span class="heatmap-cell" data-lvl="1"></span>
+          <span class="heatmap-cell" data-lvl="2"></span>
+          <span class="heatmap-cell" data-lvl="3"></span>
+          <span class="heatmap-cell" data-lvl="4"></span>
+          more
+        </span>
+      </div>
+    </div>`;
+}
+
 //─── TOAST (non-blocking notice; gentler than alert() for AuDHD users) ──
 // Queues messages, shows each for a few seconds. Tap to dismiss early.
 const _toastQueue = [];
@@ -197,8 +355,11 @@ function endSession(triggerSummary) {
     const reviewed = sess.ratedIds.size;
     const msg = reviewed === 0
       ? `Session done. No cards rated this time — that's OK, sometimes just showing up is the win.`
-      : `Session done. ${reviewed} card${reviewed === 1 ? '' : 's'} reviewed. 🎉`;
+      : sess.rapid
+        ? `⚡ ${reviewed} card${reviewed === 1 ? '' : 's'} in 60 seconds. Nice sprint.`
+        : `Session done. ${reviewed} card${reviewed === 1 ? '' : 's'} reviewed. 🎉`;
     haptic([80, 60, 80]);
+    if (reviewed > 0) celebrate({ intensity: sess.rapid ? 50 : 36, duration: 1600 });
     toast(msg, 'success', 5000);
   }
 }
@@ -212,6 +373,10 @@ function onCardRated(qid) {
     }
   }
   bumpStreak();
+  bumpActivity();
+  // Celebrate when this rating just pushed an objective to full mastery
+  const q = state.questions.find(x => x.id === qid);
+  if (q) maybeFireObjectiveCelebration(q.obj);
   scheduleAutoSync();
 }
 
@@ -244,6 +409,7 @@ function bumpStreak() {
   localStorage.setItem('streak.lastDay', today);
   localStorage.setItem('streak.count', String(count));
   localStorage.setItem('streak.todayCards', '1');
+  maybeFireStreakCelebration(count);
 }
 
 function getStreak() {
@@ -674,9 +840,12 @@ function renderStudy() {
 
   const edited = !!state.overrides[q.id];
   const sources = q.sources || [{ pretest: q.pretest, qnum: q.qnum }];
+  // Only animate the card on question change, not on reveal-toggle rerenders
+  const cardClass = state._lastRenderedCard === q.id ? 'card' : 'card card-fresh';
+  state._lastRenderedCard = q.id;
   $('#main').innerHTML = `
     ${filterBarHTML()}
-    <div class="card">
+    <div class="${cardClass}">
       <div class="card-meta">
         <span class="tag obj">OBJ ${q.obj}</span>
         ${q.qtype === 'PBQ' ? '<span class="tag pbq">PBQ</span>' : `<span class="tag">${q.qtype}</span>`}
@@ -826,9 +995,11 @@ function renderQuiz() {
 
   const edited = !!state.overrides[q.id];
   const sources = q.sources || [{ pretest: q.pretest, qnum: q.qnum }];
+  const cardClass = state._lastRenderedCard === q.id ? 'card' : 'card card-fresh';
+  state._lastRenderedCard = q.id;
   $('#main').innerHTML = `
     ${filterBarHTML()}
-    <div class="card">
+    <div class="${cardClass}">
       <div class="card-meta">
         <span class="tag obj">OBJ ${q.obj}</span>
         ${q.qtype === 'PBQ' ? '<span class="tag pbq">PBQ</span>' : `<span class="tag">${q.qtype}</span>`}
@@ -1136,17 +1307,22 @@ function renderStats() {
         </div>
       </div>
 
+      <h3 class="stats-h numeric-ui">Last 90 days</h3>
+      <div class="numeric-ui">${renderHeatmapHTML()}</div>
+
       <h3 class="stats-h numeric-ui">Mastery by Objective</h3>
       <div class="obj-bar-list numeric-ui">
-        ${objStats.map(s => `
+        ${objStats.map(s => {
+          const pct = s.total > 0 ? (s.mastered / s.total) * 100 : 0;
+          return `
           <div class="obj-bar">
             <div class="obj-label">OBJ ${s.obj}</div>
-            <div class="bar-track">
-              <div class="bar-fill" style="width: ${s.total > 0 ? (s.mastered / s.total) * 100 : 0}%"></div>
+            <div class="bar-track" role="progressbar" aria-valuenow="${Math.round(pct)}" aria-valuemin="0" aria-valuemax="100" aria-label="OBJ ${s.obj} mastery">
+              <div class="bar-fill" style="width: ${pct}%"></div>
             </div>
             <div class="obj-count">${s.mastered}/${s.total}</div>
-          </div>
-        `).join('')}
+          </div>`;
+        }).join('')}
       </div>
 
       <h3 class="stats-h">Options</h3>
