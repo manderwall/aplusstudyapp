@@ -69,6 +69,7 @@ const state = {
   order: 'smart',  // 'smart' | 'random' | 'sequential' — card ordering strategy
   _orderSeed: null,    // stable per-session seed so Prev/Next don't reshuffle
   _orderCache: null,   // { key, list }
+  _revealedAt: 0,      // timestamp of last reveal, used to block ghost-clicks on rate buttons
   progress: {},    // { questionId: { status, seen, correct, lastSeen, ease, interval, due, updated_at } }
   overrides: {},   // { questionId: { options?, image?, images? } } — user-added content
   // Active study session (Pomodoro-style)
@@ -884,13 +885,21 @@ function renderStudy() {
 
 function attachStudyEvents(q) {
   const reveal = $('#reveal-btn');
-  if (reveal) reveal.addEventListener('click', () => { state.revealed = true; renderStudy(); });
+  if (reveal) reveal.addEventListener('click', () => {
+    state.revealed = true;
+    state._revealedAt = Date.now();  // timestamp so rating buttons ignore ghost clicks
+    renderStudy();
+  });
   const skip = $('#skip-btn');
   if (skip) skip.addEventListener('click', () => { nextQuestion(); });
   const prev = $('#prev-btn');
   if (prev) prev.addEventListener('click', () => { prevQuestion(); });
   attachOptionEvents(() => renderStudy());
   $$('[data-rate]').forEach(btn => btn.addEventListener('click', () => {
+    // Guard: ignore clicks that arrive within 350ms of the reveal re-render.
+    // This prevents a ghost-click from the same touch that tapped "Reveal"
+    // from immediately rating the card before the user reads the explanation.
+    if (Date.now() - (state._revealedAt || 0) < 350) return;
     const rate = btn.dataset.rate;
     recordRating(q.id, rate);
     nextQuestion();
@@ -2436,8 +2445,10 @@ function installSwipe() {
   let sx = 0, sy = 0, tracking = false, pid = null;
   main.addEventListener('pointerdown', (e) => {
     if (state.mode !== 'study' && state.mode !== 'quiz') return;
-    // Don't hijack taps on interactive elements or the scratchpad
-    if (e.target.closest('button, input, a, canvas, .filter-bar, .scratchpad-wrap')) return;
+    // Don't start a swipe on answer options or other interactive elements.
+    // .q-options covers the whole radiogroup so a tap+drift on any option
+    // won't accidentally trigger a swipe-to-advance.
+    if (e.target.closest('button, input, a, canvas, .filter-bar, .scratchpad-wrap, .q-options')) return;
     sx = e.clientX; sy = e.clientY;
     tracking = true;
     pid = e.pointerId;
@@ -2447,7 +2458,8 @@ function installSwipe() {
     tracking = false;
     const dx = e.clientX - sx;
     const dy = e.clientY - sy;
-    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5 && dx < 0) {
+    // Require a cleaner horizontal gesture (80px, less diagonal tolerance)
+    if (Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dy) * 2 && dx < 0) {
       haptic(15);
       if (state.mode === 'study') nextQuestion();
       else nextQuizQuestion();
