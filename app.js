@@ -235,11 +235,12 @@ function scheduleAutoSync() {
   }, 5000);
 }
 
-//─── INDEXEDDB (progress + overrides persistence) ────────────
+//─── INDEXEDDB (progress + overrides + drawings persistence) ──
 const DB_NAME = 'aplus-study';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const STORE = 'progress';
 const OSTORE = 'overrides';   // per-question edits: { [qid]: {options?, image?, images?} }
+const DSTORE = 'drawings';    // per-question scratchpad canvas PNGs (base64 dataURL)
 
 function openDB() {
   return new Promise((resolve, reject) => {
@@ -248,6 +249,7 @@ function openDB() {
       const db = req.result;
       if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
       if (!db.objectStoreNames.contains(OSTORE)) db.createObjectStore(OSTORE);
+      if (!db.objectStoreNames.contains(DSTORE)) db.createObjectStore(DSTORE);
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
@@ -496,12 +498,12 @@ function renderStudy() {
         </div>
       `}
     </div>
-    ${renderScratchpadHTML()}
+    ${renderScratchpadHTML(q)}
   `;
   renderFilterBar();
   updateHUD();
   attachStudyEvents(q);
-  attachScratchpadEvents();
+  attachScratchpadEvents(q);
   $('#edit-btn')?.addEventListener('click', () => { state.editing = true; renderStudy(); });
 }
 
@@ -630,7 +632,7 @@ function renderQuiz() {
         </div>
       `}
     </div>
-    ${renderScratchpadHTML()}
+    ${renderScratchpadHTML(q)}
   `;
   renderFilterBar();
   updateHUD();
@@ -655,7 +657,7 @@ function renderQuiz() {
     onCardRated(q.id);
     nextQuizQuestion();
   }));
-  attachScratchpadEvents();
+  attachScratchpadEvents(q);
 }
 
 function nextQuizQuestion() {
@@ -1075,7 +1077,26 @@ function renderFilterBar() {
 }
 
 //─── SCRATCH PAD (Apple Pencil) ──────────────────────────────
-function renderScratchpadHTML() {
+function renderScratchpadHTML(q) {
+  // PBQ with an image → overlay mode: canvas layered over the image so the
+  // user can annotate / label components directly.
+  const hasImage = q && (q.image || (q.images && q.images.length));
+  if (hasImage) {
+    const src = q.image || q.images[0];
+    return `
+      <div class="scratchpad-wrap overlay">
+        <div class="scratchpad-controls">
+          <button id="pen-btn" class="active">✏️ Pen</button>
+          <button id="eraser-btn">🧽 Eraser</button>
+          <button id="clear-pad-btn" style="margin-left: auto;">Clear</button>
+        </div>
+        <div class="scratchpad-overlay-container">
+          <img class="scratchpad-underlay" src="${escape(src)}" alt="Annotate">
+          <canvas id="scratchpad" class="scratchpad overlay-canvas"></canvas>
+        </div>
+      </div>
+    `;
+  }
   return `
     <div class="scratchpad-wrap">
       <div class="scratchpad-controls">
@@ -1088,9 +1109,26 @@ function renderScratchpadHTML() {
   `;
 }
 
-function attachScratchpadEvents() {
+// Drawings persist per question in IndexedDB.
+async function loadDrawing(qid) {
+  try { return (await idbGet('drawings', qid)) || null; } catch { return null; }
+}
+async function saveDrawing(qid, dataUrl) {
+  try { await idbPut('drawings', qid, dataUrl); } catch (e) { console.warn('Save drawing failed', e); }
+}
+async function clearDrawing(qid) {
+  try {
+    const db = await openDB();
+    const tx = db.transaction('drawings', 'readwrite');
+    tx.objectStore('drawings').delete(qid);
+  } catch {}
+}
+
+function attachScratchpadEvents(q) {
   const canvas = $('#scratchpad');
   if (!canvas) return;
+  const qid = q?.id;
+
   // Resize canvas to actual pixel size for sharp lines
   const resize = () => {
     const rect = canvas.getBoundingClientRect();
@@ -1100,16 +1138,43 @@ function attachScratchpadEvents() {
     const ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
   };
+  // For overlay mode, wait for image to load so canvas matches its dimensions
+  const underlay = $('.scratchpad-underlay');
+  if (underlay && !underlay.complete) {
+    underlay.addEventListener('load', () => { resize(); restoreDrawing(); }, { once: true });
+  }
   resize();
 
   const ctx = canvas.getContext('2d');
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--text');
+  ctx.strokeStyle = underlay
+    ? '#ff3b30'   // red pen on image overlays — high contrast
+    : getComputedStyle(document.body).getPropertyValue('--text');
+
+  // Restore prior drawing for this card
+  async function restoreDrawing() {
+    if (!qid) return;
+    const dataUrl = await loadDrawing(qid);
+    if (!dataUrl) return;
+    const img = new Image();
+    img.onload = () => {
+      const rect = canvas.getBoundingClientRect();
+      ctx.drawImage(img, 0, 0, rect.width, rect.height);
+    };
+    img.src = dataUrl;
+  }
+  restoreDrawing();
 
   let drawing = false;
   let lastX = 0, lastY = 0;
   let mode = 'pen';
+  let savePending = null;
+  const scheduleSave = () => {
+    if (!qid) return;
+    clearTimeout(savePending);
+    savePending = setTimeout(() => saveDrawing(qid, canvas.toDataURL('image/png')), 400);
+  };
 
   const penBtn = $('#pen-btn');
   const eraserBtn = $('#eraser-btn');
@@ -1127,6 +1192,7 @@ function attachScratchpadEvents() {
   });
   clearBtn.addEventListener('click', () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (qid) clearDrawing(qid);
   });
 
   function getXY(e) {
@@ -1135,12 +1201,10 @@ function attachScratchpadEvents() {
   }
 
   canvas.addEventListener('pointerdown', (e) => {
-    // Ignore touch if a pen is in use nearby; allow pen OR finger
     drawing = true;
     canvas.setPointerCapture(e.pointerId);
     const { x, y } = getXY(e);
     lastX = x; lastY = y;
-    // Pressure from Apple Pencil
     const pressure = e.pointerType === 'pen' ? (e.pressure || 0.5) : 0.5;
     ctx.lineWidth = mode === 'eraser' ? 20 : (1 + pressure * 3);
     ctx.globalCompositeOperation = mode === 'eraser' ? 'destination-out' : 'source-over';
@@ -1158,7 +1222,7 @@ function attachScratchpadEvents() {
     lastX = x; lastY = y;
   });
 
-  const stop = () => { drawing = false; };
+  const stop = () => { if (drawing) { drawing = false; scheduleSave(); } };
   canvas.addEventListener('pointerup', stop);
   canvas.addEventListener('pointercancel', stop);
   canvas.addEventListener('pointerleave', stop);
