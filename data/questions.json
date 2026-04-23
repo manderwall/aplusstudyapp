@@ -145,7 +145,7 @@
     "qtype": "Multiple Choice",
     "question": "Which of the following technologies could be used in an unlicensed long-range fixed wireless system?",
     "wrong_pick": "Cellular",
-    "correct_short": "",
+    "correct_short": "Wi-Fi",
     "explanation": "OBJ 2.7: Long-range fixed wireless can be licensed or unlicensed depending on the frequencies and power levels being utilized. For example, an 802.11 wireless network could be established using a directional antenna to connect two buildings over several miles using unlicensed frequencies and minimal power levels (under 200 mW), which are under the FCC limits. Alternatively, a microwave link can be established in the 4.91 GHz to 5.97 GHz unlicensed frequency range using a point-to-multipoint microwave antenna and transceiver system. Conversely, a user could purchase a licensed cellular fixed wireless system that requires a license from the FCC to operate to ensure they are not interfering with other users and services in the same frequency band.",
     "sources": [
       {
@@ -788,7 +788,7 @@
       "VGA",
       "DVI-I"
     ],
-    "correct_short": "F",
+    "correct_short": "DVI-D",
     "explanation": "OBJ 3.2 - This port is the DVI-D connection. This is not a DVI-I since there is only a dash and not a cross on the right side of the port. This means it only supports digital and not analog connections. The digital video interface (DVI) came in three models: DVI-A (analog), DVI-D (digital), and DVI-D (analog and digital known as integrated). DVI adapters were designed to replace the VGA ports used in legacy CRT monitors but they were themselves replaced by HDMI. While this is an older technology, you will still see them commonly used in corporate environments. For the exam, it is important that you can identify the different parts of a motherboard's rear port cluster by sight.",
     "sources": [
       {
@@ -801,13 +801,12 @@
       }
     ],
     "options": [
-      "cluster.)",
-      "FireWire",
-      "SPDIF",
-      "USB",
-      "PS/2"
+      "VGA",
+      "DVI-I",
+      "HDMI",
+      "DVI-D"
     ],
-    "image": "images/pretest5_p35.png"
+    "image": "images/pretest2_q30_portcluster.png"
   },
   {
     "id": "p2q34",
@@ -1286,7 +1285,7 @@
     "qtype": "Multiple Choice",
     "question": "A computer technician is configuring a NAS for a company to store their corporate data. The technician has installed four 10 TB hard drives operating at 5400 RPM in a RAID 10 configuration. How much usable storage space is contained in this NAS?",
     "wrong_pick": "10 TB",
-    "correct_short": "10 TB",
+    "correct_short": "20 TB",
     "explanation": "OBJ 3.4: A RAID 10 combines disk mirroring and disk striping to protect data stored in the array and requires a minimum of four disks. Since the NAS uses a RAID 10 configuration, it is a stripped and mirrored array. When all four 10 TB HDDs are installed, half of the capacity is used by the mirroring functionality of the RAID 10. Therefore, only 20 TB is available as the usable storage capacity. This configuration will give the array higher speed/performance (due to the stripping) and increase redundancy (due to the mirroring).",
     "sources": [
       {
@@ -1295,10 +1294,10 @@
       }
     ],
     "options": [
-      "1.5 TB",
-      "2 TB",
-      "0.5 TB",
-      "1 TB"
+      "40 TB",
+      "10 TB",
+      "20 TB",
+      "30 TB"
     ]
   },
   {
@@ -1686,7 +1685,7 @@
     "qtype": "Multiple Choice",
     "question": "Which type of microphone is most suitable for a conference room setup where sound needs to be captured from multiple directions?",
     "wrong_pick": "Cardioid",
-    "correct_short": "",
+    "correct_short": "Omnidirectional",
     "explanation": "",
     "sources": [
       {
@@ -2132,7 +2131,7 @@
     "qtype": "Multiple Choice",
     "question": "Which of the following is categorized as a public IP address?",
     "wrong_pick": "192.168.0.2",
-    "correct_short": "",
+    "correct_short": "11.120.32.41",
     "explanation": "OBJ 2.6: To communicate on the Internet, a host must obtain a unique public IP address. Typically this is allocated by an Internet Service Provider. If an address is not an APIPA address (169.254.x.x), a private IP address (10.x.x.x, 172.16-31.x.x, or 192.168.x.x), or a localhost IP (127.0.0.1), then it is considered a public IP address.",
     "sources": [
       {
@@ -2155,7 +2154,7 @@
     "qtype": "Multiple Choice",
     "question": "Which of the following ports should you unblock at the firewall if your workstation cannot access diontraining.com but can access the website by its IP address?",
     "wrong_pick": "80",
-    "correct_short": "",
+    "correct_short": "443",
     "explanation": "OBJ 2.1: The Domain Name System (DNS) servers provide resolution of host and domain names to their IP addresses and are essential for locating resources on the Internet. Most local networks also use DNS for name resolution. Typically, the DNS server would be the gateway address, though this may not be the case on all networks. Often two DNS server addresses (preferred and alternate) are specified for redundancy. DNS operates over TCP/UDP port 53, and if that is blocked, the client will be unable to convert the domain name (diontraining.com) to its IP address. The hypertext transfer protocol (HTTP) is a protocol used to provide web content to browsers using port 80. The hypertext transfer protocol secure (HTTPS) is a secure protocol used to provide web content to browsers using SSL/TLS encryption over port 443. The dynamic host control protocol (DHCP) is a protocol used to allocate IP addresses to a host when it joins a network. DHCP utilizes UDP ports 67 and 68.",
     "sources": [
       {
