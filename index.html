@@ -13,34 +13,35 @@
   <title>A+ Study</title>
 </head>
 <body>
+  <a class="skip-link" href="#main">Skip to main content</a>
   <div id="app">
     <header>
       <h1 id="mode-title">Loading…</h1>
       <div class="header-right">
-        <div id="progress-hud"></div>
+        <div id="progress-hud" role="status" aria-live="polite" aria-atomic="true"></div>
         <button id="help-btn" type="button" aria-label="Help / welcome" title="Help & options">❓</button>
-        <button id="focus-btn" type="button" aria-label="Toggle focus mode" title="Focus mode — press F">🔒</button>
+        <button id="focus-btn" type="button" aria-label="Toggle focus mode" aria-pressed="false" title="Focus mode — press F">🔒</button>
         <button id="theme-btn" type="button" aria-label="Toggle theme" title="Theme (auto/light/dark) — press T">🌓</button>
       </div>
     </header>
 
-    <main id="main"></main>
+    <main id="main" tabindex="-1"></main>
 
-    <nav id="tabbar">
-      <button data-mode="study" class="tab active">
-        <span class="tab-icon">📚</span>
+    <nav id="tabbar" aria-label="Main sections" role="tablist">
+      <button data-mode="study" class="tab active" role="tab" aria-selected="true">
+        <span class="tab-icon" aria-hidden="true">📚</span>
         <span class="tab-label">Study</span>
       </button>
-      <button data-mode="quiz" class="tab">
-        <span class="tab-icon">❓</span>
+      <button data-mode="quiz" class="tab" role="tab" aria-selected="false">
+        <span class="tab-icon" aria-hidden="true">❓</span>
         <span class="tab-label">Quiz</span>
       </button>
-      <button data-mode="reading" class="tab">
-        <span class="tab-icon">📖</span>
+      <button data-mode="reading" class="tab" role="tab" aria-selected="false">
+        <span class="tab-icon" aria-hidden="true">📖</span>
         <span class="tab-label">Reading</span>
       </button>
-      <button data-mode="stats" class="tab">
-        <span class="tab-icon">📊</span>
+      <button data-mode="stats" class="tab" role="tab" aria-selected="false">
+        <span class="tab-icon" aria-hidden="true">📊</span>
         <span class="tab-label">Stats</span>
       </button>
     </nav>

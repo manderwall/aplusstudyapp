@@ -604,12 +604,31 @@ function attachStudyEvents(q) {
 }
 
 function attachOptionEvents(rerender) {
-  $$('.q-options li.q-option').forEach(li => li.addEventListener('click', () => {
+  const items = $$('.q-options li.q-option');
+  const pick = (li) => {
     if (state.revealed) return;
     state.selectedOption = li.dataset.option;
     haptic(5);
     rerender();
-  }));
+  };
+  items.forEach((li, i) => {
+    li.addEventListener('click', () => pick(li));
+    // Radio-group keyboard pattern: Enter/Space selects; arrows move focus.
+    li.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        pick(li);
+        return;
+      }
+      if (state.revealed) return;
+      let next = null;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') next = items[(i + 1) % items.length];
+      else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') next = items[(i - 1 + items.length) % items.length];
+      else if (e.key === 'Home') next = items[0];
+      else if (e.key === 'End') next = items[items.length - 1];
+      if (next) { e.preventDefault(); next.focus(); }
+    });
+  });
 }
 
 function recordRating(qid, rate) {
@@ -872,20 +891,20 @@ function renderStats() {
       <h3 class="stats-h">Accessibility</h3>
       <div class="settings-panel">
         <div class="settings-row">
-          <span>Text size</span>
-          <span class="seg-control" data-pref="size">
-            <button data-val="small" class="${pref('size')==='small'?'active':''}">S</button>
-            <button data-val="medium" class="${pref('size')==='medium'?'active':''}">M</button>
-            <button data-val="large" class="${pref('size')==='large'?'active':''}">L</button>
-            <button data-val="xlarge" class="${pref('size')==='xlarge'?'active':''}">XL</button>
+          <span id="pref-size-label">Text size</span>
+          <span class="seg-control" data-pref="size" role="radiogroup" aria-labelledby="pref-size-label">
+            <button data-val="small" role="radio" aria-checked="${pref('size')==='small'?'true':'false'}" class="${pref('size')==='small'?'active':''}" aria-label="Small">S</button>
+            <button data-val="medium" role="radio" aria-checked="${pref('size')==='medium'?'true':'false'}" class="${pref('size')==='medium'?'active':''}" aria-label="Medium">M</button>
+            <button data-val="large" role="radio" aria-checked="${pref('size')==='large'?'true':'false'}" class="${pref('size')==='large'?'active':''}" aria-label="Large">L</button>
+            <button data-val="xlarge" role="radio" aria-checked="${pref('size')==='xlarge'?'true':'false'}" class="${pref('size')==='xlarge'?'active':''}" aria-label="Extra large">XL</button>
           </span>
         </div>
         <div class="settings-row">
-          <span>Font</span>
-          <span class="seg-control" data-pref="font">
-            <button data-val="system" class="${pref('font')==='system'?'active':''}">System</button>
-            <button data-val="atkinson" class="${pref('font')==='atkinson'?'active':''}">Atkinson</button>
-            <button data-val="opendyslexic" class="${pref('font')==='opendyslexic'?'active':''}">OpenDyslexic</button>
+          <span id="pref-font-label">Font</span>
+          <span class="seg-control" data-pref="font" role="radiogroup" aria-labelledby="pref-font-label">
+            <button data-val="system" role="radio" aria-checked="${pref('font')==='system'?'true':'false'}" class="${pref('font')==='system'?'active':''}">System</button>
+            <button data-val="atkinson" role="radio" aria-checked="${pref('font')==='atkinson'?'true':'false'}" class="${pref('font')==='atkinson'?'active':''}">Atkinson</button>
+            <button data-val="opendyslexic" role="radio" aria-checked="${pref('font')==='opendyslexic'?'true':'false'}" class="${pref('font')==='opendyslexic'?'active':''}">OpenDyslexic</button>
           </span>
         </div>
         <label class="settings-row">
@@ -913,12 +932,12 @@ function renderStats() {
           <input type="checkbox" id="shake-toggle" data-pref="shake" data-on="on" data-off="off" ${pref('shake')==='on'?'checked':''}>
         </label>
         <div class="settings-row">
-          <span>Focus sound</span>
-          <span class="seg-control" data-pref="sound">
-            <button data-val="off" class="${pref('sound')==='off'?'active':''}">Off</button>
-            <button data-val="white" class="${pref('sound')==='white'?'active':''}">White</button>
-            <button data-val="pink" class="${pref('sound')==='pink'?'active':''}">Pink</button>
-            <button data-val="brown" class="${pref('sound')==='brown'?'active':''}">Brown</button>
+          <span id="pref-sound-label">Focus sound</span>
+          <span class="seg-control" data-pref="sound" role="radiogroup" aria-labelledby="pref-sound-label">
+            <button data-val="off" role="radio" aria-checked="${pref('sound')==='off'?'true':'false'}" class="${pref('sound')==='off'?'active':''}">Off</button>
+            <button data-val="white" role="radio" aria-checked="${pref('sound')==='white'?'true':'false'}" class="${pref('sound')==='white'?'active':''}">White</button>
+            <button data-val="pink" role="radio" aria-checked="${pref('sound')==='pink'?'true':'false'}" class="${pref('sound')==='pink'?'active':''}">Pink</button>
+            <button data-val="brown" role="radio" aria-checked="${pref('sound')==='brown'?'true':'false'}" class="${pref('sound')==='brown'?'active':''}">Brown</button>
           </span>
         </div>
       </div>
@@ -1117,17 +1136,22 @@ function filterBarHTML() {
   const counts = {};
   for (const o of objs) counts[o] = state.questions.filter(q => q.obj === o).length;
   return `
-    <div class="search-row">
-      <input id="search-input" type="search" placeholder="Search question text…" value="${escapeHtml(state.filter.search)}" autocomplete="off">
+    <div class="search-row" role="search">
+      <input id="search-input" type="search" placeholder="Search question text…"
+             aria-label="Search questions"
+             value="${escapeHtml(state.filter.search)}" autocomplete="off">
       ${state.filter.search ? '<button id="search-clear" class="small-btn" aria-label="Clear search">✕</button>' : ''}
     </div>
-    <div class="filter-bar">
-      <button class="due-chip ${state.filter.due ? 'active' : ''}" data-filter="due">
+    <div class="filter-bar" role="group" aria-label="Filter questions">
+      <button class="due-chip ${state.filter.due ? 'active' : ''}" data-filter="due"
+              aria-pressed="${state.filter.due ? 'true' : 'false'}">
         ${state.filter.due ? '✓ ' : ''}Due (${dueCount()})
       </button>
-      <button class="${state.filter.obj === null ? 'active' : ''}" data-filter="all">All (${state.questions.length})</button>
+      <button class="${state.filter.obj === null ? 'active' : ''}" data-filter="all"
+              aria-pressed="${state.filter.obj === null ? 'true' : 'false'}">All (${state.questions.length})</button>
       ${objs.map(o => `
-        <button class="${state.filter.obj === o ? 'active' : ''}" data-filter="${o}">
+        <button class="${state.filter.obj === o ? 'active' : ''}" data-filter="${o}"
+                aria-pressed="${state.filter.obj === o ? 'true' : 'false'}">
           OBJ ${o} (${counts[o]})
         </button>
       `).join('')}
@@ -1417,11 +1441,23 @@ function renderOptionsHTML(q) {
     }
     return c.join(' ');
   };
+  // role=radio + aria-checked makes screen readers announce each option as a
+  // choice; tabindex lets keyboard users focus the first option and arrow
+  // through the rest (see attachOptionEvents).
   return `
-    <ol class="q-options" type="A">
-      ${q.options.map(opt =>
-        `<li class="${cls(opt)}" data-option="${escapeHtml(opt)}">${escapeHtml(opt)}</li>`
-      ).join('')}
+    <ol class="q-options" type="A" role="radiogroup" aria-label="Answer choices">
+      ${q.options.map((opt, i) => {
+        const checked = picked === opt;
+        const tab = (picked ? checked : i === 0) ? 0 : -1;
+        const describe = state.revealed
+          ? (isCorrect(opt) ? ' (correct answer)' : checked ? ' (your pick, incorrect)' : '')
+          : '';
+        return `<li class="${cls(opt)}" role="radio"
+            aria-checked="${checked ? 'true' : 'false'}"
+            tabindex="${tab}"
+            data-option="${escapeHtml(opt)}"
+            aria-label="${escapeHtml(opt + describe)}">${escapeHtml(opt)}</li>`;
+      }).join('')}
     </ol>`;
 }
 
@@ -1504,7 +1540,11 @@ function setMode(mode) {
   state.selectedOption = null;
   state.history = [];
   state._shuffleCache = null;
-  $$('.tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
+  $$('.tab').forEach(t => {
+    const active = t.dataset.mode === mode;
+    t.classList.toggle('active', active);
+    t.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
   if (mode === 'study') renderStudy();
   else if (mode === 'quiz') renderQuiz();
   else if (mode === 'reading') renderReading();
@@ -1616,7 +1656,10 @@ function toggleFocus() {
   document.documentElement.toggleAttribute('data-focus', state.focus);
   haptic(5);
   const btn = $('#focus-btn');
-  if (btn) btn.textContent = state.focus ? '🔓' : '🔒';
+  if (btn) {
+    btn.textContent = state.focus ? '🔓' : '🔒';
+    btn.setAttribute('aria-pressed', state.focus ? 'true' : 'false');
+  }
 }
 
 //─── THEME (auto / light / dark) ─────────────────────────────
@@ -2087,11 +2130,11 @@ function showWelcome() {
     : `${total} flashcards built from the questions you missed across your pretests. Spaced repetition brings the tough ones back.`;
 
   const html = `
-    <div id="welcome-overlay">
+    <div id="welcome-overlay" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
       <div class="welcome-card">
         <button class="welcome-close" id="welcome-close" aria-label="Close">✕</button>
-        <div class="welcome-mascot">${MASCOT(returningUser && streak.count > 0 ? 'celebrate' : 'wave')}</div>
-        <h2>${greeting}</h2>
+        <div class="welcome-mascot" aria-hidden="true">${MASCOT(returningUser && streak.count > 0 ? 'celebrate' : 'wave')}</div>
+        <h2 id="welcome-title">${greeting}</h2>
         <p class="welcome-sub">${subtitle}</p>
 
         <h3>Pick your starting point</h3>
@@ -2144,14 +2187,30 @@ function showWelcome() {
   document.body.insertAdjacentHTML('beforeend', html);
 
   const overlay = $('#welcome-overlay');
-  const escClose = (e) => {
-    if (e.key === 'Escape' && $('#welcome-overlay') === overlay) close(null);
+  const previouslyFocused = document.activeElement;
+  const focusablesFor = () => [...overlay.querySelectorAll(
+    'button, [href], input, [tabindex]:not([tabindex="-1"])'
+  )].filter(el => !el.disabled && el.offsetParent !== null);
+  const onKeydown = (e) => {
+    if ($('#welcome-overlay') !== overlay) return;
+    if (e.key === 'Escape') { close(null); return; }
+    if (e.key !== 'Tab') return;
+    // Simple focus trap — cycle Tab / Shift+Tab within the dialog
+    const f = focusablesFor();
+    if (f.length === 0) return;
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   };
   const close = (action) => {
     const dismissPerm = $('#welcome-dismiss-permanent')?.checked;
     if (dismissPerm) localStorage.setItem('welcomeDismissed', '1');
-    document.removeEventListener('keydown', escClose);
+    document.removeEventListener('keydown', onKeydown);
     overlay.remove();
+    // Restore focus to the trigger so keyboard users aren't dumped at <body>
+    if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
+      previouslyFocused.focus();
+    }
     const studyActions = new Set(['due', 'micro', 'session15']);
     if (action === 'due') { state.filter.due = true; setMode('study'); }
     else if (action === 'micro') { startSession({ targetCards: 5 }); setMode('study'); }
@@ -2167,7 +2226,13 @@ function showWelcome() {
   $$('[data-welcome]').forEach(btn =>
     btn.addEventListener('click', () => close(btn.dataset.welcome))
   );
-  document.addEventListener('keydown', escClose);
+  document.addEventListener('keydown', onKeydown);
+  // Focus the primary action so keyboard + screen-reader users land in the
+  // dialog immediately instead of at <body>.
+  setTimeout(() => {
+    const primary = overlay.querySelector('[data-welcome="due"]') || overlay.querySelector('button');
+    primary?.focus();
+  }, 0);
 }
 
 async function init() {

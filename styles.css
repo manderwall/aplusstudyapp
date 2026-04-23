@@ -2,6 +2,38 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
+/* ─── Accessibility primitives ─── */
+/* Skip link: visually hidden until a keyboard user focuses it. */
+.skip-link {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -200%);
+  z-index: 2000;
+  background: var(--accent, #5aa6ff);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 0 0 10px 10px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.15s;
+}
+.skip-link:focus {
+  transform: translate(-50%, 0);
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* Single consistent focus ring for keyboard users across all interactive
+   elements. Uses :focus-visible so mouse clicks don't leave a ring. */
+:where(button, a, input, textarea, select, [role="tab"], [role="radio"], [tabindex]):focus-visible {
+  outline: 2px solid var(--accent, #5aa6ff);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+
 :root {
   --bg: #0f0f0f;
   --surface: #1a1a1a;
