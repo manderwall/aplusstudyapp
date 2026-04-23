@@ -2021,7 +2021,7 @@
     "qtype": "Multiple Choice",
     "question": "Which of the following must be enabled on a mobile device to allow internet access when cellular data is unavailable, such as in an airplane?",
     "wrong_pick": "Bluetooth",
-    "correct_short": "SIM card locking",
+    "correct_short": "Wi-Fi",
     "explanation": "OBJ 1.3: When cellular data is unavailable, enabling Wi-Fi allows the device to connect to available wireless networks to access the internet. Bluetooth and GPS services do not provide internet connectivity, and SIM card locking is a security feature.",
     "sources": [
       {
