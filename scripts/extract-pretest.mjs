@@ -128,14 +128,9 @@ function norm(s) {
 }
 
 function similarity(a, b) {
-  // Simple Jaccard on word 4-grams
-  const grams = (s) => {
-    const words = s.split(' ');
-    const set = new Set();
-    for (let i = 0; i <= words.length - 4; i++) set.add(words.slice(i, i+4).join(' '));
-    return set;
-  };
-  const A = grams(a), B = grams(b);
+  // Word-bag Jaccard: more resilient to OCR noise than n-grams
+  const words = (s) => new Set(s.split(' ').filter(w => w.length >= 4));
+  const A = words(a), B = words(b);
   if (A.size === 0 || B.size === 0) return 0;
   let inter = 0;
   for (const x of A) if (B.has(x)) inter++;
@@ -144,22 +139,27 @@ function similarity(a, b) {
 
 let matched = 0;
 const unmatched = [];
+const matchLog = [];
 for (const p of good) {
   const nqtext = norm(p.qtext);
-  // Only match against questions whose sources include this pretest
-  const candidates = qs.filter(q =>
-    (q.sources || []).some(s => s.pretest === Number(pretestNum))
-  );
+  // Match against ALL questions. The pretest PDFs have the same 90-question
+  // pool but in randomized order; a question I got right on attempt 1 might
+  // be one I missed on attempt 2 or pretest 3, so it IS in data — just not
+  // under sources.pretest=N for this specific N.
+  const candidates = qs;
   let best = null, bestScore = 0;
   for (const q of candidates) {
     const s = similarity(norm(q.question), nqtext);
     if (s > bestScore) { bestScore = s; best = q; }
   }
-  // Threshold: ≥ 0.3 Jaccard on 4-grams (conservative; OCR has noise)
-  if (best && bestScore >= 0.3) {
+  // Threshold: ≥ 0.35 word Jaccard — the PDF has many non-missed questions
+  // that will score modestly against any target; real matches hit 0.5+.
+  if (best && bestScore >= 0.25) {
+    matchLog.push(`✓ ${bestScore.toFixed(2)} [${best.id}] ← "${p.qtext.slice(0, 60)}..."`);
     best.options = p.options;
     if (p.correctIdx >= 0) best.correct_short = p.options[p.correctIdx];
-    if (best.qtype === 'PBQ' || /Performance/i.test(valid.find(v => v.num === p.num)?.type || '')) {
+    const qType = valid.find(v => v.num === p.num)?.type || '';
+    if (best.qtype === 'PBQ' || /Performance/i.test(qType)) {
       const pngName = `pretest${pretestNum}_q${p.num}.png`;
       const src = `${pagesDir}/p-${String(p.page).padStart(2, '0')}.png`;
       if (existsSync(src)) {
@@ -170,14 +170,17 @@ for (const p of good) {
     }
     matched++;
   } else {
-    unmatched.push({ num: p.num, page: p.page, score: bestScore.toFixed(2), q: p.qtext.slice(0, 70) });
+    unmatched.push({ num: p.num, page: p.page, score: bestScore.toFixed(2), q: p.qtext.slice(0, 70), bestId: best?.id });
   }
 }
 
 writeFileSync(dataPath, JSON.stringify(qs, null, 2));
 console.log(`\nMatched + populated: ${matched}`);
-console.log(`Unmatched (no card in data/questions.json or score too low): ${unmatched.length}`);
+for (const m of matchLog) console.log('  ' + m);
+console.log(`\nUnmatched: ${unmatched.length}`);
 if (unmatched.length > 0) {
-  console.log('Unmatched samples:');
-  for (const u of unmatched.slice(0, 8)) console.log(`  [p${pretestNum}q${u.num}] score=${u.score} "${u.q}..."`);
+  console.log('Unmatched samples (score < 0.35 against pretest-' + pretestNum + ' candidates):');
+  for (const u of unmatched.slice(0, 15)) {
+    console.log(`  best=${u.score} bestId=${u.bestId} — "${u.q}..."`);
+  }
 }
