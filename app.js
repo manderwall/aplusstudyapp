@@ -307,6 +307,38 @@ async function loadData() {
   state.overrides = await loadOverrides();
   // Initialize progress for any new question; migrate older saves
   let migrated = false;
+  // 1. Dedupe migration: old per-pretest IDs → canonical IDs via q.sources
+  const validIds = new Set(state.questions.map(q => q.id));
+  const orphans = Object.keys(state.progress).filter(id => !validIds.has(id));
+  for (const oldId of orphans) {
+    const m = oldId.match(/^p(\d+)q(\d+)$/);
+    if (!m) { delete state.progress[oldId]; migrated = true; continue; }
+    const pretest = Number(m[1]), qnum = Number(m[2]);
+    const canon = state.questions.find(q =>
+      (q.sources || []).some(s => s.pretest === pretest && s.qnum === qnum)
+    );
+    if (canon) {
+      const old = state.progress[oldId];
+      const tgt = state.progress[canon.id];
+      if (!tgt) {
+        state.progress[canon.id] = old;
+      } else {
+        // Merge by taking the more-advanced progress across both
+        tgt.seen = (tgt.seen || 0) + (old.seen || 0);
+        tgt.correct = (tgt.correct || 0) + (old.correct || 0);
+        tgt.lastSeen = Math.max(tgt.lastSeen || 0, old.lastSeen || 0);
+        tgt.updated_at = Math.max(tgt.updated_at || 0, old.updated_at || 0);
+        tgt.interval = Math.max(tgt.interval || 0, old.interval || 0);
+        tgt.ease = Math.max(tgt.ease ?? 2.5, old.ease ?? 2.5);
+        tgt.due = Math.max(tgt.due || 0, old.due || 0);
+        const rank = { new: 0, learning: 1, good: 2 };
+        if ((rank[old.status] ?? 0) > (rank[tgt.status] ?? 0)) tgt.status = old.status;
+      }
+    }
+    delete state.progress[oldId];
+    migrated = true;
+  }
+  // 2. Fill defaults + migrate SRS fields for every current question
   for (const q of state.questions) {
     const p = state.progress[q.id];
     if (!p) {
@@ -422,13 +454,15 @@ function renderStudy() {
   }
 
   const edited = !!state.overrides[q.id];
+  const sources = q.sources || [{ pretest: q.pretest, qnum: q.qnum }];
   $('#main').innerHTML = `
     ${filterBarHTML()}
     <div class="card">
       <div class="card-meta">
         <span class="tag obj">OBJ ${q.obj}</span>
         ${q.qtype === 'PBQ' ? '<span class="tag pbq">PBQ</span>' : `<span class="tag">${q.qtype}</span>`}
-        <span class="tag">P${q.pretest} Q${q.qnum}</span>
+        <span class="tag" title="Appeared on: ${sources.map(s => `P${s.pretest}Q${s.qnum}`).join(', ')}">P${q.pretest} Q${q.qnum}</span>
+        ${sources.length > 1 ? `<span class="tag repeats" title="You missed this on ${sources.length} pretests: ${sources.map(s => `P${s.pretest}Q${s.qnum}`).join(', ')}">🔁 ${sources.length}×</span>` : ''}
         ${prog.seen > 0 ? `<span class="tag numeric">Seen ${prog.seen}×</span>` : ''}
         ${edited ? '<span class="tag edited">✏️ Edited</span>' : ''}
         <button class="tag tag-btn" id="edit-btn" title="Add/edit options and image">✏️ Edit</button>
@@ -438,8 +472,10 @@ function renderStudy() {
       ${renderOptionsHTML(q)}
       ${state.revealed ? `
         <div class="card-section wrong">
-          <div class="label">You picked (wrong)</div>
-          <p>${escape(q.wrong_pick)}</p>
+          <div class="label">You picked (wrong)${Array.isArray(q.wrong_picks) && q.wrong_picks.length > 1 ? ` — ${q.wrong_picks.length} different ways` : ''}</div>
+          ${Array.isArray(q.wrong_picks) && q.wrong_picks.length > 1
+            ? `<ul class="wrong-picks">${q.wrong_picks.map(w => `<li>${escape(w)}</li>`).join('')}</ul>`
+            : `<p>${escape(q.wrong_pick)}</p>`}
         </div>
         <div class="card-section right">
           <div class="label">Correct answer & explanation</div>
@@ -540,12 +576,14 @@ function renderQuiz() {
   }
 
   const edited = !!state.overrides[q.id];
+  const sources = q.sources || [{ pretest: q.pretest, qnum: q.qnum }];
   $('#main').innerHTML = `
     ${filterBarHTML()}
     <div class="card">
       <div class="card-meta">
         <span class="tag obj">OBJ ${q.obj}</span>
         ${q.qtype === 'PBQ' ? '<span class="tag pbq">PBQ</span>' : `<span class="tag">${q.qtype}</span>`}
+        ${sources.length > 1 ? `<span class="tag repeats" title="You missed this on ${sources.length} pretests">🔁 ${sources.length}×</span>` : ''}
         ${accuracy !== null ? `<span class="tag numeric">${accuracy}% (${prog.correct}/${prog.seen})</span>` : ''}
         ${edited ? '<span class="tag edited">✏️ Edited</span>' : ''}
         <button class="tag tag-btn" id="edit-btn" title="Add/edit options and image">✏️ Edit</button>
@@ -555,8 +593,10 @@ function renderQuiz() {
       ${renderOptionsHTML(q)}
       ${state.revealed ? `
         <div class="card-section wrong">
-          <div class="label">Common wrong pick</div>
-          <p>${escape(q.wrong_pick)}</p>
+          <div class="label">Common wrong pick${Array.isArray(q.wrong_picks) && q.wrong_picks.length > 1 ? `s (${q.wrong_picks.length})` : ''}</div>
+          ${Array.isArray(q.wrong_picks) && q.wrong_picks.length > 1
+            ? `<ul class="wrong-picks">${q.wrong_picks.map(w => `<li>${escape(w)}</li>`).join('')}</ul>`
+            : `<p>${escape(q.wrong_pick)}</p>`}
         </div>
         <div class="card-section right">
           <div class="label">Correct answer & explanation</div>
