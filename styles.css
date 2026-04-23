@@ -210,6 +210,27 @@ header h1 {
   font-size: 14px;
   font-variant-numeric: tabular-nums;
 }
+#progress-hud.hud-soon    { color: var(--warn); }
+#progress-hud.hud-urgent  { color: var(--bad); font-weight: 600; }
+#progress-hud.hud-past    { color: var(--text-dim); font-style: italic; }
+
+/* Exam-date inputs (native date picker styled to match settings rows) */
+.exam-date-input {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 140px;
+}
+.exam-date-input:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+.settings-meta.hud-soon   { color: var(--warn); font-weight: 500; }
+.settings-meta.hud-urgent { color: var(--bad); font-weight: 600; }
+.settings-meta.hud-past   { color: var(--text-dim); font-style: italic; }
 
 #theme-btn, #focus-btn, #help-btn {
   background: var(--surface-2);

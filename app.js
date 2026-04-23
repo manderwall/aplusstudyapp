@@ -32,6 +32,26 @@ const EXAMS = {
 const EXAM_IDS = Object.keys(EXAMS);
 function examDef(id) { return EXAMS[id] || EXAMS.core1; }
 
+// Exam target date (ISO yyyy-mm-dd) per exam. Used to drive the header
+// countdown and the urgency styling on the welcome screen.
+function getExamDate(examId) {
+  return localStorage.getItem(`exam.${examId}.date`) || '';
+}
+function setExamDate(examId, iso) {
+  if (!iso) localStorage.removeItem(`exam.${examId}.date`);
+  else localStorage.setItem(`exam.${examId}.date`, iso);
+}
+function daysUntilExam(examId = state?.exam) {
+  const iso = getExamDate(examId);
+  if (!iso) return null;
+  const [y, m, d] = iso.split('-').map(Number);
+  if (!y || !m || !d) return null;
+  const target = new Date(y, m - 1, d);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((target - today) / (24 * 60 * 60 * 1000));
+}
+
 //─── GLOBAL STATE ────────────────────────────────────────────
 const state = {
   exam: 'core1',
@@ -563,6 +583,21 @@ function updateHUD() {
   const hud = $('#progress-hud');
   if (!hud) return;
   const parts = [];
+  // Exam countdown is always visible so the deadline stays top-of-mind.
+  // Urgency class kicks in when ≤7 days remain; hidden in Anxiety Mode
+  // along with other numeric progress feedback.
+  const days = daysUntilExam(state.exam);
+  hud.classList.remove('hud-urgent', 'hud-soon', 'hud-past');
+  if (days !== null && pref('anxiety') !== 'on') {
+    const short = examDef(state.exam).label.replace(/\s*\(.*\)$/, '');
+    let label;
+    if (days < 0)       { label = `${short} exam was ${-days}d ago`; hud.classList.add('hud-past'); }
+    else if (days === 0){ label = `${short} · TODAY`; hud.classList.add('hud-urgent'); }
+    else if (days <= 7) { label = `${short} · ${days}d`; hud.classList.add('hud-urgent'); }
+    else if (days <= 30){ label = `${short} · ${days}d`; hud.classList.add('hud-soon'); }
+    else                { label = `${short} · ${days}d`; }
+    parts.push(`⏳ ${label}`);
+  }
   if (state.session) {
     if (state.session.endsAt) parts.push(`⏱ ${formatRemaining(state.session.endsAt - Date.now())}`);
     if (state.session.targetCards) {
@@ -918,6 +953,26 @@ function renderStats() {
             `).join('')}
           </span>
         </div>
+        ${EXAM_IDS.map(id => {
+          const d = daysUntilExam(id);
+          const urgency = d === null ? '' : d < 0 ? ' hud-past' : d <= 7 ? ' hud-urgent' : d <= 30 ? ' hud-soon' : '';
+          const countdown = d === null
+            ? '<span class="settings-meta">no date set</span>'
+            : d < 0 ? `<span class="settings-meta${urgency}">was ${-d}d ago</span>`
+            : d === 0 ? `<span class="settings-meta${urgency}">today</span>`
+            : `<span class="settings-meta${urgency}">${d} day${d === 1 ? '' : 's'} away</span>`;
+          return `
+            <div class="settings-row">
+              <span>${escapeHtml(examDef(id).label)} exam date</span>
+              <span class="settings-actions" style="gap: 10px;">
+                ${countdown}
+                <input type="date" class="exam-date-input" data-exam-date="${id}"
+                       value="${escapeHtml(getExamDate(id))}"
+                       aria-label="Exam date for ${escapeHtml(examDef(id).label)}">
+              </span>
+            </div>
+          `;
+        }).join('')}
         ${qs.length === 0 ? `
           <div class="settings-row">
             <span class="settings-meta">
@@ -1176,6 +1231,13 @@ function renderStats() {
   // Exam switcher: different data attribute so it doesn't collide with prefs
   $$('[data-exam-switch] button[data-exam]').forEach(btn => {
     btn.addEventListener('click', () => switchExam(btn.dataset.exam));
+  });
+  $$('input[data-exam-date]').forEach(input => {
+    input.addEventListener('change', (e) => {
+      setExamDate(input.dataset.examDate, e.target.value);
+      updateHUD();
+      renderStats();
+    });
   });
   // Accessibility: checkboxes (contrast / motion / haptics / autosync / anxiety / shake)
   $$('input[type="checkbox"][data-pref]').forEach(input => {
