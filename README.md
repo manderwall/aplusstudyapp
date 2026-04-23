@@ -22,7 +22,7 @@ A Progressive Web App (PWA) for Amanda. CompTIA A+ Core 1 (220-1201) study tool 
 
 | Key | Action |
 |---|---|
-| `Space` / `Enter` / `R` | Reveal answer. If already revealed, advances with a "good" rating. |
+| `Space` / `Enter` / `R` | Reveal answer. If already revealed: Study mode advances with a "good" rating; Quiz mode just skips (explicit right/wrong tap is required to record a quiz result). |
 | `1` / `2` / `3` / `4` | Rate: Again / Hard / Good / Easy (Study mode, after reveal) |
 | `→` / `K` / `N` | Next question |
 | `←` / `J` / `P` | Previous question |

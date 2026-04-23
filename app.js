@@ -1313,13 +1313,14 @@ function renderImageHTML(q) {
 function renderOptionsHTML(q) {
   if (!Array.isArray(q.options) || q.options.length === 0) return '';
   const picked = state.selectedOption;
-  const correct = q.correct_short;
-  const isCorrect = (opt) => {
-    if (!correct) return false;
-    const a = opt.toLowerCase().trim().replace(/\s+/g, ' ');
-    const b = correct.toLowerCase().trim().replace(/\s+/g, ' ');
-    return a === b;
-  };
+  const norm = (s) => (s || '').toLowerCase().trim().replace(/\s+/g, ' ');
+  // Multiple Answer questions use correct_picks (array); single-answer uses correct_short.
+  const correctSet = new Set(
+    Array.isArray(q.correct_picks) && q.correct_picks.length
+      ? q.correct_picks.map(norm)
+      : q.correct_short ? [norm(q.correct_short)] : []
+  );
+  const isCorrect = (opt) => correctSet.has(norm(opt));
   const cls = (opt) => {
     const c = ['q-option'];
     if (!state.revealed) {
@@ -1792,22 +1793,17 @@ function installKeyboard() {
         if (!state.revealed) {
           state.revealed = true;
           state.mode === 'study' ? renderStudy() : renderQuiz();
-        } else {
-          // When revealed: space/enter advances with a neutral "good" rating
+        } else if (state.mode === 'study') {
+          // When revealed in Study: space/enter advances with a "good" rating
           const qs = filteredQuestions();
           if (qs.length > 0) {
-            const q = qs[state.currentIndex];
-            if (state.mode === 'study') {
-              recordRating(q.id, 'good');
-              nextQuestion();
-            } else {
-              const p = state.progress[q.id];
-              p.seen++; p.lastSeen = Date.now(); p.updated_at = p.lastSeen; p.correct++;
-              schedule(p, 'good');
-              haptic(10); saveProgress(); onCardRated(q.id);
-              nextQuizQuestion();
-            }
+            recordRating(qs[state.currentIndex].id, 'good');
+            nextQuestion();
           }
+        } else {
+          // In Quiz, don't fabricate a right/wrong — require an explicit tap
+          // on "I got it right/wrong". Space/Enter just skips forward.
+          nextQuizQuestion();
         }
         return;
       }
@@ -1922,12 +1918,18 @@ function showWelcome() {
       </div>
     </div>
   `;
+  // Re-opening from the header Help button should replace, not stack
+  $('#welcome-overlay')?.remove();
   document.body.insertAdjacentHTML('beforeend', html);
 
   const overlay = $('#welcome-overlay');
+  const escClose = (e) => {
+    if (e.key === 'Escape' && $('#welcome-overlay') === overlay) close(null);
+  };
   const close = (action) => {
     const dismissPerm = $('#welcome-dismiss-permanent')?.checked;
     if (dismissPerm) localStorage.setItem('welcomeDismissed', '1');
+    document.removeEventListener('keydown', escClose);
     overlay.remove();
     const studyActions = new Set(['due', 'micro', 'session15']);
     if (action === 'due') { state.filter.due = true; setMode('study'); }
@@ -1944,13 +1946,7 @@ function showWelcome() {
   $$('[data-welcome]').forEach(btn =>
     btn.addEventListener('click', () => close(btn.dataset.welcome))
   );
-  // Esc closes
-  document.addEventListener('keydown', function escClose(e) {
-    if (e.key === 'Escape' && $('#welcome-overlay')) {
-      close(null);
-      document.removeEventListener('keydown', escClose);
-    }
-  });
+  document.addEventListener('keydown', escClose);
 }
 
 async function init() {

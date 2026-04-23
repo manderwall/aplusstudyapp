@@ -873,7 +873,6 @@
       }
     ],
     "options": [
-      "What printer setting should the user enable for this print job to achieve this result?",
       "Orientation",
       "Collate",
       "Transparency",
@@ -1034,15 +1033,16 @@
       }
     ],
     "options": [
-      "will be used exclusively as a file server for the company's internal network. Which of the",
-      "following are most important to install to BEST meet the company's needs? (Select TWO.)",
       "Gigabit NIC",
       "RAID 0",
       "1 TB HDD (5400 RPM)",
       "RAID 5",
       "FastEthernet NIC",
-      "1 TB SSD",
-      "Selected Answer - Incorrect"
+      "1 TB SSD"
+    ],
+    "correct_picks": [
+      "Gigabit NIC",
+      "RAID 5"
     ]
   },
   {
@@ -1237,8 +1237,7 @@
       }
     ],
     "options": [
-      "Turn off the television and Roku, unplug and replug the HDMI cable, and then restart",
-      "both units",
+      "Turn off the television and Roku, unplug and replug the HDMI cable, and then restart both units",
       "Turn off the Roku and turn it back on",
       "Turn off the television and turn it back on",
       "Unplug and replug the HDMI cable from the Roku and television"
@@ -1260,8 +1259,6 @@
       }
     ],
     "options": [
-      "asked to click on the appropriate device in a network diagram to see and modify its",
-      "configuration.)",
       "AP1",
       "AP2",
       "SW1",
@@ -1393,7 +1390,7 @@
     "qtype": "Multiple Choice",
     "question": "Which of the following best describes a Type I hypervisor?",
     "wrong_pick": "It requires a host operating system to function and manage virtualized environments",
-    "correct_short": "environments",
+    "correct_short": "It is installed directly on the hardware, offering better performance and security",
     "explanation": "OBJ 4.1: A Type I hypervisor, also known as a \"bare-metal\" hypervisor, is installed directly on the physical hardware, providing better performance and security by eliminating the need for an underlying operating system. Running on top of an existing operating system describes a Type II hypervisor. Type I hypervisors are typically used in enterprise and data center environments and are not primarily used for desktop virtualization. They also do not rely on an OS to function, so they do not require a host operating system.",
     "sources": [
       {
@@ -1403,8 +1400,7 @@
     ],
     "options": [
       "It is primarily used for desktop virtualization and testing environments",
-      "It requires a host operating system to function and manage virtualized",
-      "environments",
+      "It requires a host operating system to function and manage virtualized environments",
       "It runs on top of an existing operating system to create and manage virtual machines",
       "It is installed directly on the hardware, offering better performance and security"
     ]
@@ -1440,7 +1436,7 @@
     "qtype": "Multiple Choice",
     "question": "You are configuring a new printer for a small real estate office. There are only 4 computers in the network, and they are all connected to a single 4-port switch/router/cable modem device. There are no additional open ports on the device and no servers configured within the network. All the computers operate as part of a single workgroup with no domain controller. You need to configure the printer to allow all 4 computers to print to it as long as they are connected to the switch. Which of the following methods would BEST allow the users to print to the printer based on this network's configuration?",
     "wrong_pick": "Configure a print server and connect the printer to it",
-    "correct_short": "connected to the switch. Which of the following methods would BEST allow the users to print",
+    "correct_short": "Configure it as a shared printer connected to one of the four workstations",
     "explanation": "OBJ 3.7: Due to the small size of the network and the lack of additional open switch ports, it would be BEST to connect the printer to one of the workstations and configure it as a shared printer. This will allow any of the other workstations to print to the shared printer via the connected workstation. This allows the workstation to act as a print server, which means that the computer must always be left on or the rest of the users would be unable to print. Bluetooth printing is set up as a one-to-one pairing between a single computer and a single printer that is located within 10 feet. Since this is a small office, they do not have a dedicated server to configure for use as a print server. Cloud printing is only supported by some printers, and the question doesn't specify if this printer supports this feature.",
     "sources": [
       {
@@ -1449,11 +1445,6 @@
       }
     ],
     "options": [
-      "There are no additional open ports on the device and no servers configured within the",
-      "network. All the computers operate as part of a single workgroup with no domain controller.",
-      "You need to configure the printer to allow all 4 computers to print to it as long as they are",
-      "connected to the switch. Which of the following methods would BEST allow the users to print",
-      "to the printer based on this network's configuration?",
       "Configure the printer to support cloud printing",
       "Configure the printer to support Bluetooth printing",
       "Configure it as a shared printer connected to one of the four workstations",
@@ -1652,7 +1643,7 @@
     "qtype": "Multiple Choice",
     "question": "You have been assigned a trouble ticket for a workstation that is unable to boot. When you arrive at the workstation, you recognize an error message on the screen that reads, \"Error loading operating system, BOOTMGR is missing, Press Ctrl+Alt+Del to restart.\" Which of the following actions should you take first?",
     "wrong_pick": "Reboot the computer into the BIOS to see if the boot order is set to HDD",
-    "correct_short": "Reboot the computer into the Windows 10 repair console and enter \"Bootrec /fixmbr\" at",
+    "correct_short": "Reboot the computer into the Windows 10 repair console and enter \"Bootrec /fixmbr\" at the command prompt",
     "explanation": "OBJ 5.2: To troubleshoot the failed boot, you must reboot the computer and enter into recovery mode. In Windows 10, you will need to boot from the installation disc, select “Repair your computer,” and then enter the command-line interface (CLI). From the CLI, enter the command \"bootrec /fixmbr\" to repair the master boot record. Once completed, reboot the computer and allow it to load into Windows.",
     "sources": [
       {
@@ -1662,8 +1653,7 @@
     ],
     "options": [
       "Reboot the computer into recovery mode and initiate the disk restoral process",
-      "Reboot the computer into the Windows 10 repair console and enter \"Bootrec /fixmbr\" at",
-      "the command prompt",
+      "Reboot the computer into the Windows 10 repair console and enter \"Bootrec /fixmbr\" at the command prompt",
       "Reboot the computer into the BIOS to see if the boot order is set to HDD",
       "Reboot the computer and allow it to load back into Windows"
     ]
@@ -1847,7 +1837,7 @@
     "wrong_picks": [
       "Hold down power and volume up buttons simultaneously for 10 seconds, then slide to power off"
     ],
-    "correct_short": "off.",
+    "correct_short": "Hold down power and volume down buttons simultaneously for 10 seconds until it turns off",
     "explanation": "OBJ 5.4: Smartphones can become frozen, hung up, or locked up to the point they are unresponsive to touch or some button presses. The best solution is to hold down the power and volume down buttons simultaneously on an iPhone until it turns off.",
     "sources": [
       {
@@ -1860,12 +1850,9 @@
       }
     ],
     "options": [
-      "Hold down power and volume down buttons simultaneously for 10 seconds until it turns",
-      "off.",
-      "Hold down the power button and then the sleep/wake button simultaneously for about",
-      "10 seconds",
-      "Hold down power and volume up buttons simultaneously for 10 seconds, then",
-      "slide to power off",
+      "Hold down power and volume down buttons simultaneously for 10 seconds until it turns off",
+      "Hold down the power button and then the sleep/wake button simultaneously for about 10 seconds",
+      "Hold down power and volume up buttons simultaneously for 10 seconds, then slide to power off",
       "Hold down the home button for 10 seconds, then slide to power off"
     ]
   },
@@ -1886,8 +1873,6 @@
       }
     ],
     "options": [
-      "Upon opening the case, which component should you inspect for damage and expect to",
-      "replace?",
       "System fan",
       "GPU",
       "Motherboard",
@@ -2065,7 +2050,7 @@
     "qtype": "Multiple Choice",
     "question": "John is setting up 100 Windows 10 computers for a new corporate office. He wants to ensure that no one can change the boot order and boot from an unauthorized operating system. What feature should he ensure is enabled?",
     "wrong_pick": "Secure Boot",
-    "correct_short": "Full disk encryption",
+    "correct_short": "BIOS password required",
     "explanation": "OBJ 3.5: John should utilize the BIOS to set up a password to prevent unauthorized access to the Basic Input/Output System (BIOS) by other users. The BIOS is software that utilizes a small memory chip on the motherboard to hold the settings specialized for an organization to prevent access and tampering, thus reducing the workstations' overall attack surface and the network. Full disk encryption is used to encrypt the user and system data stored in the device’s internal storage. RAM integrity checking is conducted by default on most systems during the initial boot process, but it doesn't prevent a user from booting the system or changing the boot order. The purpose of Secure Boot is to prevent malicious and unauthorized apps from loading into the operating system (OS) during the startup process. Secure Boot is enabled by default in Windows 10. When the PC starts, the firmware checks the signature of each piece of boot software, including UEFI firmware drivers (also known as Option ROMs), EFI applications, and the operating system. If the signatures are valid, the PC boots and the firmware gives control to the operating system.",
     "sources": [
       {
@@ -2074,7 +2059,6 @@
       }
     ],
     "options": [
-      "What feature should he ensure is enabled?",
       "RAM integrity checking",
       "Full disk encryption",
       "Secure Boot",
