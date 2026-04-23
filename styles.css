@@ -614,7 +614,9 @@ button.action.bad { background: var(--bad); color: #fff; border-color: var(--bad
   border-radius: 0;
 }
 
-/* Subtle hint above the overlay explaining what to do */
+/* Subtle hint above the overlay explaining what to do.
+   The `[data-revealed]` attribute on <html> is set by app.js once the user
+   hits Reveal, so the "before revealing" nudge disappears post-answer. */
 .scratchpad-wrap.overlay::before {
   content: '✏️ Annotate directly on the image — label components from memory before revealing';
   display: block;
@@ -622,6 +624,9 @@ button.action.bad { background: var(--bad); color: #fff; border-color: var(--bad
   color: var(--text-dim);
   margin-bottom: 8px;
   font-style: italic;
+}
+html[data-revealed] .scratchpad-wrap.overlay::before {
+  content: '✏️ Annotations are saved per card — keep your notes or tap Clear to start fresh.';
 }
 
 /* Search bar (above filter bar in Study/Quiz) */
@@ -1237,4 +1242,42 @@ html[data-motion="reduced"] .mascot.celebrate { animation: none !important; }
 /* Very small phones (iPhone SE portrait) */
 @media (max-width: 360px) {
   button.action { flex-basis: 100%; }
+}
+
+/* ─── Toast (non-blocking notice) ─── */
+#toast-host {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--safe-bottom) + 80px);
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+  padding: 0 16px;
+}
+.toast {
+  pointer-events: auto;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  max-width: 520px;
+  font-size: 14px;
+  line-height: 1.45;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.2s, transform 0.2s;
+  cursor: pointer;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast-success { border-color: var(--good); }
+.toast-error   { border-color: var(--bad); color: var(--text); }
+html[data-motion="reduced"] .toast { transition: none; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .toast { transition: none; transform: none; }
 }

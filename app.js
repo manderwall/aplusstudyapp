@@ -124,6 +124,38 @@ function haptic(pattern = 10) {
   if (navigator.vibrate) navigator.vibrate(pattern);
 }
 
+//─── TOAST (non-blocking notice; gentler than alert() for AuDHD users) ──
+// Queues messages, shows each for a few seconds. Tap to dismiss early.
+const _toastQueue = [];
+let _toastShowing = false;
+function toast(msg, kind = 'info', ms = 3500) {
+  _toastQueue.push({ msg, kind, ms });
+  if (!_toastShowing) _drainToasts();
+}
+function _drainToasts() {
+  const next = _toastQueue.shift();
+  if (!next) { _toastShowing = false; return; }
+  _toastShowing = true;
+  let host = document.getElementById('toast-host');
+  if (!host) {
+    host = document.createElement('div');
+    host.id = 'toast-host';
+    document.body.appendChild(host);
+  }
+  const el = document.createElement('div');
+  el.className = `toast toast-${next.kind}`;
+  el.setAttribute('role', next.kind === 'error' ? 'alert' : 'status');
+  el.textContent = next.msg;
+  host.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  const dismiss = () => {
+    el.classList.remove('show');
+    setTimeout(() => { el.remove(); _drainToasts(); }, 200);
+  };
+  el.addEventListener('click', dismiss);
+  setTimeout(dismiss, next.ms);
+}
+
 //─── SESSION (Pomodoro or card-count micro-goal) ─────────────
 function startSession({ minutes = 0, targetCards = 0 } = {}) {
   state.session = {
@@ -155,7 +187,7 @@ function endSession(triggerSummary) {
       ? `Session done. No cards rated this time — that's OK, sometimes just showing up is the win.`
       : `Session done. ${reviewed} card${reviewed === 1 ? '' : 's'} reviewed. 🎉`;
     haptic([80, 60, 80]);
-    alert(msg);
+    toast(msg, 'success', 5000);
   }
 }
 
@@ -491,12 +523,13 @@ function updateHUD() {
 //─── MODE: STUDY (flashcards with self-rating) ──────────────
 function renderStudy() {
   $('#mode-title').textContent = 'Study';
+  document.documentElement.toggleAttribute('data-revealed', !!state.revealed);
   const qs = filteredQuestions();
   if (qs.length === 0) {
     const msg = state.filter.due
       ? ['✨ All caught up!', 'No cards due right now — come back later, or tap Due again to turn it off and study anything.', 'celebrate']
       : state.filter.search
-      ? ['Hmm, nothing matches', `Nothing for "${escape(state.filter.search)}". Try a different word or clear the search.`, 'sleep']
+      ? ['Hmm, nothing matches', `Nothing for "${escapeHtml(state.filter.search)}". Try a different word or clear the search.`, 'sleep']
       : ['No questions', 'Pick an objective below or clear the filter.', 'sleep'];
     $('#main').innerHTML = filterBarHTML() + emptyHTML(msg[0], msg[1], msg[2]);
     renderFilterBar();
@@ -529,15 +562,15 @@ function renderStudy() {
         ${edited ? '<span class="tag edited">✏️ Edited</span>' : ''}
         <button class="tag tag-btn" id="edit-btn" title="Add/edit options and image">✏️ Edit</button>
       </div>
-      <div class="card-question">${escape(q.question)}</div>
+      <div class="card-question">${escapeHtml(q.question)}</div>
       ${renderImageHTML(q)}
       ${renderOptionsHTML(q)}
       ${state.revealed ? `
         <div class="card-section wrong">
           <div class="label">You picked (wrong)${Array.isArray(q.wrong_picks) && q.wrong_picks.length > 1 ? ` — ${q.wrong_picks.length} different ways` : ''}</div>
           ${Array.isArray(q.wrong_picks) && q.wrong_picks.length > 1
-            ? `<ul class="wrong-picks">${q.wrong_picks.map(w => `<li>${escape(w)}</li>`).join('')}</ul>`
-            : `<p>${escape(q.wrong_pick)}</p>`}
+            ? `<ul class="wrong-picks">${q.wrong_picks.map(w => `<li>${escapeHtml(w)}</li>`).join('')}</ul>`
+            : `<p>${escapeHtml(q.wrong_pick)}</p>`}
         </div>
         <div class="card-section right">
           <div class="label">Correct answer & explanation</div>
@@ -627,12 +660,13 @@ function prevQuestion() {
 //─── MODE: QUIZ (same as study but tracks right/wrong explicitly) ──
 function renderQuiz() {
   $('#mode-title').textContent = 'Quiz';
+  document.documentElement.toggleAttribute('data-revealed', !!state.revealed);
   const qs = filteredQuestions();
   if (qs.length === 0) {
     const msg = state.filter.due
       ? ['✨ All caught up!', 'Nothing due for Quiz — tap Due to turn it off and pick anything.', 'celebrate']
       : state.filter.search
-      ? ['Hmm, nothing matches', `No match for "${escape(state.filter.search)}" — try another word.`, 'sleep']
+      ? ['Hmm, nothing matches', `No match for "${escapeHtml(state.filter.search)}" — try another word.`, 'sleep']
       : ['No questions', 'Pick an objective or clear the filter.', 'sleep'];
     $('#main').innerHTML = filterBarHTML() + emptyHTML(msg[0], msg[1], msg[2]);
     renderFilterBar();
@@ -665,15 +699,15 @@ function renderQuiz() {
         ${edited ? '<span class="tag edited">✏️ Edited</span>' : ''}
         <button class="tag tag-btn" id="edit-btn" title="Add/edit options and image">✏️ Edit</button>
       </div>
-      <div class="card-question">${escape(q.question)}</div>
+      <div class="card-question">${escapeHtml(q.question)}</div>
       ${renderImageHTML(q)}
       ${renderOptionsHTML(q)}
       ${state.revealed ? `
         <div class="card-section wrong">
           <div class="label">Common wrong pick${Array.isArray(q.wrong_picks) && q.wrong_picks.length > 1 ? `s (${q.wrong_picks.length})` : ''}</div>
           ${Array.isArray(q.wrong_picks) && q.wrong_picks.length > 1
-            ? `<ul class="wrong-picks">${q.wrong_picks.map(w => `<li>${escape(w)}</li>`).join('')}</ul>`
-            : `<p>${escape(q.wrong_pick)}</p>`}
+            ? `<ul class="wrong-picks">${q.wrong_picks.map(w => `<li>${escapeHtml(w)}</li>`).join('')}</ul>`
+            : `<p>${escapeHtml(q.wrong_pick)}</p>`}
         </div>
         <div class="card-section right">
           <div class="label">Correct answer & explanation</div>
@@ -758,7 +792,7 @@ function renderReading() {
     const fix = state.conceptFixes[obj];
     return `
       <div class="obj-section">
-        <h2>OBJ ${obj} — ${escape(fix.title)}</h2>
+        <h2>OBJ ${obj} — ${escapeHtml(fix.title)}</h2>
         ${fix.content}
       </div>
     `;
@@ -943,15 +977,15 @@ function renderStats() {
         <div class="settings-stack">
           <label class="settings-vrow">
             <span class="settings-vlabel">Project URL</span>
-            <input id="cloud-url" type="url" placeholder="https://xxxx.supabase.co" value="${escape(getCloudCfg().url)}">
+            <input id="cloud-url" type="url" placeholder="https://xxxx.supabase.co" value="${escapeHtml(getCloudCfg().url)}">
           </label>
           <label class="settings-vrow">
             <span class="settings-vlabel">Anon key</span>
-            <input id="cloud-key" type="password" placeholder="eyJ…" value="${escape(getCloudCfg().key)}">
+            <input id="cloud-key" type="password" placeholder="eyJ…" value="${escapeHtml(getCloudCfg().key)}">
           </label>
           <label class="settings-vrow">
             <span class="settings-vlabel">Sync key (any string you pick — same on every device)</span>
-            <input id="cloud-sync" type="text" placeholder="amanda-aplus" value="${escape(getCloudCfg().syncKey)}">
+            <input id="cloud-sync" type="text" placeholder="amanda-aplus" value="${escapeHtml(getCloudCfg().syncKey)}">
           </label>
           <div class="settings-actions" style="justify-content: space-between; padding: 4px 0;">
             <span class="settings-meta" id="cloud-status">${
@@ -1064,7 +1098,7 @@ function filterBarHTML() {
   for (const o of objs) counts[o] = state.questions.filter(q => q.obj === o).length;
   return `
     <div class="search-row">
-      <input id="search-input" type="search" placeholder="Search question text…" value="${escape(state.filter.search)}" autocomplete="off">
+      <input id="search-input" type="search" placeholder="Search question text…" value="${escapeHtml(state.filter.search)}" autocomplete="off">
       ${state.filter.search ? '<button id="search-clear" class="small-btn" aria-label="Clear search">✕</button>' : ''}
     </div>
     <div class="filter-bar">
@@ -1151,7 +1185,7 @@ function renderScratchpadHTML(q) {
           <button id="clear-pad-btn" style="margin-left: auto;">Clear</button>
         </div>
         <div class="scratchpad-overlay-container">
-          <img class="scratchpad-underlay" src="${escape(src)}" alt="Annotate">
+          <img class="scratchpad-underlay" src="${escapeHtml(src)}" alt="Annotate">
           <canvas id="scratchpad" class="scratchpad overlay-canvas"></canvas>
         </div>
       </div>
@@ -1294,7 +1328,7 @@ function renderImageHTML(q) {
   const imgs = q.images || (q.image ? [q.image] : []);
   if (imgs.length > 0) {
     return `<div class="q-images">${imgs.map(src =>
-      `<img src="${escape(src)}" alt="Question figure" loading="lazy">`
+      `<img src="${escapeHtml(src)}" alt="Question figure" loading="lazy">`
     ).join('')}</div>`;
   }
   // PBQ with no image → make it clear it's missing
@@ -1302,7 +1336,7 @@ function renderImageHTML(q) {
     return `<div class="q-image-missing">
       <strong>⚠️ Image not available.</strong>
       This PBQ references a figure from the original pretest. Drop a PNG/JPG at
-      <code>images/${escape(q.id)}.png</code> and add <code>"image": "images/${escape(q.id)}.png"</code>
+      <code>images/${escapeHtml(q.id)}.png</code> and add <code>"image": "images/${escapeHtml(q.id)}.png"</code>
       to this question in <code>data/questions.json</code> to show it here.
       The explanation below still describes what was being asked.
     </div>`;
@@ -1335,7 +1369,7 @@ function renderOptionsHTML(q) {
   return `
     <ol class="q-options" type="A">
       ${q.options.map(opt =>
-        `<li class="${cls(opt)}" data-option="${escape(opt)}">${escape(opt)}</li>`
+        `<li class="${cls(opt)}" data-option="${escapeHtml(opt)}">${escapeHtml(opt)}</li>`
       ).join('')}
     </ol>`;
 }
@@ -1346,18 +1380,18 @@ function renderEditFormHTML(q) {
   const imgVal = q.image || (q.images && q.images[0]) || '';
   return `
     <div class="card edit-card">
-      <h3 class="edit-title">Edit question <span class="edit-id">${escape(q.id)}</span></h3>
-      <p class="edit-question">${escape(q.question)}</p>
+      <h3 class="edit-title">Edit question <span class="edit-id">${escapeHtml(q.id)}</span></h3>
+      <p class="edit-question">${escapeHtml(q.question)}</p>
 
       <label class="edit-field">
         <span class="edit-label">Multiple-choice options (one per line)</span>
-        <textarea id="edit-options" rows="6" placeholder="Cable modem&#10;DSL&#10;ONT&#10;SDN">${escape(optsText)}</textarea>
+        <textarea id="edit-options" rows="6" placeholder="Cable modem&#10;DSL&#10;ONT&#10;SDN">${escapeHtml(optsText)}</textarea>
         <span class="edit-hint">Tip: enter the four answer choices. Order doesn't matter — the app doesn't grade clicks.</span>
       </label>
 
       <label class="edit-field">
         <span class="edit-label">Image URL (PBQs)</span>
-        <input id="edit-image" type="text" value="${escape(imgVal)}" placeholder="images/${escape(q.id)}.png or https://…">
+        <input id="edit-image" type="text" value="${escapeHtml(imgVal)}" placeholder="images/${escapeHtml(q.id)}.png or https://…">
         <span class="edit-hint">Drop a PNG/JPG into the project's <code>images/</code> folder and use that path, or paste any URL.</span>
       </label>
 
@@ -1401,7 +1435,7 @@ function attachEditEvents(q) {
 }
 
 //─── HELPERS ─────────────────────────────────────────────────
-function escape(s) {
+function escapeHtml(s) {
   if (!s) return '';
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
@@ -1422,7 +1456,7 @@ function formatExplanation(text) {
     text = text.slice(0, tipIdx).trim();
   }
 
-  const mdBold = (s) => escape(s).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  const mdBold = (s) => escapeHtml(s).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   // Split only at a space between a sentence-ending punctuation mark and the
   // next sentence's capital letter. Avoids breaking numbers like "2.4 GHz" or
   // "802.11g" — those decimals aren't followed by a capital letter.
@@ -1633,9 +1667,9 @@ function importProgress() {
       }
       await saveProgress();
       renderStats();
-      alert('Progress imported.');
+      toast('Progress imported.', 'success');
     } catch (e) {
-      alert('Import failed: ' + e.message);
+      toast('Import failed: ' + e.message, 'error', 5000);
     }
   });
   input.click();
@@ -1667,9 +1701,9 @@ function importOverrides() {
       state.overrides = choice ? { ...state.overrides, ...data } : data;
       await saveOverrides();
       renderStats();
-      alert('Overrides imported.');
+      toast('Overrides imported.', 'success');
     } catch (e) {
-      alert('Import failed: ' + e.message);
+      toast('Import failed: ' + e.message, 'error', 5000);
     }
   });
   input.click();
@@ -1964,7 +1998,7 @@ async function init() {
   try {
     await loadData();
   } catch (e) {
-    $('#main').innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><h3>Couldn't load data</h3><p>${escape(e.message)}</p></div>`;
+    $('#main').innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><h3>Couldn't load data</h3><p>${escapeHtml(e.message)}</p></div>`;
     return;
   }
   $$('.tab').forEach(t => t.addEventListener('click', () => setMode(t.dataset.mode)));
