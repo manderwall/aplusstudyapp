@@ -18,7 +18,9 @@ jobs:
           node --check app.js
           node --check lib.mjs
           node --check sw.js
-      - name: Validate questions.json
-        run: node scripts/validate-questions.mjs
+      - name: Validate questions.json (Core 1)
+        run: node scripts/validate-questions.mjs data/questions.json
+      - name: Validate questions.json (Core 2)
+        run: node scripts/validate-questions.mjs data/core2/questions.json
       - name: Unit tests
         run: node --test tests/pure.test.mjs tests/crypto.test.mjs

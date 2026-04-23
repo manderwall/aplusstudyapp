@@ -11,8 +11,30 @@ import {
   makeVerificationBlob, verifyPin,
 } from './crypto.mjs';
 
+//─── EXAMS (multi-dataset support) ──────────────────────────
+// Each exam has its own questions + concept-fixes file, and its own
+// progress/overrides rows in IndexedDB, keyed by id. Adding a new exam
+// is just: drop files in data/<id>/ and add an entry here.
+const EXAMS = {
+  core1: {
+    id: 'core1',
+    label: 'Core 1 (220-1201)',
+    questions: 'data/questions.json',
+    fixes: 'data/concept-fixes.json',
+  },
+  core2: {
+    id: 'core2',
+    label: 'Core 2 (220-1202)',
+    questions: 'data/core2/questions.json',
+    fixes: 'data/core2/concept-fixes.json',
+  },
+};
+const EXAM_IDS = Object.keys(EXAMS);
+function examDef(id) { return EXAMS[id] || EXAMS.core1; }
+
 //─── GLOBAL STATE ────────────────────────────────────────────
 const state = {
+  exam: 'core1',
   questions: [],
   conceptFixes: {},
   mode: 'study',
@@ -338,6 +360,15 @@ function idbPut(store, key, value) {
   }));
 }
 
+function idbDelete(store, key) {
+  return openDB().then(db => new Promise(resolve => {
+    const tx = db.transaction(store, 'readwrite');
+    tx.objectStore(store).delete(key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => resolve();
+  }));
+}
+
 //─── PIN LOCK (AES-GCM at-rest encryption) ───────────────────
 // Setup metadata lives in localStorage under `pin.setup` as
 //   { v: 1, salt: b64, iterations: N, verification: { v, iv, ct } }
@@ -365,40 +396,62 @@ async function maybeDecrypt(raw, fallback) {
   return decryptJSON(state._cryptoKey, raw);
 }
 
-async function loadProgress() {
-  try { return (await maybeDecrypt(await idbGet(STORE, 'all'), {})) || {}; }
-  catch (e) { if (e.message === 'locked') throw e; return {}; }
+// Per-exam keys so Core 1 and Core 2 progress live side by side. Pre-multi-
+// exam saves lived under the 'all' key; loadProgress/loadOverrides transparently
+// migrate that row to 'core1' on first read.
+async function loadProgress(examId = state.exam) {
+  try {
+    let raw = await idbGet(STORE, examId);
+    if (raw == null && examId === 'core1') {
+      const legacy = await idbGet(STORE, 'all');
+      if (legacy != null) {
+        await idbPut(STORE, 'core1', legacy);
+        await idbDelete(STORE, 'all');
+        raw = legacy;
+      }
+    }
+    return (await maybeDecrypt(raw, {})) || {};
+  } catch (e) { if (e.message === 'locked') throw e; return {}; }
 }
-async function saveProgress() {
-  try { await idbPut(STORE, 'all', await maybeEncrypt(state.progress)); }
+async function saveProgress(examId = state.exam) {
+  try { await idbPut(STORE, examId, await maybeEncrypt(state.progress)); }
   catch (e) { console.warn('Save progress failed', e); }
 }
-async function clearProgress() {
+async function clearProgress(examId = state.exam) {
   try {
-    const db = await openDB();
-    const tx = db.transaction(STORE, 'readwrite');
-    tx.objectStore(STORE).clear();
+    await idbDelete(STORE, examId);
     state.progress = {};
   } catch (e) { console.warn('Clear failed', e); }
 }
 
-async function loadOverrides() {
-  try { return (await maybeDecrypt(await idbGet(OSTORE, 'all'), {})) || {}; }
-  catch (e) { if (e.message === 'locked') throw e; return {}; }
+async function loadOverrides(examId = state.exam) {
+  try {
+    let raw = await idbGet(OSTORE, examId);
+    if (raw == null && examId === 'core1') {
+      const legacy = await idbGet(OSTORE, 'all');
+      if (legacy != null) {
+        await idbPut(OSTORE, 'core1', legacy);
+        await idbDelete(OSTORE, 'all');
+        raw = legacy;
+      }
+    }
+    return (await maybeDecrypt(raw, {})) || {};
+  } catch (e) { if (e.message === 'locked') throw e; return {}; }
 }
-async function saveOverrides() {
-  try { await idbPut(OSTORE, 'all', await maybeEncrypt(state.overrides)); }
+async function saveOverrides(examId = state.exam) {
+  try { await idbPut(OSTORE, examId, await maybeEncrypt(state.overrides)); }
   catch (e) { console.warn('Save overrides failed', e); }
 }
 
 //─── DATA LOAD ───────────────────────────────────────────────
 async function loadData() {
+  const def = examDef(state.exam);
   const [questionsRes, fixesRes] = await Promise.all([
-    fetch('data/questions.json'),
-    fetch('data/concept-fixes.json'),
+    fetch(def.questions),
+    fetch(def.fixes),
   ]);
-  state.questions = await questionsRes.json();
-  state.conceptFixes = await fixesRes.json();
+  state.questions = questionsRes.ok ? await questionsRes.json() : [];
+  state.conceptFixes = fixesRes.ok ? await fixesRes.json() : {};
   state.progress = await loadProgress();
   state.overrides = await loadOverrides();
   // Initialize progress for any new question; migrate older saves
@@ -804,6 +857,15 @@ function renderReading() {
     return am - bm || an - bn;
   });
 
+  if (objs.length === 0) {
+    $('#main').innerHTML = emptyHTML(
+      'No concept fixes yet',
+      `${examDef(state.exam).label} has no reading content. Populate ${examDef(state.exam).fixes} and hard-refresh.`,
+      'sleep'
+    );
+    return;
+  }
+
   const html = objs.map(obj => {
     const fix = state.conceptFixes[obj];
     return `
@@ -842,6 +904,37 @@ function renderStats() {
   const streak = getStreak();
   $('#main').innerHTML = `
     <div class="stats-wrap">
+      <h3 class="stats-h">Active exam</h3>
+      <div class="settings-panel">
+        <div class="settings-row">
+          <span id="exam-label">Dataset</span>
+          <span class="seg-control" data-exam-switch role="radiogroup" aria-labelledby="exam-label">
+            ${EXAM_IDS.map(id => `
+              <button data-exam="${id}" role="radio"
+                      aria-checked="${state.exam === id ? 'true' : 'false'}"
+                      class="${state.exam === id ? 'active' : ''}">
+                ${examDef(id).label.replace(/\s*\(.*\)$/, '')}
+              </button>
+            `).join('')}
+          </span>
+        </div>
+        ${qs.length === 0 ? `
+          <div class="settings-row">
+            <span class="settings-meta">
+              <strong>${escapeHtml(examDef(state.exam).label)} has no questions yet.</strong>
+              <br>Drop your extracted questions into <code>${escapeHtml(examDef(state.exam).questions)}</code>
+              and hard-refresh the app. See README → "Adding a new exam dataset".
+            </span>
+          </div>
+        ` : `
+          <div class="settings-row">
+            <span class="settings-meta">
+              ${qs.length} cards in ${escapeHtml(examDef(state.exam).label)}. Progress is tracked separately per exam.
+            </span>
+          </div>
+        `}
+      </div>
+
       <div class="stats-row numeric-ui">
         <div class="stat-card">
           <div class="number">${seen.length}</div>
@@ -1048,11 +1141,11 @@ function renderStats() {
         </div>
       </div>
 
-      <button class="reset-btn" id="reset-btn">Reset all progress</button>
+      <button class="reset-btn" id="reset-btn">Reset progress for ${escapeHtml(examDef(state.exam).label)}</button>
     </div>
   `;
   $('#reset-btn').addEventListener('click', async () => {
-    if (confirm('Reset all study progress? This cannot be undone.')) {
+    if (confirm(`Reset ${examDef(state.exam).label} progress? This cannot be undone. Progress for other exams is unaffected.`)) {
       await clearProgress();
       for (const q of state.questions) {
         state.progress[q.id] = defaultProgress();
@@ -1072,13 +1165,17 @@ function renderStats() {
   });
 
   // Accessibility: segmented controls (size / font / sound)
-  $$('.seg-control').forEach(group => {
+  $$('.seg-control[data-pref]').forEach(group => {
     const key = group.dataset.pref;
     group.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => {
       setPref(key, btn.dataset.val);
       if (key === 'sound') setSound(btn.dataset.val);
       renderStats();
     }));
+  });
+  // Exam switcher: different data attribute so it doesn't collide with prefs
+  $$('[data-exam-switch] button[data-exam]').forEach(btn => {
+    btn.addEventListener('click', () => switchExam(btn.dataset.exam));
   });
   // Accessibility: checkboxes (contrast / motion / haptics / autosync / anxiety / shake)
   $$('input[type="checkbox"][data-pref]').forEach(input => {
@@ -1543,6 +1640,31 @@ function emptyHTML(title, sub, mood = 'sleep') {
 }
 
 //─── ROUTING ─────────────────────────────────────────────────
+async function switchExam(newExam) {
+  if (!EXAM_IDS.includes(newExam) || newExam === state.exam) return;
+  // Persist current exam's progress before switching to avoid losing any
+  // rating that happened between the last save and the switch click.
+  await saveProgress();
+  await saveOverrides();
+  state.exam = newExam;
+  localStorage.setItem('exam', newExam);
+  // Reset nav + filter state so we don't point at a card index that doesn't
+  // exist in the new dataset.
+  state.filter = { obj: null, due: false, search: '' };
+  state.currentIndex = 0;
+  state.revealed = false;
+  state.editing = false;
+  state.selectedOption = null;
+  state.history = [];
+  state._shuffleCache = null;
+  try { await loadData(); }
+  catch (e) { toast('Couldn\'t load ' + examDef(newExam).label + ': ' + e.message, 'error', 5000); }
+  toast('Switched to ' + examDef(newExam).label, 'info');
+  // If the active tab is Stats we re-render Stats; otherwise jump to Study.
+  if (state.mode === 'stats') renderStats();
+  else setMode('study');
+}
+
 function setMode(mode) {
   state.mode = mode;
   state.currentIndex = 0;
@@ -1795,12 +1917,33 @@ function cloudHeaders(key, extra = {}) {
   };
 }
 
+// Cloud payload v2 bundles every exam's progress + overrides in one row so a
+// single push/pull syncs Core 1 and Core 2 together. v1 payloads (pre-multi-
+// exam) are auto-migrated into the "core1" slot on pull.
+async function gatherAllExamsForCloud() {
+  // Read the other exams straight from IDB (decrypted with the session key
+  // if the PIN is on), while the active exam lives in state.
+  const progress = {};
+  const overrides = {};
+  for (const id of EXAM_IDS) {
+    if (id === state.exam) {
+      progress[id] = state.progress;
+      overrides[id] = state.overrides;
+    } else {
+      progress[id] = await loadProgress(id);
+      overrides[id] = await loadOverrides(id);
+    }
+  }
+  return { progress, overrides };
+}
+
 async function cloudPush() {
   const { url, key, syncKey } = getCloudCfg();
   if (!url || !key || !syncKey) throw new Error('Set Supabase URL, anon key, and sync key first');
+  const bundle = await gatherAllExamsForCloud();
   const body = JSON.stringify({
     sync_key: syncKey,
-    data: { progress: state.progress, overrides: state.overrides, version: 1 },
+    data: { version: 2, progress: bundle.progress, overrides: bundle.overrides },
     updated_at: new Date().toISOString(),
   });
   const res = await fetch(`${url}/rest/v1/progress`, {
@@ -1812,6 +1955,18 @@ async function cloudPush() {
   localStorage.setItem('supabase.lastSync', new Date().toISOString());
 }
 
+function normalizeCloudData(data) {
+  // v1 (legacy): { progress: {id: {...}}, overrides: {...} } — single-exam.
+  // v2:         { progress: {examId: {id: {...}}}, overrides: {examId: {...}} }
+  if (data?.version === 2) {
+    return { progress: data.progress || {}, overrides: data.overrides || {} };
+  }
+  return {
+    progress:  { core1: data?.progress  || {} },
+    overrides: { core1: data?.overrides || {} },
+  };
+}
+
 async function cloudPull({ merge = true } = {}) {
   const { url, key, syncKey } = getCloudCfg();
   if (!url || !key || !syncKey) throw new Error('Set Supabase URL, anon key, and sync key first');
@@ -1821,38 +1976,61 @@ async function cloudPull({ merge = true } = {}) {
   if (!res.ok) throw new Error(`Pull ${res.status}: ${(await res.text()).slice(0, 200)}`);
   const rows = await res.json();
   if (!rows.length) throw new Error(`No row found for sync key "${syncKey}"`);
-  const data = rows[0].data || {};
-  const cloudProgress = data.progress || {};
-  const cloudOverrides = data.overrides || {};
+  const { progress: cloudProgressByExam, overrides: cloudOverridesByExam } = normalizeCloudData(rows[0].data || {});
 
-  if (merge) {
-    // Per-card last-write-wins: keep whichever side has a newer updated_at
-    for (const [id, cloudP] of Object.entries(cloudProgress)) {
-      const localP = state.progress[id];
-      if (!localP) { state.progress[id] = cloudP; continue; }
-      const cTime = cloudP.updated_at || cloudP.lastSeen || 0;
-      const lTime = localP.updated_at || localP.lastSeen || 0;
-      if (cTime > lTime) state.progress[id] = cloudP;
-    }
-    // Overrides: prefer whichever has more fields (naive — rare to edit same card in two places concurrently)
-    for (const [id, cloudO] of Object.entries(cloudOverrides)) {
-      const localO = state.overrides[id];
-      if (!localO || Object.keys(cloudO).length > Object.keys(localO).length) {
-        state.overrides[id] = cloudO;
+  for (const examId of EXAM_IDS) {
+    const cloudProgress  = cloudProgressByExam[examId]  || {};
+    const cloudOverrides = cloudOverridesByExam[examId] || {};
+    const isActive = examId === state.exam;
+    const local = isActive
+      ? { progress: state.progress,  overrides: state.overrides }
+      : { progress: await loadProgress(examId), overrides: await loadOverrides(examId) };
+
+    if (merge) {
+      // Per-card last-write-wins using updated_at (falls back to lastSeen)
+      for (const [id, cp] of Object.entries(cloudProgress)) {
+        const lp = local.progress[id];
+        if (!lp) { local.progress[id] = cp; continue; }
+        const cTime = cp.updated_at || cp.lastSeen || 0;
+        const lTime = lp.updated_at || lp.lastSeen || 0;
+        if (cTime > lTime) local.progress[id] = cp;
       }
+      // Overrides: prefer the side with more fields (naïve — rare to concurrently edit)
+      for (const [id, co] of Object.entries(cloudOverrides)) {
+        const lo = local.overrides[id];
+        if (!lo || Object.keys(co).length > Object.keys(lo).length) {
+          local.overrides[id] = co;
+        }
+      }
+    } else {
+      local.progress = cloudProgress;
+      local.overrides = cloudOverrides;
     }
-  } else {
-    state.progress = cloudProgress;
-    state.overrides = cloudOverrides;
-  }
 
-  // Re-apply defaults/migrations for any card the cloud didn't cover
-  for (const q of state.questions) {
-    if (!state.progress[q.id]) state.progress[q.id] = defaultProgress();
-    else migrateProgress(state.progress[q.id]);
+    if (isActive) {
+      state.progress  = local.progress;
+      state.overrides = local.overrides;
+      // Re-apply defaults/migrations for cards the cloud didn't cover
+      for (const q of state.questions) {
+        if (!state.progress[q.id]) state.progress[q.id] = defaultProgress();
+        else migrateProgress(state.progress[q.id]);
+      }
+      await saveProgress();
+      await saveOverrides();
+    } else {
+      // Write the updated row back under the right exam's key
+      const savedExam = state.exam;
+      state.exam = examId;
+      const savedProgress = state.progress, savedOverrides = state.overrides;
+      state.progress  = local.progress;
+      state.overrides = local.overrides;
+      await saveProgress();
+      await saveOverrides();
+      state.exam = savedExam;
+      state.progress  = savedProgress;
+      state.overrides = savedOverrides;
+    }
   }
-  await saveProgress();
-  await saveOverrides();
   localStorage.setItem('supabase.lastSync', new Date().toISOString());
 }
 
@@ -2249,6 +2427,10 @@ function showWelcome() {
 async function init() {
   // Prefs / theme / shuffle all load before any render so first paint is correct
   applyPrefs();
+  // Active exam is persisted separately so the PIN gate can still unlock the
+  // right encrypted progress blob on first load.
+  const savedExam = localStorage.getItem('exam');
+  if (EXAM_IDS.includes(savedExam)) state.exam = savedExam;
   setTheme(localStorage.getItem('theme') || 'auto');
   state.shuffle = localStorage.getItem('shuffle') === 'true';
   if (pref('sound') !== 'off') setSound(pref('sound'));  // ambient noise restores (needs gesture on some browsers)

@@ -221,6 +221,40 @@ Optional. Stops a curious family member (or a pickpocket) from opening the app a
 
 If you set a PIN on iPad, you'll need to set one on iPhone independently — each device has its own encrypted store. Supabase pull still works because cloud blobs are plaintext.
 
+## Adding a new exam dataset (Core 2, etc.)
+
+The app supports multiple exam datasets side by side. Core 1 (220-1201) ships populated; Core 2 (220-1202) ships as an empty scaffold you populate locally.
+
+### Directory layout
+
+```
+data/
+├── questions.json            # Core 1 questions (legacy path kept stable)
+├── concept-fixes.json        # Core 1 concept-fix sheets
+└── core2/
+    ├── questions.json        # Core 2 questions (empty [])
+    └── concept-fixes.json    # Core 2 concept-fix sheets (empty {})
+```
+
+### Populate Core 2
+
+1. Run your extraction (same format as Core 1) against the Core 2 pretest PDFs/docs — same JSON schema documented above under "Adding multiple-choice options + PBQ images".
+2. Write the output to `data/core2/questions.json`. Fill `data/core2/concept-fixes.json` the same way.
+3. Hard-refresh the app (or bump `CACHE` in `sw.js` if you're testing a deployed PWA).
+4. Stats → Active exam → pick **Core 2** to start studying it.
+
+### Switching between exams
+
+- Stats → **Active exam** — toggle picks the active dataset.
+- Each exam has independent progress, question overrides, and scratchpad drawings. Switching preserves both sides.
+- PIN lock, if enabled, encrypts progress for *every* exam — no extra setup needed.
+- Cloud sync (Supabase) bundles both exams' progress + overrides in a single row (payload v2). A v1 row from an older device pulls into the Core 1 slot automatically.
+- Streak + focus sessions are global, not per-exam.
+
+### Adding a third exam
+
+Edit the `EXAMS` map near the top of `app.js` — add `{ id, label, questions, fixes }` — drop files under `data/<id>/`, and the Stats switcher will pick it up automatically. CI's `validate-questions.mjs` accepts any path, so add a step to `.github/workflows/ci.yml` for the new file.
+
 ## Vibe-coding additions
 
 If you want to extend it with Claude Code, here's the structure:

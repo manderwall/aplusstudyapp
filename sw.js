@@ -1,5 +1,5 @@
 // Service worker — cache shell + content for offline use
-const CACHE = 'aplus-study-v19';
+const CACHE = 'aplus-study-v20';
 const ASSETS = [
   './',
   './index.html',
@@ -8,8 +8,10 @@ const ASSETS = [
   './lib.mjs',
   './crypto.mjs',
   './manifest.json',
-  './data/questions.json',
-  './data/concept-fixes.json',
+  './data/questions.json',         // Core 1 questions
+  './data/concept-fixes.json',     // Core 1 concept fixes
+  './data/core2/questions.json',   // Core 2 questions (empty scaffold)
+  './data/core2/concept-fixes.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
 ];
