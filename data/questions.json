@@ -162,7 +162,7 @@
       "PATA connector",
       "PATA connection"
     ],
-    "correct_short": "",
+    "correct_short": "PCIe x1",
     "explanation": "OBJ 3.5: The area circled indicates the PCIe x1 slots. PCIe (peripheral component interconnect express) is an interface standard for connecting high-speed components. Every desktop PC motherboard has some PCIe slots you can use to add GPUs (video cards or graphics cards), RAID cards, network adapters, Wi-Fi cards, or SSD (solid-state drive) add-on cards. The types of PCIe slots available in your PC will depend on your motherboard and are designated as PCIe x1, x4, x8, and x16. PCIe x1 slots are usually used for external input/output devices such as network interface cards. For the exam, it is important that you can identify the different parts of the motherboard by sight.",
     "sources": [
       {
@@ -185,7 +185,14 @@
         "pretest": 5,
         "qnum": 28
       }
-    ]
+    ],
+    "options": [
+      "PCIe x1",
+      "PCIe x4",
+      "PCIe x8",
+      "PCIe x16"
+    ],
+    "image": "images/pretest1_q36.png"
   },
   {
     "id": "p1q37",
@@ -341,7 +348,7 @@
     "wrong_picks": [
       "802.11n"
     ],
-    "correct_short": "",
+    "correct_short": "802.11ac",
     "explanation": "",
     "sources": [
       {
@@ -352,6 +359,14 @@
         "pretest": 2,
         "qnum": 14
       }
+    ],
+    "options": [
+      "802.11a",
+      "802.11ac",
+      "802.11ax",
+      "802.11b",
+      "802.11g",
+      "802.11n"
     ]
   },
   {
@@ -366,7 +381,6 @@
       "Reduces network dependency issues",
       "Simplifies software installation on devices"
     ],
-    "correct_short": "",
     "explanation": "OBJ 4.1: The primary benefit of using Virtual Desktop Infrastructure (VDI) is that it enhances desktop security and control. VDI centralizes desktop management, allowing administrators to enforce security policies, apply updates, and monitor access more effectively, which significantly reduces the risk of data breaches or unauthorized access. Simplifying software installation on devices is incorrect because, while VDI simplifies management, software installation is typically handled centrally rather than on individual devices. Increases in local processing speeds are not accurate since processing is performed on the server rather than the local device. Reducing network dependency issues is also incorrect because VDI requires a stable network connection to function properly.",
     "sources": [
       {
@@ -956,7 +970,6 @@
     "qtype": "Multiple Choice",
     "question": "Wireless network users recently began experiencing speed and performance issues on your network after Access Point 2 (AP2) was replaced due to a recent hardware failure. The original wireless network was installed according to a wireless consultant's specifications and has always worked properly without any past issues.You have been asked to evaluate the situation and resolve any issues you find to improve the network's performance and connectivity. The client has instructed you to adjust the least amount of settings/configurations possible while attempting to fix the issue. Before arriving on-site, you receive the below office's floor plan with an elementary network diagram drawn on top.Based on the information provided to you so far, which network device would you log into first to begin your troubleshooting efforts?",
     "wrong_pick": "SW1",
-    "correct_short": "",
     "explanation": "OBJ 5.5: Since everything was working properly on the network before AP2 was replaced after the recent hardware failure, AP2 likely has some configuration error that has led to the recent connectivity and performance problems. Therefore, you should begin your troubleshooting efforts with AP2. According to the CompTIA troubleshooting method, you should always determine if anything has changed and question the obvious. If AP2 was recently replaced, it is most likely the device with an incorrect configuration setting or the one causing the issues.",
     "sources": [
       {
@@ -1531,13 +1544,19 @@
     "qtype": "Multiple Choice",
     "question": "Which of the following must be enabled on a mobile device to allow internet access when cellular data is unavailable, such as in an airplane?",
     "wrong_pick": "Bluetooth",
-    "correct_short": "",
+    "correct_short": "Wi-Fi",
     "explanation": "OBJ 1.3: When cellular data is unavailable, enabling Wi-Fi allows the device to connect to available wireless networks to access the internet. Bluetooth and GPS services do not provide internet connectivity, and SIM card locking is a security feature.",
     "sources": [
       {
         "pretest": 4,
         "qnum": 69
       }
+    ],
+    "options": [
+      "Bluetooth",
+      "GPS services",
+      "SIM card locking",
+      "Wi-Fi"
     ]
   },
   {
