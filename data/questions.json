@@ -772,8 +772,6 @@
       }
     ],
     "options": [
-      "Which of the following types of displays should the company purchase to meet this",
-      "requirement?",
       "IPS",
       "TN",
       "Plasma",
@@ -1131,7 +1129,7 @@
     "qtype": "Multiple Choice",
     "question": "Which storage solution provides the most flexibility and scalability for a virtualized environment?",
     "wrong_pick": "Local solid-state drive",
-    "correct_short": "Local solid-state drive",
+    "correct_short": "Network-attached storage",
     "explanation": "OBJ 4.1: Network-attached storage (NAS) provides a centralized and scalable storage solution that allows multiple virtual machines to access data over the network efficiently. Direct-attached storage (DAS) is directly connected to a single server and lacks flexibility. A local solid-state drive (SSD) offers high speed but lacks network-wide scalability. An external USB drive is not suitable for enterprise-level virtualization due to limited scalability, accessibility, and speed.",
     "sources": [
       {
@@ -1585,7 +1583,7 @@
     "qtype": "Multiple Choice",
     "question": "Which of the following metrics should you consider to compare the performance of an SSD or HDD?",
     "wrong_pick": "Seek time",
-    "correct_short": "Seek time",
+    "correct_short": "IOPS",
     "explanation": "OBJ 5.2: The input/output operations per second (IOPS) is a measurement of performance used to compare a hard disk drive (HDD) and solid-state device (SSD). The IOPS is calculated based on the physical constraints of the media being used. For a hard disk drive, the IOPS is calculated by dividing 1000 milliseconds by the combined average seek time and average latency. The seek time only applies to a traditional hard drive since it calculates the time it takes to move the head to the proper storage location on the platter. For an SSD, there is no seek time used since it can instantly access any portion of the memory without physically moving a read head.",
     "sources": [
       {
@@ -1617,7 +1615,6 @@
       }
     ],
     "options": [
-      "Which of the following motherboards would be the BEST choice for an HTPC system?",
       "ITX",
       "Micro-ATX",
       "Mini-ITX",
@@ -1778,7 +1775,7 @@
     "qtype": "Multiple Choice",
     "question": "A customer contacts the service desk because their laptop will not power on when plugged in, and the battery is dead. The service desk replaces its battery, connects it to a different power adapter, and the laptop works all day until the battery runs out. Now, the laptop won't turn on, and the battery won't charge. Which of the following do you recommend to solve this issue?",
     "wrong_pick": "Replace the power adapter",
-    "correct_short": "Replace the power adapter",
+    "correct_short": "Replace the DC jack",
     "explanation": "OBJ 5.4: This scenario indicates that the DC jack is faulty. Since the battery was replaced and the laptop continues to work, this indicates it isn't a battery issue but is, instead, most likely a DC jack issue. The DC jack often gets broken on a laptop, and if the jack is broken, the device cannot charge or receive power from the power adapter or wall outlet.",
     "sources": [
       {
@@ -1801,7 +1798,7 @@
     "qtype": "Multiple Choice",
     "question": "Jay is complaining that the speed at which the cursor moves across his laptop's screen when using his trackpad makes it difficult to properly control. Which setting could he use to slow down the cursor in Windows 10?",
     "wrong_pick": "Settings > Devices > Touchpad > Touchpad sensitivity",
-    "correct_short": "Settings > Devices > Touchpad > Touchpad sensitivity",
+    "correct_short": "Settings > Devices > Touchpad > Speed",
     "explanation": "OBJ 1.3: If the speed of the pointer or cursor moving across the screen is difficult to control, a technician can reduce the touchpad's speed in Windows 10 under Settings. To open settings, press the Windows key and the \"i\" key. Next, open Settings and click/tap on the Devices icon. Then, click/tap on Touchpad in the left-hand column. On the right-hand of the screen, adjust the slider labeled “Change the cursor speed” to a speed that is more comfortable to use. The touchpad sensitivity setting is used to control the amount of pressure needed before the touchpad registers a click as input from the user.",
     "sources": [
       {
@@ -2008,8 +2005,6 @@
       }
     ],
     "options": [
-      "Which of the following ports need to be opened on the firewall to ensure the phones can",
-      "communicate with the TFTP server and download their boot-up configurations?",
       "69",
       "21",
       "161",
