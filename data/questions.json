@@ -406,7 +406,7 @@
     "qtype": "Multiple Choice",
     "question": "You have been asked to replace the wireless 802.11ac card in an employee's laptop.\n\nWhich of the following types of expansion cards is this?",
     "wrong_pick": "SODIMM",
-    "correct_short": "PCIe",
+    "correct_short": "miniPCIe",
     "explanation": "OBJ 1.1: Mini PCIe (mPCIe) are smaller form factor versions of standard PCI Express expansions cards used with laptops and other small form factor computing devices. Mini PCIe expansion cards provide the ability to add wireless networking or cellular data cards to a laptop. Non-volatile memory express (NVMe) is an interface for connecting flash memory devices, such as SSDs, directly to a PCI Express bus. NVMe allows much higher transfer rates than SATA/AHCI. PCI Express (PCIe) is an expansion bus standard using serial communications. Each device on the bus can create a point-to-point link with the I/O controller or another device. The link comprises one or more lanes (x1, x2, x4, x8, x12, x16, or x32). Each lane supports a full-duplex transfer rate of 250 MBps (v1.0), 500 MBps (v2.0), or 1 GBps (v3.0). A small outline dual inline memory module (SODIMM) can be purchased in various types and sizes to fit any laptop, router, or other small form factor computing device.",
     "sources": [
       {
