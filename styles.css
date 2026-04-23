@@ -442,6 +442,44 @@ button.action.bad { background: var(--bad); color: #fff; border-color: var(--bad
   display: block;
 }
 
+/* Overlay mode: canvas on top of the question image for annotation */
+.scratchpad-wrap.overlay { max-width: 760px; }
+.scratchpad-overlay-container {
+  position: relative;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  line-height: 0;
+}
+.scratchpad-underlay {
+  width: 100%;
+  height: auto;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.scratchpad.overlay-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+/* Subtle hint above the overlay explaining what to do */
+.scratchpad-wrap.overlay::before {
+  content: '✏️ Annotate directly on the image — label components from memory before revealing';
+  display: block;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  font-style: italic;
+}
+
 /* Search bar (above filter bar in Study/Quiz) */
 .search-row {
   display: flex;
