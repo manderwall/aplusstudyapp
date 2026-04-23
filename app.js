@@ -451,36 +451,36 @@ function scheduleAutoSync() {
 const MASCOT_SVG = {
   wave: `<svg class="mascot" viewBox="0 0 120 120" aria-hidden="true">
     <g class="mascot-sparkles">
-      <path d="M12 26 L14 31 L19 33 L14 35 L12 40 L10 35 L5 33 L10 31 Z"/>
-      <path d="M104 22 L105 26 L109 27 L105 28 L104 32 L103 28 L99 27 L103 26 Z"/>
-      <path d="M100 92 L102 97 L107 99 L102 101 L100 106 L98 101 L93 99 L98 97 Z"/>
+      <path d="M14 28 L16 33 L21 35 L16 37 L14 42 L12 37 L7 35 L12 33 Z"/>
+      <path d="M102 22 L103 26 L107 27 L103 28 L102 32 L101 28 L97 27 L101 26 Z"/>
+      <path d="M98 96 L100 101 L105 103 L100 104 L98 109 L96 104 L91 103 L96 101 Z"/>
     </g>
-    <circle class="mascot-body" cx="60" cy="66" r="40"/>
-    <circle class="mascot-paw" cx="96" cy="48" r="8"/>
-    <circle class="mascot-eye" cx="48" cy="60" r="3.5"/>
-    <circle class="mascot-eye" cx="72" cy="60" r="3.5"/>
-    <circle class="mascot-shine" cx="49.2" cy="58.3" r="1.1"/>
-    <circle class="mascot-shine" cx="73.2" cy="58.3" r="1.1"/>
-    <ellipse class="mascot-blush" cx="42" cy="72" rx="5" ry="2.4"/>
-    <ellipse class="mascot-blush" cx="78" cy="72" rx="5" ry="2.4"/>
-    <path class="mascot-smile" d="M53 76 Q60 82 67 76" fill="none"/>
+    <circle class="mascot-body" cx="56" cy="68" r="36"/>
+    <circle class="mascot-paw" cx="103" cy="44" r="11"/>
+    <circle class="mascot-eye" cx="44" cy="62" r="3.5"/>
+    <circle class="mascot-eye" cx="68" cy="62" r="3.5"/>
+    <circle class="mascot-shine" cx="45.2" cy="60.3" r="1.1"/>
+    <circle class="mascot-shine" cx="69.2" cy="60.3" r="1.1"/>
+    <ellipse class="mascot-blush" cx="38" cy="74" rx="5" ry="2.4"/>
+    <ellipse class="mascot-blush" cx="74" cy="74" rx="5" ry="2.4"/>
+    <path class="mascot-smile" d="M49 78 Q56 84 63 78" fill="none"/>
   </svg>`,
 
   celebrate: `<svg class="mascot celebrate" viewBox="0 0 120 120" aria-hidden="true">
     <g class="mascot-sparkles">
-      <path d="M12 26 L14 31 L19 33 L14 35 L12 40 L10 35 L5 33 L10 31 Z"/>
-      <path d="M104 22 L105 26 L109 27 L105 28 L104 32 L103 28 L99 27 L103 26 Z"/>
-      <path d="M100 92 L102 97 L107 99 L102 101 L100 106 L98 101 L93 99 L98 97 Z"/>
-      <path d="M22 92 L23 96 L27 97 L23 98 L22 102 L21 98 L17 97 L21 96 Z"/>
+      <path d="M14 28 L16 33 L21 35 L16 37 L14 42 L12 37 L7 35 L12 33 Z"/>
+      <path d="M102 22 L103 26 L107 27 L103 28 L102 32 L101 28 L97 27 L101 26 Z"/>
+      <path d="M98 96 L100 101 L105 103 L100 104 L98 109 L96 104 L91 103 L96 101 Z"/>
+      <path d="M20 96 L21 100 L25 101 L21 102 L20 106 L19 102 L15 101 L19 100 Z"/>
     </g>
-    <circle class="mascot-body" cx="60" cy="66" r="40"/>
-    <path class="mascot-eye-happy" d="M44 62 Q48 57 52 62" fill="none"/>
-    <path class="mascot-eye-happy" d="M68 62 Q72 57 76 62" fill="none"/>
-    <ellipse class="mascot-blush" cx="42" cy="72" rx="5" ry="2.4"/>
-    <ellipse class="mascot-blush" cx="78" cy="72" rx="5" ry="2.4"/>
-    <path class="mascot-smile" d="M50 76 Q60 86 70 76" fill="none"/>
-    <rect x="30" y="12" width="3" height="6" fill="#ffd700" transform="rotate(18 31 15)"/>
-    <rect x="86" y="14" width="3" height="6" fill="#ff80ab" transform="rotate(-18 87 17)"/>
+    <circle class="mascot-body" cx="60" cy="68" r="36"/>
+    <path class="mascot-eye-happy" d="M44 64 Q48 58 52 64" fill="none"/>
+    <path class="mascot-eye-happy" d="M68 64 Q72 58 76 64" fill="none"/>
+    <ellipse class="mascot-blush" cx="42" cy="74" rx="5" ry="2.4"/>
+    <ellipse class="mascot-blush" cx="78" cy="74" rx="5" ry="2.4"/>
+    <path class="mascot-smile" d="M50 78 Q60 88 70 78" fill="none"/>
+    <rect x="28" y="12" width="3" height="6" fill="#ffd700" transform="rotate(18 29 15)"/>
+    <rect x="88" y="14" width="3" height="6" fill="#ff80ab" transform="rotate(-18 89 17)"/>
     <circle cx="60" cy="10" r="2" fill="#80d8ff"/>
   </svg>`,
 
@@ -488,27 +488,24 @@ const MASCOT_SVG = {
     <text x="92" y="22" class="mascot-z">z</text>
     <text x="100" y="34" class="mascot-z" font-size="10">z</text>
     <text x="107" y="42" class="mascot-z" font-size="7">z</text>
-    <circle class="mascot-body" cx="60" cy="66" r="40"/>
-    <path class="mascot-eye-closed" d="M44 62 Q48 66 52 62" fill="none"/>
-    <path class="mascot-eye-closed" d="M68 62 Q72 66 76 62" fill="none"/>
-    <ellipse class="mascot-blush" cx="42" cy="72" rx="5" ry="2.4"/>
-    <ellipse class="mascot-blush" cx="78" cy="72" rx="5" ry="2.4"/>
-    <path class="mascot-smile" d="M55 77 Q60 79 65 77" fill="none"/>
+    <circle class="mascot-body" cx="60" cy="68" r="36"/>
+    <path class="mascot-eye-closed" d="M44 64 Q48 68 52 64" fill="none"/>
+    <path class="mascot-eye-closed" d="M68 64 Q72 68 76 64" fill="none"/>
+    <ellipse class="mascot-blush" cx="42" cy="74" rx="5" ry="2.4"/>
+    <ellipse class="mascot-blush" cx="78" cy="74" rx="5" ry="2.4"/>
+    <path class="mascot-smile" d="M55 79 Q60 81 65 79" fill="none"/>
   </svg>`,
 };
 
-// Expose SVG fallbacks so `<img onerror>` handlers can reach them.
+// Expose SVG blobs so other code paths can reach them if needed.
 window.__MASCOT_SVG__ = MASCOT_SVG;
 
-// Try a PNG at images/kawaii/{mood}.png first; fall back to inline SVG on error.
-// Drop a PNG with that name in the repo and it'll replace the SVG automatically.
+// Return the mascot SVG markup directly — no network round-trip, no flash
+// of broken-image icon, and the CSS-driven wave/bounce animations work in
+// both plain browsers and iOS Safari PWAs.
 function MASCOT(mood) {
   const key = mood in MASCOT_SVG ? mood : 'sleep';
-  const png = `images/kawaii/${key}.png`;
-  const fallback = MASCOT_SVG[key].replace(/"/g, '&quot;').replace(/\n\s*/g, ' ');
-  return `<img class="mascot mascot-png" src="${png}" alt="" aria-hidden="true"
-    onerror="const d=document.createElement('div');d.innerHTML=this.getAttribute('data-fallback');this.replaceWith(d.firstElementChild);"
-    data-fallback="${fallback}">`;
+  return MASCOT_SVG[key];
 }
 
 const DB_NAME = 'aplus-study';

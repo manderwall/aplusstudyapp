@@ -1045,10 +1045,19 @@ html[data-revealed] .scratchpad-wrap.overlay::before {
 .empty-state p { max-width: 360px; margin: 0 auto; line-height: 1.5; }
 
 /* ─── Kawaii mascot ─── */
-.mascot { width: 96px; height: 96px; display: block; object-fit: contain; }
-img.mascot.mascot-png { background: transparent; }
+.mascot { width: 96px; height: 96px; display: block; }
 .mascot .mascot-body { fill: #ffc9df; stroke: #ff87b2; stroke-width: 2.5; }
-.mascot .mascot-paw  { fill: #ffc9df; stroke: #ff87b2; stroke-width: 2.5; transform-origin: 96px 56px; animation: mascotWave 2.2s ease-in-out infinite; }
+/* Wave pivot is the bottom-left of the paw's bounding box (where it joins
+   the body). transform-box: fill-box makes transform-origin percentages
+   relative to the <circle>'s own box so Safari + Firefox agree. */
+.mascot .mascot-paw  {
+  fill: #ffc9df;
+  stroke: #ff87b2;
+  stroke-width: 2.5;
+  transform-box: fill-box;
+  transform-origin: 0% 100%;
+  animation: mascotWave 1.8s ease-in-out infinite;
+}
 .mascot .mascot-eye { fill: #3b2c3f; }
 .mascot .mascot-eye-happy { stroke: #3b2c3f; stroke-width: 2.2; stroke-linecap: round; }
 .mascot .mascot-eye-closed { stroke: #3b2c3f; stroke-width: 2; stroke-linecap: round; }
@@ -1072,8 +1081,8 @@ img.mascot.mascot-png { background: transparent; }
   50% { transform: translateY(-4px) scale(1.03); }
 }
 @keyframes mascotWave {
-  0%, 100% { transform: rotate(-12deg); }
-  50%       { transform: rotate(18deg); }
+  0%, 100% { transform: rotate(-10deg); }
+  50%       { transform: rotate(20deg); }
 }
 /* Respect reduce-motion preference: mascot holds still */
 html[data-motion="reduced"] .mascot .mascot-sparkles path,
