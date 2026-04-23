@@ -239,39 +239,50 @@ function scheduleAutoSync() {
 // they shift with theme/high-contrast/anxiety settings.
 const MASCOT_SVG = {
   wave: `<svg class="mascot" viewBox="0 0 120 120" aria-hidden="true">
-    <g class="mascot-sparkles"><path d="M14 28 L16 34 L22 36 L16 38 L14 44 L12 38 L6 36 L12 34 Z"/><path d="M100 18 L101 22 L105 23 L101 24 L100 28 L99 24 L95 23 L99 22 Z"/><path d="M104 90 L106 96 L112 98 L106 100 L104 106 L102 100 L96 98 L102 96 Z"/></g>
-    <g class="mascot-body"><ellipse cx="60" cy="72" rx="32" ry="26"/><circle cx="36" cy="62" r="16"/><circle cx="84" cy="62" r="16"/><circle cx="60" cy="50" r="20"/></g>
-    <ellipse class="mascot-eye" cx="50" cy="62" rx="4" ry="5"/><ellipse class="mascot-eye" cx="70" cy="62" rx="4" ry="5"/>
-    <circle class="mascot-shine" cx="51" cy="59" r="1.5"/><circle class="mascot-shine" cx="71" cy="59" r="1.5"/>
-    <ellipse class="mascot-blush" cx="43" cy="72" rx="4.5" ry="2.2"/><ellipse class="mascot-blush" cx="77" cy="72" rx="4.5" ry="2.2"/>
-    <path class="mascot-smile" d="M54 74 Q60 79 66 74" fill="none"/>
+    <g class="mascot-sparkles">
+      <path d="M12 26 L14 31 L19 33 L14 35 L12 40 L10 35 L5 33 L10 31 Z"/>
+      <path d="M104 22 L105 26 L109 27 L105 28 L104 32 L103 28 L99 27 L103 26 Z"/>
+      <path d="M100 92 L102 97 L107 99 L102 101 L100 106 L98 101 L93 99 L98 97 Z"/>
+    </g>
+    <circle class="mascot-body" cx="60" cy="66" r="40"/>
+    <circle class="mascot-paw" cx="96" cy="48" r="8"/>
+    <circle class="mascot-eye" cx="48" cy="60" r="3.5"/>
+    <circle class="mascot-eye" cx="72" cy="60" r="3.5"/>
+    <circle class="mascot-shine" cx="49.2" cy="58.3" r="1.1"/>
+    <circle class="mascot-shine" cx="73.2" cy="58.3" r="1.1"/>
+    <ellipse class="mascot-blush" cx="42" cy="72" rx="5" ry="2.4"/>
+    <ellipse class="mascot-blush" cx="78" cy="72" rx="5" ry="2.4"/>
+    <path class="mascot-smile" d="M53 76 Q60 82 67 76" fill="none"/>
   </svg>`,
 
   celebrate: `<svg class="mascot celebrate" viewBox="0 0 120 120" aria-hidden="true">
     <g class="mascot-sparkles">
-      <path d="M14 28 L16 34 L22 36 L16 38 L14 44 L12 38 L6 36 L12 34 Z"/>
-      <path d="M100 18 L101 22 L105 23 L101 24 L100 28 L99 24 L95 23 L99 22 Z"/>
-      <path d="M104 90 L106 96 L112 98 L106 100 L104 106 L102 100 L96 98 L102 96 Z"/>
-      <path d="M20 92 L21 96 L25 97 L21 98 L20 102 L19 98 L15 97 L19 96 Z"/>
+      <path d="M12 26 L14 31 L19 33 L14 35 L12 40 L10 35 L5 33 L10 31 Z"/>
+      <path d="M104 22 L105 26 L109 27 L105 28 L104 32 L103 28 L99 27 L103 26 Z"/>
+      <path d="M100 92 L102 97 L107 99 L102 101 L100 106 L98 101 L93 99 L98 97 Z"/>
+      <path d="M22 92 L23 96 L27 97 L23 98 L22 102 L21 98 L17 97 L21 96 Z"/>
     </g>
-    <g class="mascot-body"><ellipse cx="60" cy="72" rx="32" ry="26"/><circle cx="36" cy="62" r="16"/><circle cx="84" cy="62" r="16"/><circle cx="60" cy="50" r="20"/></g>
-    <path class="mascot-eye-happy" d="M46 62 Q50 57 54 62" fill="none"/>
-    <path class="mascot-eye-happy" d="M66 62 Q70 57 74 62" fill="none"/>
-    <ellipse class="mascot-blush" cx="43" cy="72" rx="4.5" ry="2.2"/><ellipse class="mascot-blush" cx="77" cy="72" rx="4.5" ry="2.2"/>
-    <path class="mascot-smile" d="M52 74 Q60 82 68 74" fill="none"/>
-    <!-- party confetti floating up -->
-    <rect x="28" y="14" width="3" height="6" fill="#ffd700" transform="rotate(15 29 17)"/>
-    <rect x="88" y="14" width="3" height="6" fill="#ff80ab" transform="rotate(-15 89 17)"/>
-    <circle cx="58" cy="12" r="2" fill="#80d8ff"/>
+    <circle class="mascot-body" cx="60" cy="66" r="40"/>
+    <path class="mascot-eye-happy" d="M44 62 Q48 57 52 62" fill="none"/>
+    <path class="mascot-eye-happy" d="M68 62 Q72 57 76 62" fill="none"/>
+    <ellipse class="mascot-blush" cx="42" cy="72" rx="5" ry="2.4"/>
+    <ellipse class="mascot-blush" cx="78" cy="72" rx="5" ry="2.4"/>
+    <path class="mascot-smile" d="M50 76 Q60 86 70 76" fill="none"/>
+    <rect x="30" y="12" width="3" height="6" fill="#ffd700" transform="rotate(18 31 15)"/>
+    <rect x="86" y="14" width="3" height="6" fill="#ff80ab" transform="rotate(-18 87 17)"/>
+    <circle cx="60" cy="10" r="2" fill="#80d8ff"/>
   </svg>`,
 
   sleep: `<svg class="mascot" viewBox="0 0 120 120" aria-hidden="true">
-    <text x="88" y="22" class="mascot-z">z</text><text x="96" y="34" class="mascot-z" font-size="10">z</text><text x="102" y="42" class="mascot-z" font-size="7">z</text>
-    <g class="mascot-body"><ellipse cx="60" cy="72" rx="32" ry="26"/><circle cx="36" cy="62" r="16"/><circle cx="84" cy="62" r="16"/><circle cx="60" cy="50" r="20"/></g>
-    <path class="mascot-eye-closed" d="M46 62 Q50 66 54 62" fill="none"/>
-    <path class="mascot-eye-closed" d="M66 62 Q70 66 74 62" fill="none"/>
-    <ellipse class="mascot-blush" cx="43" cy="72" rx="4.5" ry="2.2"/><ellipse class="mascot-blush" cx="77" cy="72" rx="4.5" ry="2.2"/>
-    <path class="mascot-smile" d="M55 74 Q60 76 65 74" fill="none"/>
+    <text x="92" y="22" class="mascot-z">z</text>
+    <text x="100" y="34" class="mascot-z" font-size="10">z</text>
+    <text x="107" y="42" class="mascot-z" font-size="7">z</text>
+    <circle class="mascot-body" cx="60" cy="66" r="40"/>
+    <path class="mascot-eye-closed" d="M44 62 Q48 66 52 62" fill="none"/>
+    <path class="mascot-eye-closed" d="M68 62 Q72 66 76 62" fill="none"/>
+    <ellipse class="mascot-blush" cx="42" cy="72" rx="5" ry="2.4"/>
+    <ellipse class="mascot-blush" cx="78" cy="72" rx="5" ry="2.4"/>
+    <path class="mascot-smile" d="M55 77 Q60 79 65 77" fill="none"/>
   </svg>`,
 };
 
