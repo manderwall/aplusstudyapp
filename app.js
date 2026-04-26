@@ -901,11 +901,13 @@ function attachStudyEvents(q) {
   const prev = $('#prev-btn');
   if (prev) prev.addEventListener('click', () => { prevQuestion(); });
   attachOptionEvents(() => renderStudy());
+  // Arm the rate buttons 500ms after they appear. Until then `.rate-row-arming`
+  // disables pointer events via CSS — even a ghost-click can't land. The JS
+  // timestamp guard below is a backup if the class somehow doesn't apply.
+  const armRow = $('.rate-row-arming');
+  if (armRow) setTimeout(() => armRow.classList.remove('rate-row-arming'), 500);
   $$('[data-rate]').forEach(btn => btn.addEventListener('click', () => {
-    // Guard: ignore clicks that arrive within 350ms of the reveal re-render.
-    // This prevents a ghost-click from the same touch that tapped "Reveal"
-    // from immediately rating the card before the user reads the explanation.
-    if (Date.now() - (state._revealedAt || 0) < 350) return;
+    if (Date.now() - (state._revealedAt || 0) < 500) return;
     const rate = btn.dataset.rate;
     recordRating(q.id, rate);
     nextQuestion();
@@ -2086,7 +2088,7 @@ function renderRatingButtonsHTML(q) {
       <div class="rate-title">How well did you know this?</div>
       <div class="rate-sub">${recLabel} — <em>${rec}</em> is highlighted</div>
     </div>
-    <div class="btn-row rate-row">
+    <div class="btn-row rate-row rate-row-arming">
       ${rates.map(r => `
         <button class="action rate-btn ${r.cls}${r.key === rec ? ' recommended' : ''}"
                 data-rate="${r.key}"
@@ -2718,6 +2720,9 @@ function installKeyboard() {
           state._revealedAt = Date.now();
           renderStudy();
         } else {
+          // Same 500ms guard as the click handler — defeats key autorepeat or a
+          // fast double-press of space accidentally advancing past the reveal.
+          if (Date.now() - (state._revealedAt || 0) < 500) return;
           const qs = filteredQuestions();
           if (qs.length > 0) { recordRating(qs[state.currentIndex].id, 'good'); nextQuestion(); }
         }
@@ -2725,6 +2730,7 @@ function installKeyboard() {
       }
       if (state.revealed && ['1', '2', '3', '4'].includes(key)) {
         e.preventDefault();
+        if (Date.now() - (state._revealedAt || 0) < 500) return;
         const rate = ['again', 'hard', 'good', 'easy'][Number(key) - 1];
         const qs = filteredQuestions();
         if (qs.length > 0) { recordRating(qs[state.currentIndex].id, rate); nextQuestion(); }
