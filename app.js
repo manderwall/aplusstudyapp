@@ -855,7 +855,7 @@ function renderStudy() {
   // specific path; this is the catch-all that makes ANY accidental click
   // on the card during the reveal-transition window impossible.
   const sinceReveal = Date.now() - (state._revealedAt || 0);
-  if (state.revealed && sinceReveal < 500) cardClass += ' card-just-revealed';
+  if (state.revealed && sinceReveal < 800) cardClass += ' card-just-revealed';
   $('#main').innerHTML = `
     ${filterBarHTML()}
     <div class="${cardClass}">
@@ -913,17 +913,19 @@ function attachStudyEvents(q) {
   // events via CSS — even a ghost-click can't land on a rate or Back button.
   // The JS timestamp guard below is a backup if the class somehow doesn't apply.
   const armed = $$('.rate-row-arming');
-  if (armed.length) setTimeout(() => armed.forEach(el => el.classList.remove('rate-row-arming')), 500);
+  if (armed.length) setTimeout(() => armed.forEach(el => el.classList.remove('rate-row-arming')), 800);
   // Catch-all: drop the .card-just-revealed pointer-events:none lock after the
   // window expires so the user can interact normally with the post-reveal card.
+  // 800ms covers iOS Safari's lingering tap-delay even when user-scalable=no
+  // is set (it doesn't fully eliminate the delay on every iOS version).
   const justRevealed = $('.card-just-revealed');
-  if (justRevealed) setTimeout(() => justRevealed.classList.remove('card-just-revealed'), 500);
+  if (justRevealed) setTimeout(() => justRevealed.classList.remove('card-just-revealed'), 800);
   // "← Back" link inside the rate header — lets the user undo a misregistered
   // tap on Reveal that landed somewhere unexpected, without having to wait
   // until they're on the next card and then navigate back.
   $('#rate-back-btn')?.addEventListener('click', () => prevQuestion());
   $$('[data-rate]').forEach(btn => btn.addEventListener('click', () => {
-    if (Date.now() - (state._revealedAt || 0) < 500) return;
+    if (Date.now() - (state._revealedAt || 0) < 800) return;
     const rate = btn.dataset.rate;
     recordRating(q.id, rate);
     nextQuestion();
@@ -991,7 +993,7 @@ function nextQuestion() {
   // Last-resort guard: ignore any navigation that fires within 500ms of a
   // reveal. If a ghost-click somehow leaks past the rate-row arming and the
   // pointerup target check, this still keeps the card from advancing.
-  if (Date.now() - (state._revealedAt || 0) < 500) return;
+  if (Date.now() - (state._revealedAt || 0) < 800) return;
   const qs = filteredQuestions();
   state.revealed = false;
   stopSpeaking();
@@ -1009,7 +1011,7 @@ function nextQuestion() {
 function prevQuestion() {
   // Same last-resort guard as nextQuestion — a ghost click on the Back button
   // shortly after Reveal must not actually navigate back.
-  if (Date.now() - (state._revealedAt || 0) < 500) return;
+  if (Date.now() - (state._revealedAt || 0) < 800) return;
   const qs = filteredQuestions();
   state.revealed = false;
   stopSpeaking();
@@ -2756,7 +2758,7 @@ function installKeyboard() {
         } else {
           // Same 500ms guard as the click handler — defeats key autorepeat or a
           // fast double-press of space accidentally advancing past the reveal.
-          if (Date.now() - (state._revealedAt || 0) < 500) return;
+          if (Date.now() - (state._revealedAt || 0) < 800) return;
           const qs = filteredQuestions();
           if (qs.length > 0) { recordRating(qs[state.currentIndex].id, 'good'); nextQuestion(); }
         }
@@ -2764,7 +2766,7 @@ function installKeyboard() {
       }
       if (state.revealed && ['1', '2', '3', '4'].includes(key)) {
         e.preventDefault();
-        if (Date.now() - (state._revealedAt || 0) < 500) return;
+        if (Date.now() - (state._revealedAt || 0) < 800) return;
         const rate = ['again', 'hard', 'good', 'easy'][Number(key) - 1];
         const qs = filteredQuestions();
         if (qs.length > 0) { recordRating(qs[state.currentIndex].id, rate); nextQuestion(); }
