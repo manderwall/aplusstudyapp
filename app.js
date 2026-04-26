@@ -74,6 +74,7 @@ const state = {
   _revealedAt: 0,      // timestamp of last reveal, used to block ghost-clicks on rate buttons
   progress: {},    // { questionId: { status, seen, correct, lastSeen, ease, interval, due, updated_at } }
   overrides: {},   // { questionId: { options?, image?, images? } } — user-added content
+  quizSession: null,  // null | { questions, answers, current, startedAt, done }
   // Active study session (Pomodoro-style)
   session: null,   // { endsAt, startCards, ratedIds: Set<string>, length }
   _sessionTick: null,  // setInterval id for HUD refresh
@@ -872,10 +873,10 @@ function renderStudy() {
         </div>
         ${renderRatingButtonsHTML(q)}
       ` : `
-        <div class="btn-row">
-          <button class="action" id="prev-btn" aria-label="Previous">← Prev</button>
+        <div class="btn-row btn-row-nav">
+          <button class="action nav-btn" id="prev-btn" aria-label="Previous card" title="Previous">←</button>
           <button class="action primary" id="reveal-btn">Reveal answer</button>
-          <button class="action" id="skip-btn">Skip →</button>
+          <button class="action nav-btn" id="skip-btn" aria-label="Skip without rating" title="Skip without rating">→</button>
         </div>
       `}
     </div>
@@ -900,11 +901,17 @@ function attachStudyEvents(q) {
   const prev = $('#prev-btn');
   if (prev) prev.addEventListener('click', () => { prevQuestion(); });
   attachOptionEvents(() => renderStudy());
+  // Arm the rate buttons 500ms after they appear. Until then `.rate-row-arming`
+  // disables pointer events via CSS — even a ghost-click can't land. The JS
+  // timestamp guard below is a backup if the class somehow doesn't apply.
+  const armRow = $('.rate-row-arming');
+  if (armRow) setTimeout(() => armRow.classList.remove('rate-row-arming'), 500);
+  // "← Back" link inside the rate header — lets the user undo a misregistered
+  // tap on Reveal that landed somewhere unexpected, without having to wait
+  // until they're on the next card and then navigate back.
+  $('#rate-back-btn')?.addEventListener('click', () => prevQuestion());
   $$('[data-rate]').forEach(btn => btn.addEventListener('click', () => {
-    // Guard: ignore clicks that arrive within 350ms of the reveal re-render.
-    // This prevents a ghost-click from the same touch that tapped "Reveal"
-    // from immediately rating the card before the user reads the explanation.
-    if (Date.now() - (state._revealedAt || 0) < 350) return;
+    if (Date.now() - (state._revealedAt || 0) < 500) return;
     const rate = btn.dataset.rate;
     recordRating(q.id, rate);
     nextQuestion();
@@ -996,128 +1003,313 @@ function prevQuestion() {
   renderStudy();
 }
 
-//─── MODE: QUIZ (same as study but tracks right/wrong explicitly) ──
+//─── MODE: QUIZ (exam simulator — pick and score, no hints) ──
 function renderQuiz() {
+  document.documentElement.removeAttribute('data-revealed');
+  if (!state.quizSession) { renderQuizStart(); return; }
+  if (state.quizSession.done) { renderQuizResults(); return; }
+  renderQuizCard();
+}
+
+function renderQuizStart() {
+  const available = filteredQuestions();
+  const total = available.length;
   $('#mode-title').textContent = 'Quiz';
-  document.documentElement.toggleAttribute('data-revealed', !!state.revealed);
-  const qs = filteredQuestions();
-  if (qs.length === 0) {
-    const msg = state.filter.due
-      ? ['✨ All caught up!', 'Nothing due for Quiz — tap Due to turn it off and pick anything.', 'celebrate']
-      : state.filter.search
-      ? ['Hmm, nothing matches', `No match for "${escapeHtml(state.filter.search)}" — try another word.`, 'sleep']
-      : ['No questions', 'Pick an objective or clear the filter.', 'sleep'];
-    $('#main').innerHTML = filterBarHTML() + emptyHTML(msg[0], msg[1], msg[2]);
-    renderFilterBar();
-    return;
-  }
-  if (state.currentIndex >= qs.length) state.currentIndex = 0;
-  const baseQ = qs[state.currentIndex];
-  const q = getQuestion(baseQ);
-  const prog = state.progress[q.id];
-  const accuracy = prog.seen > 0 ? Math.round((prog.correct / prog.seen) * 100) : null;
-
-  if (state.editing) {
-    $('#main').innerHTML = `${filterBarHTML()}${renderEditFormHTML(q)}`;
-    renderFilterBar();
-    updateHUD();
-    attachEditEvents(q);
-    return;
-  }
-
-  const edited = !!state.overrides[q.id];
-  const sources = q.sources || [{ pretest: q.pretest, qnum: q.qnum }];
-  const cardClass = state._lastRenderedCard === q.id ? 'card' : 'card card-fresh';
-  state._lastRenderedCard = q.id;
+  const sizes = [
+    { n: 20, label: '20 questions — Quick test' },
+    { n: 40, label: '40 questions — Half exam' },
+    { n: 90, label: '90 questions — Full practice exam' },
+  ];
+  const btns = sizes.map(({ n, label }) => {
+    const count = Math.min(n, total);
+    const disabled = total < 5 ? 'disabled' : '';
+    const note = total < n && total >= 5 ? ` (only ${total} available)` : '';
+    return `<button class="action quiz-size-btn" data-size="${count}" ${disabled}>${label}${note}</button>`;
+  }).join('');
   $('#main').innerHTML = `
     ${filterBarHTML()}
-    <div class="${cardClass}">
-      <div class="card-meta">
-        <span class="tag obj">OBJ ${q.obj}</span>
-        ${q.qtype === 'PBQ' ? '<span class="tag pbq">PBQ</span>' : `<span class="tag">${q.qtype}</span>`}
-        ${sources.length > 1 ? `<span class="tag repeats" title="You missed this on ${sources.length} pretests">🔁 ${sources.length}×</span>` : ''}
-        ${accuracy !== null ? `<span class="tag numeric">${accuracy}% (${prog.correct}/${prog.seen})</span>` : ''}
-        ${edited ? '<span class="tag edited">✏️ Edited</span>' : ''}
-        <button class="tag tag-btn" id="edit-btn" title="Add/edit options and image">✏️ Edit</button>
-        ${speechSupported() ? '<button class="tag tag-btn" id="speak-btn" aria-pressed="false" title="Read the question aloud">🔈 Listen</button>' : ''}
-      </div>
-      <div class="card-question">${formatQuestion(q.question)}</div>
-      ${renderImageHTML(q)}
-      ${renderOptionsHTML(q)}
-      ${state.revealed ? `
-        <div class="card-section right">
-          <div class="label">Correct answer & explanation</div>
-          ${formatExplanation(q.explanation)}
-          ${renderPretestMissHTML(q)}
-        </div>
-        <div class="btn-row">
-          <button class="action bad" data-qa="wrong">I got it wrong</button>
-          <button class="action good" data-qa="right">I got it right</button>
-        </div>
-      ` : `
-        <p style="color: var(--text-dim); font-size: 14px; margin-bottom: 16px;">
-          Think of your answer, then tap reveal.
-        </p>
-        <div class="btn-row">
-          <button class="action" id="prev-btn" aria-label="Previous">← Prev</button>
-          <button class="action primary" id="reveal-btn">Reveal</button>
-          <button class="action" id="skip-btn">Skip →</button>
-        </div>
-      `}
+    <div class="card quiz-start">
+      <div class="quiz-start-icon">🎯</div>
+      <h2 class="quiz-start-title">Practice Quiz</h2>
+      <p class="quiz-start-desc">Pick your answers with no hints. You'll see your score and a list of anything you missed at the end.</p>
+      <p class="quiz-avail">${total} question${total !== 1 ? 's' : ''} available${state.filter.obj ? ` in OBJ ${state.filter.obj}` : ''}</p>
+      <div class="quiz-size-btns">${btns}</div>
+      ${total < 5 ? '<p class="quiz-start-warn">Clear the filter to get more questions.</p>' : ''}
     </div>
   `;
   renderFilterBar();
-  updateHUD();
-  $('#speak-btn')?.addEventListener('click', () => speakCard(q, { revealed: state.revealed }));
-  const reveal = $('#reveal-btn');
-  if (reveal) reveal.addEventListener('click', () => { state.revealed = true; stopSpeaking(); renderQuiz(); });
-  const skip = $('#skip-btn');
-  if (skip) skip.addEventListener('click', () => { nextQuizQuestion(); });
-  const prev = $('#prev-btn');
-  if (prev) prev.addEventListener('click', () => { prevQuizQuestion(); });
-  $('#edit-btn')?.addEventListener('click', () => { state.editing = true; renderQuiz(); });
-  attachOptionEvents(() => renderQuiz());
-  $$('[data-qa]').forEach(btn => btn.addEventListener('click', () => {
-    const right = btn.dataset.qa === 'right';
-    const p = state.progress[q.id];
-    p.seen++;
-    p.lastSeen = Date.now();
-    p.updated_at = p.lastSeen;
-    if (right) p.correct++;
-    schedule(p, right ? 'good' : 'again');
-    haptic(10);
-    saveProgress();
-    onCardRated(q.id);
-    nextQuizQuestion();
+  $$('[data-size]').forEach(btn => btn.addEventListener('click', () => {
+    const n = Math.min(parseInt(btn.dataset.size, 10), total);
+    if (n >= 1) startQuiz(n, available);
   }));
 }
 
-function nextQuizQuestion() {
-  const qs = filteredQuestions();
-  state.revealed = false;
-  stopSpeaking();
+function startQuiz(n, available) {
+  const qs = (available || filteredQuestions()).slice(0, n);
+  state.quizSession = {
+    questions: qs,
+    answers: {},
+    current: 0,
+    startedAt: Date.now(),
+    done: false,
+  };
   state.selectedOption = null;
   state.selectedOptions = [];
-  if (qs.length === 0) { renderQuiz(); return; }
-  state.history.push(state.currentIndex);
-  if (state.history.length > 50) state.history.shift();
-  state.currentIndex = (state.currentIndex + 1) % qs.length;
-  renderQuiz();
+  renderQuizCard();
 }
 
-function prevQuizQuestion() {
-  const qs = filteredQuestions();
-  state.revealed = false;
-  stopSpeaking();
+let _quizAutoAdvance = null;
+
+function renderQuizCard() {
+  clearTimeout(_quizAutoAdvance);
+  const session = state.quizSession;
+  if (!session) { renderQuizStart(); return; }
+  const { questions, answers, current } = session;
+  if (current >= questions.length) { session.done = true; renderQuizResults(); return; }
+
+  const baseQ = questions[current];
+  const q = getQuestion(baseQ);
+  const answered = answers[q.id];
+  const total = questions.length;
+  const pct = Math.round((current / total) * 100);
+
+  const options = shuffleOptionsForCard(q.options || [], q.id);
+  const ma = isMultipleAnswer(q);
+  const norm = (s) => (s || '').toLowerCase().trim().replace(/\s+/g, ' ');
+  const correctSet = new Set(
+    Array.isArray(q.correct_picks) && q.correct_picks.length
+      ? q.correct_picks.map(norm)
+      : q.correct_short ? [norm(q.correct_short)] : []
+  );
+  const isCorrect = (opt) => correctSet.has(norm(opt));
+
+  let pickedSet;
+  if (answered) {
+    pickedSet = new Set(answered.picked || []);
+  } else {
+    pickedSet = ma
+      ? new Set(state.selectedOptions || [])
+      : new Set(state.selectedOption ? [state.selectedOption] : []);
+  }
+
+  const optCls = (opt) => {
+    if (answered) {
+      if (isCorrect(opt)) return 'q-option correct';
+      if (pickedSet.has(opt)) return 'q-option wrong';
+      return 'q-option revealed-other';
+    }
+    return pickedSet.has(opt) ? 'q-option picked' : 'q-option';
+  };
+
+  const LETTERS = 'ABCDEFGHIJ';
+  const needCount = ma ? (Array.isArray(q.correct_picks) ? q.correct_picks.length : 2) : 1;
+  const hint = ma && !answered
+    ? `<div class="ma-hint">Select ${needCount} answers — tap again to deselect. Picked ${pickedSet.size} of ${needCount}.</div>`
+    : '';
+
+  const optionsHTML = options.length === 0 ? '' : `
+    ${hint}
+    <ol class="q-options${ma ? ' q-options-ma' : ''}" role="${ma ? 'group' : 'radiogroup'}" aria-label="Answer choices">
+      ${options.map((opt, i) => {
+        const checked = pickedSet.has(opt);
+        const tab = (pickedSet.size ? checked : i === 0) ? 0 : -1;
+        const letter = LETTERS[i] || String(i + 1);
+        const describe = answered
+          ? (isCorrect(opt) ? ' (correct answer)' : checked ? ' (your pick, incorrect)' : '')
+          : '';
+        return `<li class="${optCls(opt)}" role="${ma ? 'checkbox' : 'radio'}"
+            aria-checked="${checked ? 'true' : 'false'}"
+            tabindex="${tab}"
+            data-option="${escapeHtml(opt)}"
+            aria-label="${escapeHtml(letter + '. ' + opt + describe)}">
+          <span class="q-letter" aria-hidden="true">${letter}</span>
+          <span class="q-text">${escapeHtml(opt)}</span>
+          <span class="q-status" aria-hidden="true"></span>
+        </li>`;
+      }).join('')}
+    </ol>`;
+
+  const isLast = current + 1 >= total;
+  const actionBar = answered
+    ? `<div class="btn-row">
+        <button class="action primary" id="quiz-next-btn">${isLast ? 'See results →' : 'Next →'}</button>
+       </div>`
+    : ma
+    ? `<div class="btn-row">
+        <button class="action primary" id="quiz-submit-btn"${pickedSet.size < needCount ? ' disabled' : ''}>Submit answer</button>
+        <button class="action" id="quiz-skip-btn">Skip</button>
+       </div>`
+    : `<div class="btn-row">
+        <button class="action" id="quiz-skip-btn">Skip</button>
+       </div>`;
+
+  $('#mode-title').textContent = `Quiz ${current + 1}/${total}`;
+  $('#main').innerHTML = `
+    ${filterBarHTML()}
+    <div class="card card-fresh">
+      <div class="quiz-progress-bar" role="progressbar" aria-valuenow="${current}" aria-valuemin="0" aria-valuemax="${total}" aria-label="Question ${current + 1} of ${total}">
+        <div class="quiz-progress-fill" style="width:${pct}%"></div>
+      </div>
+      <div class="card-meta">
+        <span class="tag obj">OBJ ${q.obj}</span>
+        <span class="tag quiz-counter">${current + 1} / ${total}</span>
+        <button class="tag tag-btn quiz-abandon-btn" title="End this quiz">✕ End quiz</button>
+      </div>
+      <div class="card-question">${formatQuestion(q.question)}</div>
+      ${renderImageHTML(q)}
+      ${optionsHTML}
+      ${actionBar}
+    </div>
+  `;
+  renderFilterBar();
+
+  $('.quiz-abandon-btn')?.addEventListener('click', () => {
+    if (Object.keys(session.answers).length === 0 || confirm('End this quiz? Your progress will be lost.')) {
+      state.quizSession = null;
+      renderQuizStart();
+    }
+  });
+
+  if (answered) {
+    const nextBtn = $('#quiz-next-btn');
+    if (nextBtn) {
+      nextBtn.addEventListener('click', advanceQuiz);
+      _quizAutoAdvance = setTimeout(advanceQuiz, 1800);
+    }
+  } else {
+    const items = $$('.q-options li.q-option');
+    state._currentQ = q;
+    items.forEach(li => {
+      li.addEventListener('click', () => {
+        if (session.answers[q.id]) return;
+        const opt = li.dataset.option;
+        if (ma) {
+          const arr = state.selectedOptions || [];
+          const idx = arr.indexOf(opt);
+          if (idx === -1) arr.push(opt);
+          else arr.splice(idx, 1);
+          state.selectedOptions = arr;
+          renderQuizCard();
+        } else {
+          recordQuizAnswer(q, [opt]);
+        }
+      });
+    });
+    $('#quiz-submit-btn')?.addEventListener('click', () => {
+      if (!session.answers[q.id]) recordQuizAnswer(q, state.selectedOptions || []);
+    });
+    $('#quiz-skip-btn')?.addEventListener('click', () => {
+      recordQuizAnswer(q, []);
+    });
+  }
+}
+
+function recordQuizAnswer(q, picked) {
+  const session = state.quizSession;
+  if (!session || session.answers[q.id]) return;
+  const norm = (s) => (s || '').toLowerCase().trim().replace(/\s+/g, ' ');
+  const correctSet = new Set(
+    Array.isArray(q.correct_picks) && q.correct_picks.length
+      ? q.correct_picks.map(norm)
+      : q.correct_short ? [norm(q.correct_short)] : []
+  );
+  const pickedNorm = new Set(picked.map(norm));
+  let isRight;
+  if (picked.length === 0) {
+    isRight = false;
+  } else if (isMultipleAnswer(q)) {
+    isRight = pickedNorm.size === correctSet.size && [...correctSet].every(c => pickedNorm.has(c));
+  } else {
+    isRight = pickedNorm.size === 1 && [...pickedNorm].every(p => correctSet.has(p));
+  }
+  session.answers[q.id] = {
+    picked: picked.slice(),
+    isRight,
+    correctShort: q.correct_short || (Array.isArray(q.correct_picks) ? q.correct_picks.join(', ') : ''),
+  };
+  recordRating(q.id, isRight ? 'good' : 'again');
   state.selectedOption = null;
   state.selectedOptions = [];
-  if (qs.length === 0) { renderQuiz(); return; }
-  if (state.history.length > 0) {
-    state.currentIndex = state.history.pop();
+  haptic(10);
+  renderQuizCard();
+}
+
+function advanceQuiz() {
+  clearTimeout(_quizAutoAdvance);
+  const session = state.quizSession;
+  if (!session) return;
+  session.current++;
+  state.selectedOption = null;
+  state.selectedOptions = [];
+  if (session.current >= session.questions.length) {
+    session.done = true;
+    renderQuizResults();
   } else {
-    state.currentIndex = state.currentIndex === 0 ? qs.length - 1 : state.currentIndex - 1;
+    renderQuizCard();
   }
-  renderQuiz();
+}
+
+function renderQuizResults() {
+  clearTimeout(_quizAutoAdvance);
+  const session = state.quizSession;
+  const total = session.questions.length;
+  const correct = Object.values(session.answers).filter(a => a.isRight).length;
+  const answered = Object.keys(session.answers).length;
+  const skipped = total - answered;
+  const score = Math.round((correct / total) * 100);
+  const elapsed = Math.round((Date.now() - session.startedAt) / 1000);
+  const elapsedStr = elapsed < 60 ? `${elapsed}s` : `${Math.floor(elapsed / 60)}m ${elapsed % 60}s`;
+  const passed = score >= 75;
+
+  const wrong = session.questions.filter(bq => {
+    const a = session.answers[bq.id];
+    return !a || !a.isRight;
+  });
+
+  const wrongHTML = wrong.length === 0 ? '' : `
+    <div class="quiz-missed">
+      <h3 class="quiz-missed-title">Missed (${wrong.length})</h3>
+      <ul class="quiz-missed-list">
+        ${wrong.map(bq => {
+          const q = getQuestion(bq);
+          const a = session.answers[q.id];
+          const preview = q.question.length > 90 ? q.question.slice(0, 90) + '…' : q.question;
+          return `<li class="quiz-missed-item">
+            <span class="quiz-missed-q">${escapeHtml(preview)}</span>
+            ${a ? `<span class="quiz-missed-ans">✓ ${escapeHtml(a.correctShort)}</span>` : '<span class="quiz-missed-ans quiz-skipped">Skipped</span>'}
+          </li>`;
+        }).join('')}
+      </ul>
+    </div>`;
+
+  $('#mode-title').textContent = 'Quiz';
+  $('#main').innerHTML = `
+    ${filterBarHTML()}
+    <div class="card quiz-results">
+      <div class="quiz-score-circle ${passed ? 'pass' : 'fail'}">
+        <span class="quiz-score-pct">${score}%</span>
+        <span class="quiz-score-label">${passed ? 'Pass ✓' : 'Keep going'}</span>
+      </div>
+      <p class="quiz-result-detail">${correct} / ${total} correct · ${elapsedStr}${skipped > 0 ? ` · ${skipped} skipped` : ''}</p>
+      <p class="quiz-pass-note">${passed ? '🎉 CompTIA A+ pass threshold is ~75%. Great work!' : 'Target 75%+ before the real exam. Keep studying!'}</p>
+      <div class="btn-row">
+        <button class="action primary" id="quiz-new-btn">New quiz</button>
+        ${wrong.length > 0 ? `<button class="action" id="quiz-review-btn">Study missed (${wrong.length})</button>` : ''}
+      </div>
+      ${wrongHTML}
+    </div>
+  `;
+  renderFilterBar();
+
+  $('#quiz-new-btn')?.addEventListener('click', () => {
+    state.quizSession = null;
+    renderQuizStart();
+  });
+  $('#quiz-review-btn')?.addEventListener('click', () => {
+    // Wrong answers were just rated 'again', so they'll surface at the top of the Study deck
+    state.quizSession = null;
+    setMode('study');
+  });
 }
 
 //─── MODE: READING (concept fix sheets) ──────────────────────
@@ -1899,8 +2091,9 @@ function renderRatingButtonsHTML(q) {
     <div class="rate-header">
       <div class="rate-title">How well did you know this?</div>
       <div class="rate-sub">${recLabel} — <em>${rec}</em> is highlighted</div>
+      <button type="button" class="rate-back-btn" id="rate-back-btn" aria-label="Go back to the previous card" title="Back to previous card">← Back</button>
     </div>
-    <div class="btn-row rate-row">
+    <div class="btn-row rate-row rate-row-arming">
       ${rates.map(r => `
         <button class="action rate-btn ${r.cls}${r.key === rec ? ' recommended' : ''}"
                 data-rate="${r.key}"
@@ -2521,46 +2714,40 @@ function installKeyboard() {
     if (key === 'f') { e.preventDefault(); toggleFocus(); return; }
     if (key === 'escape' && state.focus) { e.preventDefault(); toggleFocus(); return; }
 
-    // Study / Quiz navigation
-    if (state.mode === 'study' || state.mode === 'quiz') {
-      if (key === 'arrowright' || key === 'k' || key === 'n') {
-        e.preventDefault();
-        state.mode === 'study' ? nextQuestion() : nextQuizQuestion();
-        return;
-      }
-      if (key === 'arrowleft' || key === 'j' || key === 'p') {
-        e.preventDefault();
-        state.mode === 'study' ? prevQuestion() : prevQuizQuestion();
-        return;
-      }
+    // Study navigation
+    if (state.mode === 'study') {
+      if (key === 'arrowright' || key === 'k' || key === 'n') { e.preventDefault(); nextQuestion(); return; }
+      if (key === 'arrowleft'  || key === 'j' || key === 'p') { e.preventDefault(); prevQuestion(); return; }
       if (key === ' ' || key === 'enter' || key === 'r') {
         e.preventDefault();
         if (!state.revealed) {
           state.revealed = true;
-          state.mode === 'study' ? renderStudy() : renderQuiz();
-        } else if (state.mode === 'study') {
-          // When revealed in Study: space/enter advances with a "good" rating
-          const qs = filteredQuestions();
-          if (qs.length > 0) {
-            recordRating(qs[state.currentIndex].id, 'good');
-            nextQuestion();
-          }
+          state._revealedAt = Date.now();
+          renderStudy();
         } else {
-          // In Quiz, don't fabricate a right/wrong — require an explicit tap
-          // on "I got it right/wrong". Space/Enter just skips forward.
-          nextQuizQuestion();
+          // Same 500ms guard as the click handler — defeats key autorepeat or a
+          // fast double-press of space accidentally advancing past the reveal.
+          if (Date.now() - (state._revealedAt || 0) < 500) return;
+          const qs = filteredQuestions();
+          if (qs.length > 0) { recordRating(qs[state.currentIndex].id, 'good'); nextQuestion(); }
         }
         return;
       }
-      // Study-only rating shortcuts 1..4
-      if (state.mode === 'study' && state.revealed && ['1', '2', '3', '4'].includes(key)) {
+      if (state.revealed && ['1', '2', '3', '4'].includes(key)) {
         e.preventDefault();
+        if (Date.now() - (state._revealedAt || 0) < 500) return;
         const rate = ['again', 'hard', 'good', 'easy'][Number(key) - 1];
         const qs = filteredQuestions();
-        if (qs.length > 0) {
-          recordRating(qs[state.currentIndex].id, rate);
-          nextQuestion();
-        }
+        if (qs.length > 0) { recordRating(qs[state.currentIndex].id, rate); nextQuestion(); }
+        return;
+      }
+    }
+    // Quiz: space/enter advances when an answer is showing; no other shortcuts
+    if (state.mode === 'quiz') {
+      const session = state.quizSession;
+      if ((key === ' ' || key === 'enter') && session && !session.done) {
+        const answered = session.answers[session.questions[session.current]?.id];
+        if (answered) { e.preventDefault(); advanceQuiz(); }
         return;
       }
     }
@@ -2586,11 +2773,18 @@ function installSwipe() {
     tracking = false;
     const dx = e.clientX - sx;
     const dy = e.clientY - sy;
-    // Require a cleaner horizontal gesture (80px, less diagonal tolerance)
-    if (Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dy) * 2 && dx < 0) {
-      haptic(15);
-      if (state.mode === 'study') nextQuestion();
-      else nextQuizQuestion();
+    // Require a cleaner horizontal gesture (80px, less diagonal tolerance).
+    // Left swipe = next; right swipe = prev (Study only — Quiz answers are
+    // recorded and going back would un-record without un-grading).
+    if (Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dy) * 2) {
+      if (dx < 0) {
+        haptic(15);
+        if (state.mode === 'study') nextQuestion();
+        else if (state.mode === 'quiz' && state.quizSession && !state.quizSession.done) advanceQuiz();
+      } else if (dx > 0 && state.mode === 'study') {
+        haptic(15);
+        prevQuestion();
+      }
     }
   });
   main.addEventListener('pointercancel', () => { tracking = false; });
