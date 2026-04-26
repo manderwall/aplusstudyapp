@@ -723,10 +723,11 @@ button.action.bad { background: var(--bad); color: #fff; border-color: var(--bad
 /* Disarmed for 500ms after reveal so a ghost-click from the original tap
    on Reveal/Skip can't land on a rate button. JS removes this class on a
    timer; see attachStudyEvents in app.js. */
-.btn-row.rate-row.rate-row-arming {
+.btn-row.rate-row.rate-row-arming,
+.rate-header.rate-row-arming {
   pointer-events: none;
-  opacity: 0.85;
 }
+.btn-row.rate-row.rate-row-arming { opacity: 0.85; }
 button.action.rate-btn {
   flex: unset;
   min-width: 0;
