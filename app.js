@@ -2771,12 +2771,18 @@ function installSwipe() {
   main.addEventListener('pointerup', (e) => {
     if (!tracking || e.pointerId !== pid) return;
     tracking = false;
+    // If the gesture ENDED on an interactive element, treat it as a click —
+    // not a swipe. Without this, a touch that starts on the card body and
+    // drifts to land on Reveal/Skip/an option fires BOTH the click handler
+    // (revealing the answer) AND the swipe handler (advancing the card),
+    // which from the user's perspective looks like "Reveal skipped the card".
+    if (e.target.closest('button, input, a, canvas, .filter-bar, .scratchpad-wrap, .q-options')) return;
     const dx = e.clientX - sx;
     const dy = e.clientY - sy;
-    // Require a cleaner horizontal gesture (80px, less diagonal tolerance).
+    // Require a cleaner horizontal gesture (100px, less diagonal tolerance).
     // Left swipe = next; right swipe = prev (Study only — Quiz answers are
     // recorded and going back would un-record without un-grading).
-    if (Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dy) * 2) {
+    if (Math.abs(dx) > 100 && Math.abs(dx) > Math.abs(dy) * 2) {
       if (dx < 0) {
         haptic(15);
         if (state.mode === 'study') nextQuestion();
