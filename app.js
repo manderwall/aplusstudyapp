@@ -873,10 +873,10 @@ function renderStudy() {
         </div>
         ${renderRatingButtonsHTML(q)}
       ` : `
-        <div class="btn-row">
-          <button class="action" id="prev-btn" aria-label="Previous">← Prev</button>
+        <div class="btn-row btn-row-nav">
+          <button class="action nav-btn" id="prev-btn" aria-label="Previous card" title="Previous">←</button>
           <button class="action primary" id="reveal-btn">Reveal answer</button>
-          <button class="action" id="skip-btn">Skip →</button>
+          <button class="action nav-btn" id="skip-btn" aria-label="Skip without rating" title="Skip without rating">→</button>
         </div>
       `}
     </div>
@@ -906,6 +906,10 @@ function attachStudyEvents(q) {
   // timestamp guard below is a backup if the class somehow doesn't apply.
   const armRow = $('.rate-row-arming');
   if (armRow) setTimeout(() => armRow.classList.remove('rate-row-arming'), 500);
+  // "← Back" link inside the rate header — lets the user undo a misregistered
+  // tap on Reveal that landed somewhere unexpected, without having to wait
+  // until they're on the next card and then navigate back.
+  $('#rate-back-btn')?.addEventListener('click', () => prevQuestion());
   $$('[data-rate]').forEach(btn => btn.addEventListener('click', () => {
     if (Date.now() - (state._revealedAt || 0) < 500) return;
     const rate = btn.dataset.rate;
@@ -2087,6 +2091,7 @@ function renderRatingButtonsHTML(q) {
     <div class="rate-header">
       <div class="rate-title">How well did you know this?</div>
       <div class="rate-sub">${recLabel} — <em>${rec}</em> is highlighted</div>
+      <button type="button" class="rate-back-btn" id="rate-back-btn" aria-label="Go back to the previous card" title="Back to previous card">← Back</button>
     </div>
     <div class="btn-row rate-row rate-row-arming">
       ${rates.map(r => `
@@ -2768,11 +2773,18 @@ function installSwipe() {
     tracking = false;
     const dx = e.clientX - sx;
     const dy = e.clientY - sy;
-    // Require a cleaner horizontal gesture (80px, less diagonal tolerance)
-    if (Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dy) * 2 && dx < 0) {
-      haptic(15);
-      if (state.mode === 'study') nextQuestion();
-      else if (state.mode === 'quiz' && state.quizSession && !state.quizSession.done) advanceQuiz();
+    // Require a cleaner horizontal gesture (80px, less diagonal tolerance).
+    // Left swipe = next; right swipe = prev (Study only — Quiz answers are
+    // recorded and going back would un-record without un-grading).
+    if (Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dy) * 2) {
+      if (dx < 0) {
+        haptic(15);
+        if (state.mode === 'study') nextQuestion();
+        else if (state.mode === 'quiz' && state.quizSession && !state.quizSession.done) advanceQuiz();
+      } else if (dx > 0 && state.mode === 'study') {
+        haptic(15);
+        prevQuestion();
+      }
     }
   });
   main.addEventListener('pointercancel', () => { tracking = false; });

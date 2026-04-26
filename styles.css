@@ -639,6 +639,21 @@ html[data-motion="reduced"] .card.card-fresh { animation: none; }
   flex-wrap: wrap;
 }
 
+/* Pre-reveal nav row: keep Prev/Skip as compact arrow buttons so all three
+   fit on one line on a 414px viewport. The full-width Skip wrap was making
+   it easy to mis-tap during a Reveal press because finger drift moved the
+   touchend down onto the wrapped Skip button. */
+.btn-row-nav { flex-wrap: nowrap; }
+.btn-row-nav button.action.nav-btn {
+  flex: 0 0 56px;
+  min-width: 56px;
+  width: 56px;
+  padding: 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+.btn-row-nav button.action.primary { flex: 1; min-width: 0; }
+
 button.action {
   flex: 1;
   min-height: 52px;
@@ -664,7 +679,24 @@ button.action.bad { background: var(--bad); color: #fff; border-color: var(--bad
   margin-top: 24px;
   margin-bottom: 10px;
   text-align: center;
+  position: relative;
 }
+.rate-back-btn {
+  position: absolute;
+  left: 0;
+  top: -2px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+.rate-back-btn:hover { background: var(--surface-2); color: var(--text); border-color: var(--text-dim); }
+.rate-back-btn:active { transform: scale(0.96); }
 .rate-title {
   font-size: 13px;
   font-weight: 600;
@@ -1468,9 +1500,6 @@ html[data-motion="reduced"] .mascot.celebrate { animation: none !important; }
   /* Search bar: edge-to-edge */
   .search-row { margin: 0 0 10px; }
   .search-row input[type="search"] { padding: 9px 12px; font-size: 14px; }
-
-  /* Prev button takes less room on narrow */
-  #prev-btn { flex-basis: calc(50% - 4px); }
 
   /* Options list: tighter padding + smaller text on narrow screens */
   .q-option { padding: 11px 12px; gap: 11px; min-height: 50px; }
