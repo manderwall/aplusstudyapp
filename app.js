@@ -901,11 +901,12 @@ function attachStudyEvents(q) {
   const prev = $('#prev-btn');
   if (prev) prev.addEventListener('click', () => { prevQuestion(); });
   attachOptionEvents(() => renderStudy());
-  // Arm the rate buttons 500ms after they appear. Until then `.rate-row-arming`
-  // disables pointer events via CSS — even a ghost-click can't land. The JS
-  // timestamp guard below is a backup if the class somehow doesn't apply.
-  const armRow = $('.rate-row-arming');
-  if (armRow) setTimeout(() => armRow.classList.remove('rate-row-arming'), 500);
+  // Arm the rate buttons AND the rate-header (containing the Back button) for
+  // 500ms after they appear. Until then `.rate-row-arming` disables pointer
+  // events via CSS — even a ghost-click can't land on a rate or Back button.
+  // The JS timestamp guard below is a backup if the class somehow doesn't apply.
+  const armed = $$('.rate-row-arming');
+  if (armed.length) setTimeout(() => armed.forEach(el => el.classList.remove('rate-row-arming')), 500);
   // "← Back" link inside the rate header — lets the user undo a misregistered
   // tap on Reveal that landed somewhere unexpected, without having to wait
   // until they're on the next card and then navigate back.
@@ -976,19 +977,28 @@ function recordRating(qid, rate) {
 }
 
 function nextQuestion() {
+  // Last-resort guard: ignore any navigation that fires within 500ms of a
+  // reveal. If a ghost-click somehow leaks past the rate-row arming and the
+  // pointerup target check, this still keeps the card from advancing.
+  if (Date.now() - (state._revealedAt || 0) < 500) return;
   const qs = filteredQuestions();
   state.revealed = false;
   stopSpeaking();
   state.selectedOption = null;
   state.selectedOptions = [];
   if (qs.length === 0) { renderStudy(); return; }
-  state.history.push(state.currentIndex);
+  // Push the current card's ID (not its index) so Prev finds the right card
+  // even if the deck reorders or shrinks (e.g. after rating with a Due filter).
+  if (qs[state.currentIndex]) state.history.push(qs[state.currentIndex].id);
   if (state.history.length > 50) state.history.shift();
   state.currentIndex = (state.currentIndex + 1) % qs.length;
   renderStudy();
 }
 
 function prevQuestion() {
+  // Same last-resort guard as nextQuestion — a ghost click on the Back button
+  // shortly after Reveal must not actually navigate back.
+  if (Date.now() - (state._revealedAt || 0) < 500) return;
   const qs = filteredQuestions();
   state.revealed = false;
   stopSpeaking();
@@ -996,7 +1006,15 @@ function prevQuestion() {
   state.selectedOptions = [];
   if (qs.length === 0) { renderStudy(); return; }
   if (state.history.length > 0) {
-    state.currentIndex = state.history.pop();
+    const prevId = state.history.pop();
+    const idx = qs.findIndex(q => q.id === prevId);
+    if (idx !== -1) {
+      state.currentIndex = idx;
+    } else {
+      // Card was filtered out of the current deck (e.g. it's no longer due).
+      // Fall back to one-step backward so Prev does *something* sensible.
+      state.currentIndex = state.currentIndex === 0 ? qs.length - 1 : state.currentIndex - 1;
+    }
   } else {
     state.currentIndex = state.currentIndex === 0 ? qs.length - 1 : state.currentIndex - 1;
   }
@@ -2088,7 +2106,7 @@ function renderRatingButtonsHTML(q) {
     { key: 'easy',  cls: 'primary',label: 'Easy' },
   ];
   return `
-    <div class="rate-header">
+    <div class="rate-header rate-row-arming">
       <div class="rate-title">How well did you know this?</div>
       <div class="rate-sub">${recLabel} — <em>${rec}</em> is highlighted</div>
       <button type="button" class="rate-back-btn" id="rate-back-btn" aria-label="Go back to the previous card" title="Back to previous card">← Back</button>
