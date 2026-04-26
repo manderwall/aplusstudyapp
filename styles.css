@@ -1449,13 +1449,15 @@ html[data-motion="reduced"] .mascot.celebrate { animation: none !important; }
   .card { padding: 18px; border-radius: 14px; margin-bottom: 14px; }
   .card-question { font-size: 17px; }
 
-  /* Sticky rate/action bar stays visible while reading long explanations.
-     Negative bottom offsets #main's padding-bottom so the bar reaches the
-     outer edge of the scroll container — no explanation-text peeking under. */
-  .card { padding-bottom: 0; }
-  .card .btn-row {
+  /* Sticky rate row keeps the Again/Hard/Good/Easy buttons visible while
+     reading a long explanation. Scope this ONLY to .rate-row — applying it
+     to every .card .btn-row makes the pre-reveal nav row and the quiz
+     button rows also sticky, which causes them to overlap with the options
+     behind them and steal clicks (looks to the user like "I tapped an
+     option but Reveal/Skip fired", or "Reveal skipped my card"). */
+  .card .btn-row.rate-row {
     position: sticky;
-    bottom: -20px;  /* matches #main padding-bottom below */
+    bottom: -4px;
     background: var(--surface);
     margin: 24px -18px 0;
     padding: 14px 18px 14px;
