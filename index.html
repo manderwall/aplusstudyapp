@@ -3,11 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-  <meta name="apple-mobile-web-app-capable" content="yes">
+  <!-- Cross-platform PWA install (Android Chrome / Edge / desktop). -->
   <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="A+ Study">
+  <meta name="description" content="CompTIA A+ exam study app — spaced repetition, practice quizzes, and concept review.">
+  <meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="color-scheme" content="dark light">
+  <!-- iOS PWA install -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="A+ Study">
-  <meta name="theme-color" content="#1a1a1a">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="icon" type="image/png" href="icons/icon-192.png">
@@ -22,6 +28,7 @@
       <div class="header-right">
         <div id="progress-hud" role="status" aria-live="polite" aria-atomic="true"></div>
         <button id="help-btn" type="button" aria-label="Help / welcome" title="Help & options">❓</button>
+        <button id="listen-btn" type="button" aria-label="Read the current card aloud" aria-pressed="false" title="Listen — read the card aloud" hidden>🔈</button>
         <button id="focus-btn" type="button" aria-label="Enter focus mode" aria-pressed="false" title="Focus mode — press F">🔓</button>
         <button id="theme-btn" type="button" aria-label="Toggle theme" title="Theme (auto/light/dark) — press T">🌓</button>
       </div>

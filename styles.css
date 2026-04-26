@@ -64,15 +64,29 @@
 
 /* ─── Accessibility / preference overrides ─── */
 
-/* Text size scales whole app */
-html[data-size="small"]   { font-size: 15px; }
-html[data-size="medium"]  { font-size: 17px; }
-html[data-size="large"]   { font-size: 19px; }
-html[data-size="xlarge"]  { font-size: 22px; }
+/* Text size scales the whole app via the `zoom` CSS property — every
+   font-size in this stylesheet is in px (no rem/em), so the simpler
+   `font-size: 15px` on html doesn't propagate. zoom proportionally
+   scales font, padding, margin, dimensions — supported by all current
+   evergreen browsers (Chromium, Safari, Firefox 126+). */
+html[data-size="small"]  body { zoom: 0.9; }
+html[data-size="medium"] body { zoom: 1; }
+html[data-size="large"]  body { zoom: 1.15; }
+html[data-size="xlarge"] body { zoom: 1.35; }
 
-/* Dyslexia-friendly fonts (loaded as @font-face below) */
+/* Dyslexia-friendly fonts (loaded as @font-face below). Form controls
+   don't inherit font-family by default — force them to so the chosen
+   font applies to buttons, inputs, textareas, selects too. */
 html[data-font="atkinson"] body { font-family: 'Atkinson Hyperlegible', -apple-system, system-ui, sans-serif; }
 html[data-font="opendyslexic"] body { font-family: 'OpenDyslexic', -apple-system, system-ui, sans-serif; letter-spacing: 0.02em; }
+html[data-font="atkinson"] button,
+html[data-font="atkinson"] input,
+html[data-font="atkinson"] textarea,
+html[data-font="atkinson"] select,
+html[data-font="opendyslexic"] button,
+html[data-font="opendyslexic"] input,
+html[data-font="opendyslexic"] textarea,
+html[data-font="opendyslexic"] select { font-family: inherit; letter-spacing: inherit; }
 
 /* Reduced motion respects OS setting by default; explicit override forces it off too */
 html[data-motion="reduced"] *,
@@ -232,7 +246,7 @@ header h1 {
 .settings-meta.hud-urgent { color: var(--bad); font-weight: 600; }
 .settings-meta.hud-past   { color: var(--text-dim); font-style: italic; }
 
-#theme-btn, #focus-btn, #help-btn {
+#theme-btn, #focus-btn, #help-btn, #listen-btn {
   background: var(--surface-2);
   border: 1px solid var(--border);
   width: 36px;
@@ -248,8 +262,9 @@ header h1 {
   color: var(--text);
   transition: transform 0.1s, background 0.1s;
 }
-#theme-btn:active, #focus-btn:active, #help-btn:active { transform: scale(0.92); }
-#theme-btn:hover, #focus-btn:hover, #help-btn:hover { background: var(--border); }
+#theme-btn:active, #focus-btn:active, #help-btn:active, #listen-btn:active { transform: scale(0.92); }
+#theme-btn:hover, #focus-btn:hover, #help-btn:hover, #listen-btn:hover { background: var(--border); }
+#listen-btn[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
 
 /* ─── Welcome / landing overlay ─── */
 #welcome-overlay {
