@@ -728,6 +728,12 @@ button.action.bad { background: var(--bad); color: #fff; border-color: var(--bad
   pointer-events: none;
 }
 .btn-row.rate-row.rate-row-arming { opacity: 0.85; }
+
+/* Catch-all post-Reveal lock. For 500ms after Reveal fires, ALL clicks on
+   the card itself are dropped — a ghost-click, double-tap, accidental
+   swipe-end-on-button, or any other touch artifact simply cannot navigate
+   the card. The class is set in renderStudy and removed via setTimeout. */
+.card.card-just-revealed { pointer-events: none; }
 button.action.rate-btn {
   flex: unset;
   min-width: 0;
