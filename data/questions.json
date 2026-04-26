@@ -1950,10 +1950,10 @@
     "qnum": 55,
     "obj": "1.1",
     "qtype": "Multiple Choice",
-    "question": "Which of the following types of authentication devices is being used in this picture?",
+    "question": "Which type of authentication factor is being used when a user logs in by scanning their fingerprint?",
     "wrong_pick": "Somewhere you are",
-    "correct_short": "Something you know",
-    "explanation": "OBJ 1.1: There are five types of authentication factors: something you know, something you have, something you are, something you do, and somewhere you are. In this picture, the user is being authenticated using their fingerprint, which is considered something you are or a biometric factor of authentication. Something you are refers to biometric authentication and includes fingerprints, retina scans, and facial scans. Something you know is a knowledge factor that includes usernames, passwords, and other non-tangible facts. Something you have is a possession factor that includes a physical token, key fob, or smart card. Somewhere you are is a location factor that includes your GPS coordinates or the location of your IP address. Something you do is an action factor that includes the way you sign your name, the way you say a passphrase, and other actionable items.",
+    "correct_short": "Something you are",
+    "explanation": "OBJ 1.1: There are five types of authentication factors: something you know, something you have, something you are, something you do, and somewhere you are. A fingerprint scan is considered something you are, or a biometric factor of authentication. Something you are refers to biometric authentication and includes fingerprints, retina scans, and facial scans. Something you know is a knowledge factor that includes usernames, passwords, and other non-tangible facts. Something you have is a possession factor that includes a physical token, key fob, or smart card. Somewhere you are is a location factor that includes your GPS coordinates or the location of your IP address. Something you do is an action factor that includes the way you sign your name, the way you say a passphrase, and other actionable items.",
     "sources": [
       {
         "pretest": 4,
