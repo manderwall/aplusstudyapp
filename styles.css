@@ -2179,71 +2179,7 @@ html.is-touch .kbd-hint { display: none; }
 .learn-more-btn:hover { background: var(--border); border-color: var(--text-dim); }
 .learn-more-btn.pageref { background: rgba(90, 166, 255, 0.10); border-color: var(--accent); color: var(--accent); }
 .learn-more-btn.suggest { font-style: italic; color: var(--text-dim); }
-.learn-more-btn.ghost {
-  background: transparent;
-  border-style: dashed;
-  color: var(--text-dim);
-}
-.learn-more-btn.ghost:hover { color: var(--accent); border-color: var(--accent); background: var(--surface-2); }
 .learn-more-btn.external::after { content: '↗'; opacity: 0.6; margin-left: 2px; }
-
-/* Inline form for adding a link to the current card */
-.learn-more-form {
-  flex-basis: 100%;
-  margin-top: 10px;
-  padding: 12px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.learn-more-form-row {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.learn-more-form input {
-  flex: 1;
-  min-width: 0;
-  padding: 8px 10px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text);
-  font-family: inherit;
-  font-size: 14px;
-}
-.learn-more-form input[name="url"] { flex: 2 1 220px; }
-.learn-more-form input[name="label"] { flex: 1 1 100px; }
-.learn-more-form input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
-.learn-more-form-actions { display: flex; gap: 8px; justify-content: flex-end; }
-.learn-more-existing {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.learn-more-existing-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 12px;
-}
-.learn-more-existing-label { font-weight: 600; color: var(--accent); }
-.learn-more-existing-url { color: var(--text-dim); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-.learn-more-remove {
-  background: transparent;
-  border: 0;
-  color: var(--bad);
-  font-size: 14px;
-  cursor: pointer;
-  padding: 0 4px;
-}
 
 /*─── PDF viewer (reference book) ─────────────────────────────*/
 .pdf-viewer-overlay {
