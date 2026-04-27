@@ -1214,21 +1214,34 @@ html[data-revealed] .scratchpad-wrap.overlay::before {
   padding: 8px 4px;
 }
 
-.obj-bar {
+/* obj-bar is now an interactive button: tap to drill that objective in Study */
+button.obj-bar {
   display: flex;
   align-items: center;
   padding: 10px 16px;
   gap: 12px;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  border-radius: 6px;
+  transition: background 0.1s;
 }
+button.obj-bar:hover { background: var(--surface-2); }
+button.obj-bar:active { transform: scale(0.99); }
+button.obj-bar:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-.obj-bar .obj-label {
+button.obj-bar .obj-label {
   min-width: 70px;
   font-weight: 600;
   color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
 
-.obj-bar .bar-track {
+button.obj-bar .bar-track {
   flex: 1;
   height: 8px;
   background: var(--surface-2);
@@ -1237,20 +1250,97 @@ html[data-revealed] .scratchpad-wrap.overlay::before {
   position: relative;
 }
 
-.obj-bar .bar-fill {
+button.obj-bar .bar-fill {
   height: 100%;
   background: linear-gradient(90deg, var(--accent) 0%, var(--good) 100%);
   border-radius: 4px;
   transition: width 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
+/* Color-tier the bar so weak objectives stand out without reading numbers */
+button.obj-bar[data-tier="low"] .bar-fill { background: var(--bad); }
+button.obj-bar[data-tier="mid"] .bar-fill { background: var(--warn); }
+button.obj-bar[data-tier="high"] .bar-fill { background: var(--good); }
 
-.obj-bar .obj-count {
+button.obj-bar .obj-count {
   min-width: 50px;
   text-align: right;
   color: var(--text-dim);
   font-size: 13px;
   font-variant-numeric: tabular-nums;
 }
+button.obj-bar .obj-acc {
+  min-width: 42px;
+  text-align: right;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Stats subtitle under section headings */
+.stats-sub {
+  margin: -8px 0 10px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+/*─── Exam-readiness banner ───────────────────────────────────*/
+.readiness {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 2px solid;
+  margin-bottom: 16px;
+}
+.readiness-pct {
+  font-size: 32px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.readiness-text { flex: 1; }
+.readiness-verdict { font-weight: 600; color: var(--text); margin-bottom: 3px; }
+.readiness-meta { font-size: 13px; color: var(--text-dim); line-height: 1.45; }
+.readiness-high { border-color: var(--good); background: rgba(74, 222, 128, 0.08); }
+.readiness-high .readiness-pct { color: var(--good); }
+.readiness-mid  { border-color: var(--warn); background: rgba(251, 191, 36, 0.08); }
+.readiness-mid  .readiness-pct { color: var(--warn); }
+.readiness-low  { border-color: var(--bad);  background: rgba(248, 113, 113, 0.08); }
+.readiness-low  .readiness-pct { color: var(--bad); }
+
+/*─── "Your pick" callout in the explanation ──────────────────*/
+.your-pick {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin: 0 0 14px;
+  border-left: 4px solid;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.your-pick-label { font-weight: 700; }
+.your-pick-value { color: var(--text); }
+.your-pick-correct {
+  flex-basis: 100%;
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.your-pick-correct::before { content: '→ '; color: var(--good); font-weight: 700; }
+.your-pick-right {
+  background: rgba(74, 222, 128, 0.10);
+  border-left-color: var(--good);
+}
+.your-pick-right .your-pick-label { color: var(--good); }
+.your-pick-wrong {
+  background: rgba(248, 113, 113, 0.10);
+  border-left-color: var(--bad);
+}
+.your-pick-wrong .your-pick-label { color: var(--bad); }
 
 /* Empty state */
 .empty-state {
@@ -1859,3 +1949,66 @@ html[data-motion="reduced"] .quiz-progress-fill { transition: none; }
 .quiz-missed-q { font-size: 13px; color: var(--text); line-height: 1.4; }
 .quiz-missed-ans { font-size: 12px; color: var(--good); font-weight: 600; }
 .quiz-missed-ans.quiz-skipped { color: var(--text-dim); font-style: italic; }
+
+/*─── Desktop / wide-window layout ────────────────────────────
+   On screens ≥ 900px the app stops looking like a phone column
+   stranded in the middle. We widen the card to use the available
+   space and bump up some chrome densities. */
+@media (min-width: 900px) {
+  #main { padding: 28px 32px; max-width: 1100px; margin: 0 auto; }
+  .card { max-width: 100%; padding: 32px; }
+  .card-question { font-size: 18px; line-height: 1.55; }
+  .q-options { gap: 12px; }
+  .q-option { padding: 16px 20px; min-height: 56px; }
+  .q-text { font-size: 16px; }
+
+  /* Tab bar slides into the header strip on desktop instead of taking
+     a fixed bottom row, so the card uses the full viewport height. */
+  #tabbar {
+    position: static;
+    background: transparent;
+    border-top: none;
+    padding: 0;
+    margin: 12px auto 0;
+    max-width: 1100px;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+  #tabbar .tab {
+    flex: 0 0 auto;
+    min-width: 96px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    flex-direction: row;
+    gap: 8px;
+  }
+  #tabbar .tab.active {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+  }
+  #tabbar .tab-icon { font-size: 16px; }
+  #tabbar .tab-label { font-size: 14px; }
+
+  /* Stats: 2-column grid on desktop so OBJ list + heatmap fit side-by-side */
+  .stats-wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; }
+  .stats-wrap > h3, .stats-wrap > .readiness, .stats-wrap > .stats-sub { grid-column: 1 / -1; }
+  .stats-wrap > .settings-panel { grid-column: 1 / -1; }
+  .stats-wrap > .stats-row { grid-column: 1 / -1; }
+}
+
+/* Keyboard-shortcut hint chips. Shown by default; hidden on touch-only
+   devices via the .is-touch class on <html> (set in app.js by detecting
+   the user's first input event). Media queries on (any-pointer) are
+   unreliable because headless / dev tools / iPad-as-Mac mis-report. */
+.kbd-hint {
+  display: inline-block;
+  font-size: 11px;
+  color: var(--text-dim);
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin-left: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  vertical-align: middle;
+}
+html.is-touch .kbd-hint { display: none; }
