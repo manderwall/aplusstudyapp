@@ -1043,6 +1043,11 @@ function attachStudyEvents(q) {
       if (page) openReferenceViewer(page);
     });
   });
+  // "+ Add link" — opens an inline form for pasting a OneDrive (or any)
+  // sharing URL for this card. Stored on the question's overrides.
+  $$('[data-add-link]').forEach(btn => {
+    btn.addEventListener('click', () => openAddLinkForm(btn.dataset.addLink));
+  });
   // Auto-suggest: if a reference book is loaded AND indexed, look up a
   // probable page for this question and offer "Suggest p. N · Set" UI.
   // Lazy / async so it doesn't block the render.
@@ -2388,13 +2393,10 @@ function renderLearnMoreHTML(q) {
     // loaded + indexed and we find a match. Hidden by default.
     parts.push(`<span class="learn-more-suggest" data-qid="${escapeHtml(q.id)}" hidden></span>`);
   }
-  if (q.learnMore) {
-    const links = Array.isArray(q.learnMore) ? q.learnMore : [{ url: q.learnMore, label: 'Reference' }];
-    for (const l of links) {
-      const url = typeof l === 'string' ? l : l.url;
-      const label = typeof l === 'string' ? 'Reference' : (l.label || 'Reference');
-      if (url) parts.push(`<a class="learn-more-btn external" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">🔗 ${escapeHtml(label)}</a>`);
-    }
+  // Normalize learnMore from any of: string | {url, label} | [string|{...}, ...]
+  const links = normalizeLearnMore(q.learnMore);
+  for (const l of links) {
+    if (l.url) parts.push(`<a class="learn-more-btn external" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer">🔗 ${escapeHtml(l.label || 'Reference')}</a>`);
   }
   // Generic search fallback — uses the question's correct answer as the
   // search term so results stay topical without exposing the question text.
@@ -2403,8 +2405,107 @@ function renderLearnMoreHTML(q) {
     const url = `https://duckduckgo.com/?q=${encodeURIComponent('CompTIA A+ ' + searchTerm)}`;
     parts.push(`<a class="learn-more-btn external" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">🔎 Search the web</a>`);
   }
-  if (parts.length === 0) return '';
-  return `<div class="learn-more">${parts.join('')}</div>`;
+  // Always offer to attach a custom link (typically a OneDrive sharing URL
+  // for this card's reference). Stored on the question's overrides so it
+  // syncs with the rest of the user's data.
+  parts.push(`<button type="button" class="learn-more-btn ghost" data-add-link="${escapeHtml(q.id)}">+ Add link</button>`);
+  return `<div class="learn-more" data-qid="${escapeHtml(q.id)}">${parts.join('')}</div>`;
+}
+
+// Accepts: undefined | string | { url, label } | array of any of those.
+// Returns: array of { url, label } objects (possibly empty).
+function normalizeLearnMore(m) {
+  if (!m) return [];
+  const arr = Array.isArray(m) ? m : [m];
+  return arr.map(x => typeof x === 'string' ? { url: x, label: 'Reference' } : { url: x?.url, label: x?.label || 'Reference' })
+            .filter(x => x.url);
+}
+
+// Inline form to paste a sharing URL (OneDrive / Drive / Dropbox / anything)
+// for the current card. Saves into state.overrides[qid].learnMore as an
+// array of {url, label} entries, so multiple links per card stack up.
+function openAddLinkForm(qid) {
+  const row = document.querySelector(`.learn-more[data-qid="${qid}"]`);
+  if (!row) return;
+  // Don't double-open
+  if (row.querySelector('.learn-more-form')) {
+    row.querySelector('.learn-more-form input[name="url"]')?.focus();
+    return;
+  }
+  // Existing links so the user sees what's already there + can remove
+  const existing = normalizeLearnMore(state.overrides[qid]?.learnMore);
+  const existingHtml = existing.length === 0 ? '' : `
+    <div class="learn-more-existing">
+      ${existing.map((l, i) => `
+        <span class="learn-more-existing-item">
+          <span class="learn-more-existing-label">${escapeHtml(l.label || 'Reference')}</span>
+          <span class="learn-more-existing-url" title="${escapeHtml(l.url)}">${escapeHtml(l.url.replace(/^https?:\/\//, '').slice(0, 40))}${l.url.length > 50 ? '…' : ''}</span>
+          <button type="button" class="learn-more-remove" data-rm="${i}" aria-label="Remove this link">✕</button>
+        </span>
+      `).join('')}
+    </div>`;
+  const form = document.createElement('div');
+  form.className = 'learn-more-form';
+  form.innerHTML = `
+    ${existingHtml}
+    <div class="learn-more-form-row">
+      <input type="url" name="url" placeholder="Paste OneDrive link (or any URL)…"
+             autocomplete="off" spellcheck="false" inputmode="url">
+      <input type="text" name="label" placeholder="Label (optional)" maxlength="40">
+    </div>
+    <div class="learn-more-form-actions">
+      <button type="button" class="small-btn" data-act="save">Save link</button>
+      <button type="button" class="small-btn" data-act="cancel">Cancel</button>
+    </div>
+  `;
+  row.appendChild(form);
+  const urlInput = form.querySelector('input[name="url"]');
+  const labelInput = form.querySelector('input[name="label"]');
+  urlInput.focus();
+
+  const close = () => form.remove();
+  const save = () => {
+    const url = (urlInput.value || '').trim();
+    if (!url) { close(); return; }
+    try { new URL(url); }
+    catch { toast('That doesn\'t look like a valid URL.', 'error'); urlInput.focus(); return; }
+    const label = (labelInput.value || '').trim() || (/onedrive|sharepoint|1drv\.ms/i.test(url) ? 'OneDrive' : 'Reference');
+    if (!state.overrides[qid]) state.overrides[qid] = {};
+    const list = normalizeLearnMore(state.overrides[qid].learnMore);
+    list.push({ url, label });
+    state.overrides[qid].learnMore = list;
+    saveOverrides();
+    toast('Link saved.', 'success');
+    if (state.mode === 'study') renderStudy();
+  };
+
+  form.querySelector('[data-act="save"]').addEventListener('click', save);
+  form.querySelector('[data-act="cancel"]').addEventListener('click', close);
+  // Enter to save, Escape to cancel
+  urlInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); save(); }
+    else if (e.key === 'Escape') { e.preventDefault(); close(); }
+  });
+  labelInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); save(); }
+    else if (e.key === 'Escape') { e.preventDefault(); close(); }
+  });
+  // Remove existing link
+  form.querySelectorAll('[data-rm]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.rm, 10);
+      const list = normalizeLearnMore(state.overrides[qid]?.learnMore);
+      list.splice(idx, 1);
+      if (list.length === 0) {
+        delete state.overrides[qid].learnMore;
+      } else {
+        state.overrides[qid].learnMore = list;
+      }
+      saveOverrides();
+      toast('Link removed.', 'success');
+      if (state.mode === 'study') renderStudy();
+    });
+  });
 }
 
 // Async sidekick to renderLearnMoreHTML — populates the "Suggest p. N"
