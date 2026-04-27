@@ -43,6 +43,7 @@ uses the Stats → "Active exam" toggle.
   "explanation":  "OBJ 3.3: …",               // REQUIRED. Should start with "OBJ <obj>:" matching the obj field.
   "image":        "images/p1q36_mobo.png",    // optional. REQUIRED for qtype=PBQ. Path must exist on disk.
   "images":       ["images/x.png"],           // optional alternative — array of paths
+  "learnMore":    "https://example.com/x",    // optional. URL or [{url, label}] for "Learn more →" link.
   "sources":      [{"pretest":1,"qnum":36}]   // optional dedupe trace
 }
 ```
@@ -94,6 +95,32 @@ literal image), check whether the trigger phrase is actually a deictic
 reference. If not, rewrite the question to be self-contained — usually
 it's worth the rewrite anyway, because users who don't see the image
 need to be able to answer.
+
+## Reference-book feature (personal use)
+
+The app supports linking individual cards to specific pages of a PDF you
+upload — e.g. your own A+ study book. The PDF lives entirely in
+IndexedDB on your device; nothing is sent to a server, nothing is
+bundled with the app, and the data store is per-exam.
+
+How it works:
+
+1. **Upload**: Stats → Reference book → Upload PDF.
+2. **Index**: After upload, click "Index for auto-suggest". The app
+   extracts text from each page (via PDF.js) and caches it. Big books
+   take a few seconds.
+3. **Per-card page link**: After answering and revealing a card, you'll
+   see a "📖 Suggest p. N" button below the explanation if the indexer
+   found a likely match. Click it to lock that page reference for the
+   card. The button changes to "📖 Open p. N" — clicking opens an
+   in-app PDF viewer at that page.
+4. **Manual override**: page refs are stored as `pageRef` in
+   `state.overrides` (the same store as user-edited options). They sync
+   via the regular cloud-sync mechanism if you have it on.
+
+The validator does not check `pageRef` because it's user data attached
+to whatever PDF you happen to have loaded — every user's page numbers
+will differ.
 
 ## Adding `concept-fixes.json` content
 

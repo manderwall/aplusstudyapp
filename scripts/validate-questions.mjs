@@ -200,7 +200,26 @@ export function validate(qs, options = {}) {
       }
     }
 
-    // 12. Stray HTML/markdown leaking from a paste
+    // 12. learnMore field, if present, must be a URL string or an array of
+    //     {url, label} entries. Catches typos in JSON pasted from elsewhere.
+    if (q.learnMore !== undefined) {
+      const links = Array.isArray(q.learnMore) ? q.learnMore : [q.learnMore];
+      for (const l of links) {
+        const url = typeof l === 'string' ? l : l?.url;
+        if (!url || typeof url !== 'string') {
+          errors.push(`${id}: learnMore entry has no url field`);
+          continue;
+        }
+        try { new URL(url); }
+        catch { errors.push(`${id}: learnMore url is not a valid URL: ${JSON.stringify(url)}`); }
+      }
+    }
+
+    // 13. pageRef in overrides isn't validated here — the user adds those at
+    //     runtime against their own PDF; we'd need the PDF to know the
+    //     valid page range. The app silently drops out-of-range refs.
+
+    // 14. Stray HTML/markdown leaking from a paste
     for (const text of [q.question, ...(q.options || []), q.explanation, q.correct_short]) {
       if (typeof text !== 'string') continue;
       if (/<\/?[a-z][^>]*>/i.test(text)) {

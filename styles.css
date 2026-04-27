@@ -2152,6 +2152,116 @@ html.is-touch .kbd-hint { display: none; }
   display: block;
 }
 
+/*─── "Learn more" footer below the explanation ──────────────*/
+.learn-more {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.learn-more-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s;
+}
+.learn-more-btn:hover { background: var(--border); border-color: var(--text-dim); }
+.learn-more-btn.pageref { background: rgba(90, 166, 255, 0.10); border-color: var(--accent); color: var(--accent); }
+.learn-more-btn.suggest { font-style: italic; color: var(--text-dim); }
+.learn-more-btn.external::after { content: '↗'; opacity: 0.6; margin-left: 2px; }
+
+/*─── PDF viewer (reference book) ─────────────────────────────*/
+.pdf-viewer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 1500;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: 12px;
+  animation: imgZoomFade 0.15s ease-out;
+}
+.pdf-viewer-frame {
+  background: var(--surface);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 1100px;
+  max-height: calc(100vh - 24px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.pdf-viewer-toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+  flex-shrink: 0;
+}
+.pdf-pageinfo { font-size: 13px; color: var(--text-dim); }
+.pdf-pageinfo strong { color: var(--text); }
+.pdf-jump {
+  width: 80px;
+  padding: 6px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+}
+.pdf-nav {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 16px;
+  cursor: pointer;
+}
+.pdf-nav:hover { background: var(--border); }
+.pdf-viewer-close {
+  margin-left: auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 14px;
+  cursor: pointer;
+}
+.pdf-viewer-close:hover { background: var(--bad); border-color: var(--bad); color: #fff; }
+.pdf-viewer-canvas-wrap {
+  flex: 1;
+  overflow: auto;
+  padding: 12px;
+  background: #2a2a2a;
+  display: flex;
+  justify-content: center;
+}
+.pdf-viewer-canvas {
+  max-width: 100%;
+  height: auto;
+  background: #fff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
 /*─── Image-zoom overlay (PBQ figure tap-to-enlarge) ──────────*/
 .img-zoom-overlay {
   position: fixed;
