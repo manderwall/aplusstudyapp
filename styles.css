@@ -1108,6 +1108,107 @@ html[data-revealed] .scratchpad-wrap.overlay::before {
 }
 
 /* Reading mode */
+.reading-wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Sticky table of contents — appears as a banner at the top on mobile,
+   a sidebar on desktop (≥ 900px, see media query below). */
+.reading-toc {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  font-size: 13px;
+}
+.reading-toc-title {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+.reading-toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 4px 12px;
+}
+.reading-toc-link {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 0;
+  color: var(--text);
+  text-decoration: none;
+  border-radius: 4px;
+}
+.reading-toc-link:hover { color: var(--accent); }
+.reading-toc-num {
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.reading-toc-text {
+  color: var(--text-dim);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* "Back to top" link inside each section */
+.reading-top-link {
+  display: inline-block;
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--text-dim);
+  text-decoration: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+}
+.reading-top-link:hover { color: var(--accent); border-color: var(--accent); }
+
+/* Anchor scroll offset so the section heading doesn't disappear under
+   the fixed header when jumping via TOC. */
+.obj-section { scroll-margin-top: 12px; }
+
+@media (min-width: 900px) {
+  .reading-wrap {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 28px;
+    align-items: start;
+  }
+  .reading-toc {
+    position: sticky;
+    top: 12px;
+    margin-bottom: 0;
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
+  }
+  .reading-toc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .reading-toc-link {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    padding: 6px 8px;
+  }
+  .reading-toc-link:hover { background: var(--surface-2); }
+  .reading-toc-text { font-size: 11px; max-width: 100%; }
+}
+
 .reading-list {
   max-width: 760px;
   margin: 0 auto;
@@ -2012,3 +2113,41 @@ html[data-motion="reduced"] .quiz-progress-fill { transition: none; }
   vertical-align: middle;
 }
 html.is-touch .kbd-hint { display: none; }
+
+/*─── Quiz history chart ──────────────────────────────────────*/
+.quiz-history {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.qh-meta {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.qh-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.qh-num {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.qh-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.qh-chart {
+  width: 100%;
+  height: 110px;
+  display: block;
+}
