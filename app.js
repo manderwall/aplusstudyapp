@@ -71,7 +71,7 @@ const state = {
   order: 'smart',  // 'smart' | 'random' | 'sequential' — card ordering strategy
   _orderSeed: null,    // stable per-session seed so Prev/Next don't reshuffle
   _orderCache: null,   // { key, list }
-  _revealedAt: 0,      // timestamp of last reveal, used to block ghost-clicks on rate buttons
+  _revealedAt: 0,      // timestamp of last reveal/answer-recorded, used to block ghost-clicks
   progress: {},    // { questionId: { status, seen, correct, lastSeen, ease, interval, due, updated_at } }
   overrides: {},   // { questionId: { options?, image?, images? } } — user-added content
   quizSession: null,  // null | { questions, answers, current, startedAt, done }
@@ -874,6 +874,7 @@ function renderStudy() {
       ${state.revealed ? `
         <div class="card-section right">
           <div class="label">Correct answer & explanation</div>
+          ${renderYourPickHTML(q)}
           ${formatExplanation(q.explanation)}
           ${renderPretestMissHTML(q)}
         </div>
@@ -1173,9 +1174,13 @@ function renderQuizCard() {
        </div>`;
 
   $('#mode-title').textContent = `Quiz ${current + 1}/${total}`;
+  // Lock the card for 800ms after answering so a ghost-click can't tap "Next"
+  // before the user has read the correct/wrong feedback.
+  const sinceAns = Date.now() - (state._revealedAt || 0);
+  const quizCardClass = 'card card-fresh' + (answered && sinceAns < 800 ? ' card-just-revealed' : '');
   $('#main').innerHTML = `
     ${filterBarHTML()}
-    <div class="card card-fresh">
+    <div class="${quizCardClass}">
       <div class="quiz-progress-bar" role="progressbar" aria-valuenow="${current}" aria-valuemin="0" aria-valuemax="${total}" aria-label="Question ${current + 1} of ${total}">
         <div class="quiz-progress-fill" style="width:${pct}%"></div>
       </div>
@@ -1200,6 +1205,10 @@ function renderQuizCard() {
   });
 
   if (answered) {
+    // Drop the .card-just-revealed lock once the 800ms window expires so the
+    // user can tap Next manually if they're faster than the auto-advance.
+    const justRevealedQuiz = $('.card-just-revealed');
+    if (justRevealedQuiz) setTimeout(() => justRevealedQuiz.classList.remove('card-just-revealed'), 800);
     const nextBtn = $('#quiz-next-btn');
     if (nextBtn) {
       nextBtn.addEventListener('click', advanceQuiz);
@@ -1257,6 +1266,9 @@ function recordQuizAnswer(q, picked) {
     correctShort: q.correct_short || (Array.isArray(q.correct_picks) ? q.correct_picks.join(', ') : ''),
   };
   recordRating(q.id, isRight ? 'good' : 'again');
+  // Reuse the Study mode reveal-window lock so a ghost-click right after
+  // picking can't auto-advance past the answer feedback.
+  state._revealedAt = Date.now();
   state.selectedOption = null;
   state.selectedOptions = [];
   haptic(10);
@@ -1264,6 +1276,11 @@ function recordQuizAnswer(q, picked) {
 }
 
 function advanceQuiz() {
+  // 800ms guard: a click on "Next" that fires within 800ms of recording
+  // the answer is almost certainly the original pick-tap leaking through
+  // as a ghost click. The legitimate setTimeout-driven auto-advance fires
+  // at 1.8 s, well past this threshold.
+  if (Date.now() - (state._revealedAt || 0) < 800) return;
   clearTimeout(_quizAutoAdvance);
   const session = state.quizSession;
   if (!session) return;
@@ -1449,6 +1466,34 @@ function renderStats() {
         `}
       </div>
 
+      ${(() => {
+        // Exam-readiness indicator: rough score blending accuracy + coverage.
+        // CompTIA A+ pass threshold is ~75%. We weight by how much of the
+        // deck the user has seen so they don't get a fake-green "100%" off
+        // a single right answer.
+        const coverage = qs.length ? seen.length / qs.length : 0;
+        // Blend: half weight to the accuracy you've shown, half to coverage.
+        const ready = Math.round(((acc / 100) * 0.6 + coverage * 0.4) * 100);
+        const tier = ready >= 80 ? 'high' : ready >= 65 ? 'mid' : 'low';
+        const verdict = ready >= 80 ? 'On track to pass'
+                      : ready >= 65 ? 'Getting there — keep going'
+                      : seen.length === 0 ? 'Start studying to see your readiness'
+                      : 'Below the ~75% pass mark — drill weak areas';
+        const exam = daysUntilExam(state.exam);
+        const examNote = exam === null ? '' : exam < 0 ? '' : exam <= 14
+          ? ` · exam in <strong>${exam} day${exam === 1 ? '' : 's'}</strong>` : '';
+        return `
+          <div class="readiness numeric-ui readiness-${tier}" role="status" aria-label="Exam readiness ${ready} percent">
+            <div class="readiness-pct">${ready}%</div>
+            <div class="readiness-text">
+              <div class="readiness-verdict">${verdict}</div>
+              <div class="readiness-meta">
+                ${seen.length} of ${qs.length} cards seen · ${acc}% accuracy${examNote}
+              </div>
+            </div>
+          </div>`;
+      })()}
+
       <div class="stats-row numeric-ui">
         <div class="stat-card">
           <div class="number">${seen.length}</div>
@@ -1570,17 +1615,21 @@ function renderStats() {
       <div class="numeric-ui">${renderHeatmapHTML()}</div>
 
       <h3 class="stats-h numeric-ui">Mastery by Objective</h3>
+      <p class="stats-sub numeric-ui">Tap a row to drill that objective in Study.</p>
       <div class="obj-bar-list numeric-ui">
         ${objStats.map(s => {
           const pct = s.total > 0 ? (s.mastered / s.total) * 100 : 0;
+          const tier = pct >= 80 ? 'high' : pct >= 50 ? 'mid' : pct > 0 ? 'low' : 'none';
+          const accLabel = s.seen > 0 ? `${s.accuracy}%` : '—';
           return `
-          <div class="obj-bar">
+          <button class="obj-bar" data-obj-drill="${s.obj}" aria-label="Drill OBJ ${s.obj} in Study mode" data-tier="${tier}">
             <div class="obj-label">OBJ ${s.obj}</div>
             <div class="bar-track" role="progressbar" aria-valuenow="${Math.round(pct)}" aria-valuemin="0" aria-valuemax="100" aria-label="OBJ ${s.obj} mastery">
               <div class="bar-fill" style="width: ${pct}%"></div>
             </div>
             <div class="obj-count">${s.mastered}/${s.total}</div>
-          </div>`;
+            <div class="obj-acc">${accLabel}</div>
+          </button>`;
         }).join('')}
       </div>
 
@@ -1715,6 +1764,18 @@ function renderStats() {
       setExamDate(input.dataset.examDate, e.target.value);
       updateHUD();
       renderStats();
+    });
+  });
+  // Per-objective drill: tap a Mastery row to filter Study to just that obj.
+  $$('[data-obj-drill]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.filter.obj = btn.dataset.objDrill;
+      state.filter.due = false;
+      state.filter.weakest = false;
+      state.filter.search = '';
+      state.currentIndex = 0;
+      state._orderCache = null;
+      setMode('study');
     });
   });
   // Accessibility: checkboxes (contrast / motion / haptics / autosync / anxiety / shake)
@@ -2061,6 +2122,34 @@ function renderImageHTML(q) {
 
 // Historical-miss footnote — what the user originally picked when taking
 // the pretest(s) that generated this card. Rendered as a small labeled
+// "Your pick" callout — shown above the explanation when the user picked
+// an option pre-reveal. Reinforces the lesson by spelling out, in words,
+// what they chose vs the correct answer (the colored option highlights
+// already convey this visually but a text callout sticks better). Returns
+// '' if the user revealed without picking (the recommended-rating "Hard"
+// already covers that case).
+function renderYourPickHTML(q) {
+  if (isMultipleAnswer(q)) {
+    const picked = state.selectedOptions || [];
+    if (picked.length === 0) return '';
+    const correctSet = new Set((q.correct_picks || []).map(normalizeOption));
+    const allRight = picked.length === correctSet.size && picked.every(p => correctSet.has(normalizeOption(p)));
+    return `<div class="your-pick your-pick-${allRight ? 'right' : 'wrong'}">
+      <span class="your-pick-label">${allRight ? '✓ You picked' : '✗ You picked'}:</span>
+      <span class="your-pick-value">${escapeHtml(picked.join(', '))}</span>
+      ${allRight ? '' : `<div class="your-pick-correct">Correct: ${escapeHtml((q.correct_picks || []).join(', '))}</div>`}
+    </div>`;
+  }
+  const picked = state.selectedOption;
+  if (!picked) return '';
+  const right = normalizeOption(picked) === normalizeOption(q.correct_short || '');
+  return `<div class="your-pick your-pick-${right ? 'right' : 'wrong'}">
+    <span class="your-pick-label">${right ? '✓ You picked' : '✗ You picked'}:</span>
+    <span class="your-pick-value">${escapeHtml(picked)}</span>
+    ${right ? '' : `<div class="your-pick-correct">Correct: ${escapeHtml(q.correct_short || '')}</div>`}
+  </div>`;
+}
+
 // note AFTER the explanation, not a prominent box above it, so it doesn't
 // compete with "what did I just tap in this session" (which the option-row
 // state colors already show). Returns '' when there's no pretest-miss data.
@@ -2111,10 +2200,10 @@ function renderRatingButtonsHTML(q) {
       : 'Tip: pick an answer next time for a smarter default';
   }
   const rates = [
-    { key: 'again', cls: 'bad',    label: 'Again' },
-    { key: 'hard',  cls: 'warn',   label: 'Hard' },
-    { key: 'good',  cls: 'good',   label: 'Good' },
-    { key: 'easy',  cls: 'primary',label: 'Easy' },
+    { key: 'again', cls: 'bad',    label: 'Again', kbd: '1' },
+    { key: 'hard',  cls: 'warn',   label: 'Hard',  kbd: '2' },
+    { key: 'good',  cls: 'good',   label: 'Good',  kbd: '3' },
+    { key: 'easy',  cls: 'primary',label: 'Easy',  kbd: '4' },
   ];
   return `
     <div class="rate-header rate-row-arming">
@@ -2126,8 +2215,8 @@ function renderRatingButtonsHTML(q) {
       ${rates.map(r => `
         <button class="action rate-btn ${r.cls}${r.key === rec ? ' recommended' : ''}"
                 data-rate="${r.key}"
-                aria-label="${r.label}, next review in ${nextIntervalLabel(p, r.key, now)}">
-          <span class="rate-label">${r.label}</span>
+                aria-label="${r.label} (key ${r.kbd}), next review in ${nextIntervalLabel(p, r.key, now)}">
+          <span class="rate-label">${r.label}<span class="kbd-hint" aria-hidden="true">${r.kbd}</span></span>
           <span class="rate-interval">${nextIntervalLabel(p, r.key, now)}</span>
         </button>
       `).join('')}
@@ -2864,6 +2953,20 @@ function installKeyboard() {
   });
 }
 
+//─── INPUT MODE DETECTION ────────────────────────────────────
+// Mark <html> with .is-touch the first time we see a touch event so CSS
+// can hide keyboard-hint chips on touch-only devices. We don't toggle it
+// back to mouse — a pure-mouse user never fires touchstart, and a hybrid
+// device (iPad with keyboard, Surface) already gets touch-first treatment
+// which is the safer default.
+function installInputModeDetection() {
+  const onTouch = () => {
+    document.documentElement.classList.add('is-touch');
+    window.removeEventListener('touchstart', onTouch);
+  };
+  window.addEventListener('touchstart', onTouch, { passive: true, once: true });
+}
+
 //─── SWIPE (swipe left to advance in Study/Quiz) ─────────────
 function installSwipe() {
   const main = $('#main');
@@ -3339,6 +3442,7 @@ async function init() {
   installSwipe();
   installKeyboard();
   installListenButton();
+  installInputModeDetection();
   setMode('study');
 
   // Show welcome on first visit (or every load until user ticks "don't show again").
