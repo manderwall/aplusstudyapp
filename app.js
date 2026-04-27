@@ -239,6 +239,47 @@ function maybeFireStreakCelebration(newCount) {
 // GitHub-style heatmap of daily cards-rated for the last 90 days. Columns
 // are weeks; rows are days of the week. Color intensity bands mirror the
 // GitHub scale so it feels familiar.
+// Quiz history chart: small inline SVG line/dot of scores per session.
+// Rendered into Stats so users see whether they're trending up. Empty state
+// (no sessions yet) returns '' — no UI noise until there's data to show.
+function renderQuizHistoryHTML() {
+  const history = loadQuizHistory();
+  if (history.length === 0) return '';
+  const W = 300, H = 110, PAD_L = 28, PAD_R = 8, PAD_T = 10, PAD_B = 22;
+  const innerW = W - PAD_L - PAD_R;
+  const innerH = H - PAD_T - PAD_B;
+  const n = history.length;
+  const x = (i) => n === 1 ? PAD_L + innerW / 2 : PAD_L + (i / (n - 1)) * innerW;
+  const y = (score) => PAD_T + (1 - score / 100) * innerH;
+  const points = history.map((e, i) => `${x(i).toFixed(1)},${y(e.score).toFixed(1)}`).join(' ');
+  const dots = history.map((e, i) =>
+    `<circle cx="${x(i).toFixed(1)}" cy="${y(e.score).toFixed(1)}" r="3.5" fill="${e.score >= 75 ? 'var(--good)' : 'var(--bad)'}" />`
+  ).join('');
+  // 75% pass-line
+  const passY = y(75).toFixed(1);
+  const best = Math.max(...history.map(e => e.score));
+  const avg = Math.round(history.reduce((s, e) => s + e.score, 0) / history.length);
+  const last = history[history.length - 1];
+  return `
+    <h3 class="stats-h numeric-ui">Quiz history</h3>
+    <div class="quiz-history numeric-ui">
+      <div class="qh-meta">
+        <div class="qh-stat"><span class="qh-num">${history.length}</span><span class="qh-label">sessions</span></div>
+        <div class="qh-stat"><span class="qh-num">${best}%</span><span class="qh-label">best</span></div>
+        <div class="qh-stat"><span class="qh-num">${avg}%</span><span class="qh-label">avg</span></div>
+        <div class="qh-stat"><span class="qh-num">${last.score}%</span><span class="qh-label">last</span></div>
+      </div>
+      <svg class="qh-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Quiz score history">
+        <line x1="${PAD_L}" y1="${passY}" x2="${W - PAD_R}" y2="${passY}" stroke="var(--good)" stroke-width="1" stroke-dasharray="4 3" opacity="0.5" />
+        <text x="${W - PAD_R - 2}" y="${(parseFloat(passY) - 3).toFixed(1)}" font-size="9" fill="var(--text-dim)" text-anchor="end">75% pass</text>
+        <text x="${PAD_L - 4}" y="${(PAD_T + 6).toFixed(1)}" font-size="9" fill="var(--text-dim)" text-anchor="end">100</text>
+        <text x="${PAD_L - 4}" y="${(PAD_T + innerH + 3).toFixed(1)}" font-size="9" fill="var(--text-dim)" text-anchor="end">0</text>
+        ${n > 1 ? `<polyline points="${points}" fill="none" stroke="var(--accent)" stroke-width="1.5" />` : ''}
+        ${dots}
+      </svg>
+    </div>`;
+}
+
 function renderHeatmapHTML() {
   const activity = getActivity();
   const DAYS = 90;
@@ -1295,6 +1336,26 @@ function advanceQuiz() {
   }
 }
 
+// Quiz history is stored per-exam in localStorage so users see their
+// progression without it polluting the cross-device sync payload.
+const QUIZ_HISTORY_KEY = (exam) => `quizHistory.${exam}`;
+const QUIZ_HISTORY_LIMIT = 50;
+function loadQuizHistory(exam = state.exam) {
+  try {
+    const raw = localStorage.getItem(QUIZ_HISTORY_KEY(exam));
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+function recordQuizHistory(entry) {
+  const exam = entry.exam || state.exam;
+  const list = loadQuizHistory(exam);
+  // Idempotency: skip if we already recorded a session with this startedAt
+  if (list.some(e => e.startedAt === entry.startedAt)) return;
+  list.push(entry);
+  if (list.length > QUIZ_HISTORY_LIMIT) list.splice(0, list.length - QUIZ_HISTORY_LIMIT);
+  try { localStorage.setItem(QUIZ_HISTORY_KEY(exam), JSON.stringify(list)); } catch {}
+}
+
 function renderQuizResults() {
   clearTimeout(_quizAutoAdvance);
   const session = state.quizSession;
@@ -1306,6 +1367,20 @@ function renderQuizResults() {
   const elapsed = Math.round((Date.now() - session.startedAt) / 1000);
   const elapsedStr = elapsed < 60 ? `${elapsed}s` : `${Math.floor(elapsed / 60)}m ${elapsed % 60}s`;
   const passed = score >= 75;
+
+  // Persist this quiz to history (idempotent — keyed on startedAt so re-renders
+  // of the results screen don't double-record). Capped at 50 to keep
+  // localStorage tiny.
+  recordQuizHistory({
+    startedAt: session.startedAt,
+    finishedAt: Date.now(),
+    total,
+    correct,
+    skipped,
+    score,
+    elapsedSec: elapsed,
+    exam: state.exam,
+  });
 
   const wrong = session.questions.filter(bq => {
     const a = session.answers[bq.id];
@@ -1363,6 +1438,10 @@ function renderReading() {
   $('#mode-title').textContent = 'Reading';
   $('#progress-hud').textContent = '';
   const objs = Object.keys(state.conceptFixes).sort((a, b) => {
+    // Pin priority sections (mnemonics, troubleshooting) to the top in a fixed
+    // order. Numeric OBJ X.Y keys sort numerically below them.
+    const PRIORITY = { mnemonics: -2, troubleshooting: -1 };
+    if (a in PRIORITY || b in PRIORITY) return (PRIORITY[a] ?? 99) - (PRIORITY[b] ?? 99);
     const [am, an] = a.split('.').map(Number);
     const [bm, bn] = b.split('.').map(Number);
     return am - bm || an - bn;
@@ -1377,17 +1456,66 @@ function renderReading() {
     return;
   }
 
-  const html = objs.map(obj => {
+  const sectionId = obj => `obj-${obj.replace(/\./g, '-')}`;
+  const tocHtml = `
+    <nav class="reading-toc" aria-label="Reading sections">
+      <div class="reading-toc-title">Sections</div>
+      <ol class="reading-toc-list">
+        ${objs.map(obj => {
+          const fix = state.conceptFixes[obj];
+          // Numeric keys (4.2, 5.5, …) get an "OBJ" prefix; named priority
+          // keys (mnemonics, troubleshooting) get title-cased on their own.
+          const isNumeric = /^\d+\.\d+$/.test(obj);
+          const label = isNumeric ? `OBJ ${obj}` : obj.charAt(0).toUpperCase() + obj.slice(1);
+          return `<li><a href="#${sectionId(obj)}" class="reading-toc-link" data-toc="${escapeHtml(obj)}">
+            <span class="reading-toc-num">${escapeHtml(label)}</span>
+            <span class="reading-toc-text">${escapeHtml(fix.title)}</span>
+          </a></li>`;
+        }).join('')}
+      </ol>
+    </nav>`;
+
+  const sectionsHtml = objs.map(obj => {
     const fix = state.conceptFixes[obj];
+    const isNumeric = /^\d+\.\d+$/.test(obj);
+    const heading = isNumeric ? `OBJ ${obj} — ${escapeHtml(fix.title)}` : escapeHtml(fix.title);
     return `
-      <div class="obj-section">
-        <h2>OBJ ${obj} — ${escapeHtml(fix.title)}</h2>
+      <section class="obj-section" id="${sectionId(obj)}" aria-labelledby="${sectionId(obj)}-h">
+        <h2 id="${sectionId(obj)}-h">${heading}</h2>
         ${fix.content}
-      </div>
+        <a href="#" class="reading-top-link" aria-label="Back to top">↑ Top</a>
+      </section>
     `;
   }).join('');
 
-  $('#main').innerHTML = `<div class="reading-list">${html}</div>`;
+  $('#main').innerHTML = `
+    <div class="reading-wrap">
+      ${tocHtml}
+      <div class="reading-list">${sectionsHtml}</div>
+    </div>`;
+
+  // Smooth scroll for the "back to top" links and TOC anchors. Keeps URL hash
+  // in sync so users can deep-link to a section.
+  $$('.reading-toc-link').forEach(a => {
+    a.addEventListener('click', (e) => {
+      const target = $(a.getAttribute('href'));
+      if (!target) return;
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      history.replaceState(null, '', a.getAttribute('href'));
+    });
+  });
+  $$('.reading-top-link').forEach(a => {
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      history.replaceState(null, '', '#');
+    });
+  });
+  // If the URL already has a hash, jump there after layout settles
+  if (location.hash && location.hash.startsWith('#obj-')) {
+    setTimeout(() => $(location.hash)?.scrollIntoView({ behavior: 'instant', block: 'start' }), 50);
+  }
 }
 
 //─── MODE: STATS ─────────────────────────────────────────────
@@ -1610,6 +1738,8 @@ function renderStats() {
           </span>
         </div>
       </div>
+
+      ${renderQuizHistoryHTML()}
 
       <h3 class="stats-h numeric-ui">Last 90 days</h3>
       <div class="numeric-ui">${renderHeatmapHTML()}</div>
