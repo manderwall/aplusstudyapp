@@ -626,10 +626,11 @@ function MASCOT(mood) {
 }
 
 const DB_NAME = 'aplus-study';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const STORE = 'progress';
 const OSTORE = 'overrides';   // per-question edits: { [qid]: {options?, image?, images?} }
 const DSTORE = 'drawings';    // per-question scratchpad canvas PNGs (base64 dataURL)
+const RSTORE = 'reference';   // user's reference book PDF (per-exam): { blob, name, size, pageCount, uploadedAt, pageText? }
 
 function openDB() {
   return new Promise((resolve, reject) => {
@@ -639,6 +640,7 @@ function openDB() {
       if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
       if (!db.objectStoreNames.contains(OSTORE)) db.createObjectStore(OSTORE);
       if (!db.objectStoreNames.contains(DSTORE)) db.createObjectStore(DSTORE);
+      if (!db.objectStoreNames.contains(RSTORE)) db.createObjectStore(RSTORE);
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
@@ -1003,6 +1005,7 @@ function renderStudy() {
           ${renderYourPickHTML(q)}
           ${formatExplanation(q.explanation)}
           ${renderPretestMissHTML(q)}
+          ${renderLearnMoreHTML(q)}
         </div>
         ${renderRatingButtonsHTML(q)}
       ` : `
@@ -1033,6 +1036,17 @@ function attachStudyEvents(q) {
   const prev = $('#prev-btn');
   if (prev) prev.addEventListener('click', () => { prevQuestion(); });
   attachOptionEvents(() => renderStudy());
+  // Reference-book "Open p. N" — opens the in-app PDF viewer at the page.
+  $$('.learn-more-btn.pageref').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const page = parseInt(btn.dataset.pageRef, 10);
+      if (page) openReferenceViewer(page);
+    });
+  });
+  // Auto-suggest: if a reference book is loaded AND indexed, look up a
+  // probable page for this question and offer "Suggest p. N · Set" UI.
+  // Lazy / async so it doesn't block the render.
+  hydrateLearnMoreSuggest(q);
   // Arm the rate buttons AND the rate-header (containing the Back button) for
   // 500ms after they appear. Until then `.rate-row-arming` disables pointer
   // events via CSS — even a ghost-click can't land on a rate or Back button.
@@ -1850,6 +1864,8 @@ function renderStats() {
         }).join('')}
       </div>
 
+      ${renderReferenceBookHTML()}
+
       <h3 class="stats-h">Options</h3>
       <div class="settings-panel">
         <div class="settings-row" title="Smart: due cards first, then new, then learning — randomized within each tier. Random: pure shuffle. Sequential: pretest order.">
@@ -1996,6 +2012,8 @@ function renderStats() {
       setMode('study');
     });
   });
+  // Reference book panel — async hydration of the upload status + actions
+  hydrateReferenceBookPanel();
   // Accessibility: checkboxes (contrast / motion / haptics / autosync / anxiety / shake)
   $$('input[type="checkbox"][data-pref]').forEach(input => {
     input.addEventListener('change', async (e) => {
@@ -2355,6 +2373,61 @@ function renderImageHTML(q) {
 // already convey this visually but a text callout sticks better). Returns
 // '' if the user revealed without picking (the recommended-rating "Hard"
 // already covers that case).
+// "Learn more" footer below the explanation. Three sources, in order:
+//   1. Manual page ref the user set on this card (state.overrides[id].pageRef)
+//   2. Auto-suggest if the reference book has been indexed
+//   3. Generic "search the web" link as a last-resort fallback
+// Renders nothing if there's no PDF and the question has no learnMore URL.
+function renderLearnMoreHTML(q) {
+  const parts = [];
+  const pageRef = pageRefFor(q.id);
+  if (pageRef) {
+    parts.push(`<button type="button" class="learn-more-btn pageref" data-page-ref="${pageRef}" data-qid="${escapeHtml(q.id)}">📖 Open p. ${pageRef}</button>`);
+  } else {
+    // Placeholder — JS will swap in a "Suggest p. N" button if the book is
+    // loaded + indexed and we find a match. Hidden by default.
+    parts.push(`<span class="learn-more-suggest" data-qid="${escapeHtml(q.id)}" hidden></span>`);
+  }
+  if (q.learnMore) {
+    const links = Array.isArray(q.learnMore) ? q.learnMore : [{ url: q.learnMore, label: 'Reference' }];
+    for (const l of links) {
+      const url = typeof l === 'string' ? l : l.url;
+      const label = typeof l === 'string' ? 'Reference' : (l.label || 'Reference');
+      if (url) parts.push(`<a class="learn-more-btn external" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">🔗 ${escapeHtml(label)}</a>`);
+    }
+  }
+  // Generic search fallback — uses the question's correct answer as the
+  // search term so results stay topical without exposing the question text.
+  const searchTerm = q.correct_short || (q.correct_picks || [])[0];
+  if (searchTerm) {
+    const url = `https://duckduckgo.com/?q=${encodeURIComponent('CompTIA A+ ' + searchTerm)}`;
+    parts.push(`<a class="learn-more-btn external" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">🔎 Search the web</a>`);
+  }
+  if (parts.length === 0) return '';
+  return `<div class="learn-more">${parts.join('')}</div>`;
+}
+
+// Async sidekick to renderLearnMoreHTML — populates the "Suggest p. N"
+// affordance after the card renders, so we don't block on IDB / PDF.js.
+async function hydrateLearnMoreSuggest(q) {
+  const slot = document.querySelector(`.learn-more-suggest[data-qid="${q.id}"]`);
+  if (!slot) return;
+  const rec = await getReferenceBook();
+  if (!rec || !rec.pageText) return;  // no book or not yet indexed
+  const page = suggestPageForQuestion(q, rec.pageText);
+  if (!page) return;
+  slot.innerHTML = `
+    <button type="button" class="learn-more-btn suggest" data-suggest-page="${page}" data-qid="${escapeHtml(q.id)}">
+      📖 Suggest p. ${page}
+    </button>`;
+  slot.hidden = false;
+  slot.querySelector('button')?.addEventListener('click', () => {
+    setPageRefFor(q.id, page);
+    toast(`Set p. ${page} for this card.`, 'success');
+    if (state.mode === 'study') renderStudy();
+  });
+}
+
 function renderYourPickHTML(q) {
   if (isMultipleAnswer(q)) {
     const picked = state.selectedOptions || [];
@@ -3188,6 +3261,294 @@ function installKeyboard() {
 // Click any question image to open it in a fullscreen overlay. Tap or
 // press Escape to close. Delegated handler so it works for cards that
 // haven't been rendered yet at install time.
+//─── REFERENCE PDF (personal study aid) ──────────────────────
+// User uploads their own legally-acquired textbook PDF once via Settings.
+// Stored entirely in IndexedDB on this device — never sent to a server,
+// never bundled with the app. Each question can have a `pageRef` override
+// pointing to the relevant page; "Open page" launches an in-app PDF.js
+// viewer. Cleared with a single click in Settings.
+const PDF_KEY = (exam) => `book.${exam}`;
+let _pdfjsModule = null;
+async function loadPdfJs() {
+  if (_pdfjsModule) return _pdfjsModule;
+  // Fixed pinned version, ESM build. The first load lands in the SW
+  // cache so subsequent loads are offline.
+  const url = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/build/pdf.min.mjs';
+  const workerUrl = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/build/pdf.worker.min.mjs';
+  const mod = await import(/* @vite-ignore */ url);
+  mod.GlobalWorkerOptions.workerSrc = workerUrl;
+  _pdfjsModule = mod;
+  return mod;
+}
+
+async function getReferenceBook(exam = state.exam) {
+  return idbGet(RSTORE, PDF_KEY(exam));
+}
+async function setReferenceBook(exam, record) {
+  return idbPut(RSTORE, PDF_KEY(exam), record);
+}
+async function clearReferenceBook(exam = state.exam) {
+  const db = await openDB();
+  return new Promise(resolve => {
+    const tx = db.transaction(RSTORE, 'readwrite');
+    tx.objectStore(RSTORE).delete(PDF_KEY(exam));
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => resolve();
+  });
+}
+
+// Triggered by the file input. Stores raw bytes + parses page count.
+async function uploadReferenceBook(file) {
+  if (!file || !file.type.includes('pdf')) {
+    toast('Please pick a PDF file.', 'error');
+    return;
+  }
+  if (file.size > 200 * 1024 * 1024) {
+    toast('That PDF is over 200 MB — try a smaller one.', 'error');
+    return;
+  }
+  toast('Loading PDF…', 'info', 2000);
+  const buf = await file.arrayBuffer();
+  let pageCount = null;
+  try {
+    const pdfjs = await loadPdfJs();
+    const doc = await pdfjs.getDocument({ data: buf.slice(0) }).promise;
+    pageCount = doc.numPages;
+  } catch (e) {
+    toast('Could not read that PDF: ' + (e.message || 'unknown error'), 'error');
+    return;
+  }
+  await setReferenceBook(state.exam, {
+    name: file.name,
+    size: file.size,
+    uploadedAt: Date.now(),
+    pageCount,
+    blob: buf,
+  });
+  toast(`Reference book loaded — ${pageCount} pages.`, 'success');
+  if (state.mode === 'stats') renderStats();
+}
+
+// Modal viewer: renders one page of the PDF onto a canvas. Prev/Next
+// navigate; Escape or tap-outside closes.
+async function openReferenceViewer(initialPage = 1) {
+  const rec = await getReferenceBook();
+  if (!rec) {
+    toast('No reference book loaded yet — upload one in Stats → Reference book.', 'info');
+    return;
+  }
+  if (document.getElementById('pdf-viewer-overlay')) return;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'pdf-viewer-overlay';
+  overlay.className = 'pdf-viewer-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-label', 'Reference book viewer');
+  overlay.innerHTML = `
+    <div class="pdf-viewer-frame">
+      <div class="pdf-viewer-toolbar">
+        <button type="button" class="pdf-nav" data-pdf-nav="prev" aria-label="Previous page">←</button>
+        <span class="pdf-pageinfo" aria-live="polite">page <strong class="pdf-cur">…</strong> / ${rec.pageCount}</span>
+        <input type="number" class="pdf-jump" min="1" max="${rec.pageCount}" value="${initialPage}" aria-label="Jump to page">
+        <button type="button" class="pdf-nav" data-pdf-nav="next" aria-label="Next page">→</button>
+        <button type="button" class="pdf-viewer-close" aria-label="Close viewer">✕</button>
+      </div>
+      <div class="pdf-viewer-canvas-wrap">
+        <canvas class="pdf-viewer-canvas" aria-label="Reference page"></canvas>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const canvas = overlay.querySelector('.pdf-viewer-canvas');
+  const curEl = overlay.querySelector('.pdf-cur');
+  const jumpEl = overlay.querySelector('.pdf-jump');
+
+  let current = Math.min(Math.max(1, initialPage | 0), rec.pageCount);
+  let pdfDoc;
+  try {
+    const pdfjs = await loadPdfJs();
+    pdfDoc = await pdfjs.getDocument({ data: rec.blob.slice(0) }).promise;
+  } catch (e) {
+    toast('Could not open PDF: ' + (e.message || 'unknown'), 'error');
+    overlay.remove();
+    return;
+  }
+
+  const renderPage = async (n) => {
+    current = Math.min(Math.max(1, n), pdfDoc.numPages);
+    curEl.textContent = current;
+    jumpEl.value = current;
+    const page = await pdfDoc.getPage(current);
+    // Scale to fit the viewer width, with a sensible cap for huge displays.
+    const wrap = overlay.querySelector('.pdf-viewer-canvas-wrap');
+    const targetW = Math.min(wrap.clientWidth - 16, 1100);
+    const baseViewport = page.getViewport({ scale: 1 });
+    const scale = targetW / baseViewport.width;
+    const viewport = page.getViewport({ scale });
+    canvas.width = Math.floor(viewport.width);
+    canvas.height = Math.floor(viewport.height);
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+  };
+
+  const close = () => {
+    document.removeEventListener('keydown', onKey);
+    overlay.remove();
+  };
+  const onKey = (e) => {
+    if (e.key === 'Escape') close();
+    else if (e.key === 'ArrowLeft') renderPage(current - 1);
+    else if (e.key === 'ArrowRight') renderPage(current + 1);
+  };
+  overlay.querySelector('.pdf-viewer-close').addEventListener('click', close);
+  overlay.querySelector('[data-pdf-nav="prev"]').addEventListener('click', () => renderPage(current - 1));
+  overlay.querySelector('[data-pdf-nav="next"]').addEventListener('click', () => renderPage(current + 1));
+  jumpEl.addEventListener('change', (e) => renderPage(parseInt(e.target.value, 10) || 1));
+  // Click outside the frame closes (matches image-zoom behavior)
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+  document.addEventListener('keydown', onKey);
+
+  await renderPage(current);
+}
+
+// Build a per-page text index for the loaded book so each question can be
+// matched against its likely page. Cached on the IDB record so it only
+// runs once per upload. Big books take a few seconds.
+async function indexReferenceBook(progressCb = () => {}) {
+  const rec = await getReferenceBook();
+  if (!rec) { toast('Upload a PDF first.', 'error'); return null; }
+  if (rec.pageText) return rec.pageText;
+  const pdfjs = await loadPdfJs();
+  const doc = await pdfjs.getDocument({ data: rec.blob.slice(0) }).promise;
+  const pages = [];
+  for (let i = 1; i <= doc.numPages; i++) {
+    const p = await doc.getPage(i);
+    const text = await p.getTextContent();
+    pages.push(text.items.map(it => it.str).join(' ').toLowerCase());
+    progressCb(i, doc.numPages);
+  }
+  rec.pageText = pages;
+  await setReferenceBook(state.exam, rec);
+  return pages;
+}
+
+// For one question, find the page with the highest density of matches
+// for the correct answer + key terms from the question text.
+function suggestPageForQuestion(q, pageText) {
+  if (!Array.isArray(pageText) || pageText.length === 0) return null;
+  // Term set: correct_short + correct_picks + content words from the question.
+  // Skip stop-words and short tokens.
+  const STOP = new Set(['the','a','an','of','in','on','for','with','to','from','at','by','and','or','is','are','was','were','be','been','this','that','these','those','it','its','as','if','than','then','which','what','when','where','why','how','you','your','their','they','have','has','had','can','could','should','would','will','do','does','did','not','no','yes','any','all','some','one','two','three','four','five','more','most','least','best','worst','use','using','used','about','into','onto','also','only','very','just','than','they','via','per','not','vs','vs.','than'].concat(['comptia']));
+  const tokens = (s) => (s || '').toLowerCase()
+    .replace(/[^a-z0-9.\-+\s]/g, ' ')
+    .split(/\s+/)
+    .filter(t => t.length >= 3 && !STOP.has(t));
+  const ans = [q.correct_short, ...(q.correct_picks || [])].filter(Boolean).map(s => s.toLowerCase());
+  const qTokens = tokens(q.question);
+  // Heavily weight the answer terms; question terms are supporting context.
+  const scored = pageText.map((text, idx) => {
+    let score = 0;
+    for (const a of ans) {
+      if (!a) continue;
+      // exact phrase match is gold
+      const phraseHits = text.split(a).length - 1;
+      score += phraseHits * 8;
+    }
+    for (const t of qTokens) {
+      if (text.includes(t)) score += 1;
+    }
+    return { page: idx + 1, score };
+  });
+  scored.sort((a, b) => b.score - a.score);
+  // Require a non-trivial score so we don't suggest a random page for
+  // questions that don't actually appear in the textbook.
+  if (scored[0].score < 3) return null;
+  return scored[0].page;
+}
+
+// Returns the manual or auto-suggested pageRef for a question.
+function pageRefFor(qid) {
+  return state.overrides[qid]?.pageRef || null;
+}
+function setPageRefFor(qid, page) {
+  if (!state.overrides[qid]) state.overrides[qid] = {};
+  if (page) state.overrides[qid].pageRef = page;
+  else delete state.overrides[qid].pageRef;
+  saveOverrides();
+}
+
+// Settings panel block: file picker + status + actions. The actual
+// upload state is async (lives in IDB) so we render a placeholder and
+// hydrate it after fetch.
+function renderReferenceBookHTML() {
+  return `
+    <h3 class="stats-h">Reference book</h3>
+    <p class="stats-sub">Optional — upload your own reference PDF (e.g. an A+ study book) and the app can link individual cards to specific pages. The PDF stays in this browser, never uploaded to a server.</p>
+    <div class="settings-panel">
+      <div class="settings-row">
+        <span id="ref-status">Checking…</span>
+        <span class="settings-actions">
+          <input type="file" id="ref-upload" accept="application/pdf,.pdf" hidden>
+          <button class="small-btn" id="ref-pick">📖 Upload PDF</button>
+          <button class="small-btn" id="ref-index" hidden>Index for auto-suggest</button>
+          <button class="small-btn" id="ref-clear" hidden>Clear</button>
+        </span>
+      </div>
+      <div class="settings-row" id="ref-suggest-row" hidden>
+        <span class="settings-meta">Auto-suggest can match each question to its likely page in your PDF. Indexing extracts the text once and caches it.</span>
+      </div>
+    </div>
+  `;
+}
+
+// Called after Stats renders to populate the async parts.
+async function hydrateReferenceBookPanel() {
+  const status = document.getElementById('ref-status');
+  if (!status) return;
+  const rec = await getReferenceBook();
+  const pickBtn = document.getElementById('ref-pick');
+  const upload = document.getElementById('ref-upload');
+  const clearBtn = document.getElementById('ref-clear');
+  const indexBtn = document.getElementById('ref-index');
+  const suggestRow = document.getElementById('ref-suggest-row');
+
+  if (rec) {
+    const sizeMB = (rec.size / 1024 / 1024).toFixed(1);
+    const indexed = rec.pageText ? ' · indexed' : '';
+    status.innerHTML = `<strong>${escapeHtml(rec.name)}</strong> · ${rec.pageCount} pages · ${sizeMB} MB${indexed}`;
+    pickBtn.textContent = '📖 Replace';
+    clearBtn.hidden = false;
+    indexBtn.hidden = false;
+    indexBtn.textContent = rec.pageText ? 'Re-index' : 'Index for auto-suggest';
+    suggestRow.hidden = false;
+  } else {
+    status.textContent = 'No PDF loaded';
+  }
+
+  pickBtn.onclick = () => upload.click();
+  upload.onchange = (e) => {
+    const f = e.target.files?.[0];
+    if (f) uploadReferenceBook(f);
+  };
+  clearBtn.onclick = async () => {
+    if (!confirm('Remove the reference PDF from this device?')) return;
+    await clearReferenceBook();
+    toast('Reference book removed.', 'success');
+    renderStats();
+  };
+  indexBtn.onclick = async () => {
+    indexBtn.disabled = true;
+    indexBtn.textContent = 'Indexing 0%';
+    await indexReferenceBook((cur, total) => {
+      indexBtn.textContent = `Indexing ${Math.round((cur / total) * 100)}%`;
+    });
+    toast('Indexed — auto-suggest is live.', 'success');
+    indexBtn.disabled = false;
+    renderStats();
+  };
+}
+
 function installImageZoom() {
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('.q-image-zoom');
