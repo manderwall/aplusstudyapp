@@ -60,7 +60,7 @@ const state = {
   questions: [],
   conceptFixes: {},
   mode: 'study',
-  filter: { obj: null, due: false, weakest: false, search: '' },
+  filter: { obj: null, due: false, weakest: false, hard: false, search: '' },
   currentIndex: 0,
   revealed: false,
   selectedOption: null,  // option text the user tapped pre-reveal (single-answer Qs)
@@ -75,6 +75,7 @@ const state = {
   progress: {},    // { questionId: { status, seen, correct, lastSeen, ease, interval, due, updated_at } }
   overrides: {},   // { questionId: { options?, image?, images? } } — user-added content
   quizSession: null,  // null | { questions, answers, current, startedAt, done }
+  cram: null,         // null | { active, startedAt, queue: id[], originalCount, cleared }
   // Active study session (Pomodoro-style)
   session: null,   // { endsAt, startCards, ratedIds: Set<string>, length }
   _sessionTick: null,  // setInterval id for HUD refresh
@@ -371,6 +372,68 @@ function _drainToasts() {
 }
 
 //─── SESSION (Pomodoro or card-count micro-goal) ─────────────
+// Cram session: walks through every card in the current filter once, then
+// loops anything you rated Again/Hard back through the queue until cleared.
+// Designed for crunch-time studying when you have a deadline and can't trust
+// the spaced-repetition queue to surface unseen cards.
+function startCram() {
+  const qs = state.questions.slice();
+  // Shuffle once for variety
+  const seed = (Date.now() & 0x7fffffff) || 1;
+  const rng = (function (s) { let t = s >>> 0; return () => { t += 0x6D2B79F5; let r = t; r = Math.imul(r ^ (r >>> 15), r | 1); r ^= r + Math.imul(r ^ (r >>> 7), r | 61); return ((r ^ (r >>> 14)) >>> 0) / 4294967296; }; })(seed);
+  const queue = qs.map(q => q.id);
+  for (let i = queue.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [queue[i], queue[j]] = [queue[j], queue[i]];
+  }
+  state.cram = {
+    active: true,
+    startedAt: Date.now(),
+    queue,
+    originalCount: queue.length,
+    cleared: 0,
+  };
+  // Cram clears all filters and uses sequential order so the queue is the
+  // single source of truth for what's shown.
+  state.filter = { obj: null, due: false, weakest: false, hard: false, search: '' };
+  state.currentIndex = 0;
+  state.history = [];
+  state._orderCache = null;
+  setMode('study');
+  toast(`Cram started — ${queue.length} cards. Rate Good/Easy to clear; Again/Hard loops them back.`, 'info', 4500);
+}
+function endCram(announce = true) {
+  if (!state.cram) return;
+  const { cleared, originalCount } = state.cram;
+  state.cram = null;
+  state.currentIndex = 0;
+  state._orderCache = null;
+  if (announce) toast(`Cram ended — cleared ${cleared} of ${originalCount}.`, 'success');
+  if (state.mode === 'study') renderStudy();
+}
+// Called from recordRating when cram is active. Updates the queue based on
+// the user's rating: Good/Easy clears the card, Again/Hard sends it to the
+// back. When the queue empties, we celebrate and end the session.
+function onCramRated(qid, rate) {
+  if (!state.cram || !state.cram.active) return;
+  const q = state.cram.queue;
+  const idx = q.indexOf(qid);
+  if (idx === -1) return;  // already cleared on a previous pass
+  q.splice(idx, 1);
+  if (rate === 'good' || rate === 'easy') {
+    state.cram.cleared++;
+  } else {
+    q.push(qid);
+  }
+  if (q.length === 0) {
+    celebrate({ intensity: 80, duration: 2200 });
+    setTimeout(() => {
+      toast(`🎉 Cram complete — all ${state.cram.originalCount} cards cleared!`, 'success', 5000);
+      endCram(false);
+    }, 200);
+  }
+}
+
 function startSession({ minutes = 0, targetCards = 0, rapid = false } = {}) {
   state.session = {
     endsAt: minutes > 0 ? Date.now() + minutes * MIN : null,
@@ -780,12 +843,23 @@ function weakestIdSet() {
 }
 
 function filteredQuestions() {
+  // Cram session: queue is the source of truth, ignore filters + cache
+  if (state.cram?.active) {
+    const byId = Object.fromEntries(state.questions.map(q => [q.id, q]));
+    return state.cram.queue.map(id => byId[id]).filter(Boolean);
+  }
   let qs = state.questions.slice();
   if (state.filter.obj) qs = qs.filter(q => q.obj === state.filter.obj);
   if (state.filter.due) qs = qs.filter(isDue);
   if (state.filter.weakest) {
     const ids = weakestIdSet();
     qs = qs.filter(q => ids.has(q.id));
+  }
+  if (state.filter.hard) {
+    qs = qs.filter(q => {
+      const r = state.progress[q.id]?.lastRating;
+      return r === 'hard' || r === 'again';
+    });
   }
   if (state.filter.search) {
     const q = state.filter.search.toLowerCase();
@@ -797,7 +871,7 @@ function filteredQuestions() {
   // Order the deck via orderDeck() unless explicitly sequential. Cached per
   // (filter × order × deck-identity) so Prev/Next don't reshuffle mid-session.
   if (state._orderSeed === null) state._orderSeed = (Date.now() & 0x7fffffff) || 1;
-  const key = `${state.order}|${state.filter.obj}|${state.filter.due}|${state.filter.weakest}|${state.filter.search}|${qs.length}|${qs.map(x=>x.id).join(',').slice(0,40)}`;
+  const key = `${state.order}|${state.filter.obj}|${state.filter.due}|${state.filter.weakest}|${state.filter.hard}|${state.filter.search}|${qs.length}|${qs.map(x=>x.id).join(',').slice(0,40)}`;
   if (!state._orderCache || state._orderCache.key !== key) {
     const list = orderDeck(qs, state.progress, { mode: state.order, seed: state._orderSeed });
     state._orderCache = { key, list };
@@ -810,6 +884,13 @@ function dueCount() {
 }
 function weakestCount() {
   return weakestIdSet().size;
+}
+// Cards the user most recently rated Hard or Again — the "still shaky" set.
+function hardCount() {
+  return state.questions.filter(q => {
+    const r = state.progress[q.id]?.lastRating;
+    return r === 'hard' || r === 'again';
+  }).length;
 }
 
 function formatRemaining(ms) {
@@ -837,6 +918,10 @@ function updateHUD() {
     else if (days <= 30){ label = `${short} · ${days}d`; hud.classList.add('hud-soon'); }
     else                { label = `${short} · ${days}d`; }
     parts.push(`⏳ ${label}`);
+  }
+  if (state.cram?.active) {
+    const remaining = state.cram.queue.length;
+    parts.push(`🔥 Cram ${state.cram.cleared}/${state.cram.originalCount}` + (remaining ? ` · ${remaining} to go` : ''));
   }
   if (state.session) {
     if (state.session.endsAt) parts.push(`⏱ ${formatRemaining(state.session.endsAt - Date.now())}`);
@@ -1022,11 +1107,13 @@ function recordRating(qid, rate) {
   p.seen++;
   p.lastSeen = Date.now();
   p.updated_at = p.lastSeen;
+  p.lastRating = rate;  // remembered for the "Hard" filter chip
   if (rate === 'good' || rate === 'easy') p.correct++;
   schedule(p, rate);
   haptic(10);
   saveProgress();
   onCardRated(qid);
+  onCramRated(qid, rate);
 }
 
 function nextQuestion() {
@@ -1902,6 +1989,7 @@ function renderStats() {
       state.filter.obj = btn.dataset.objDrill;
       state.filter.due = false;
       state.filter.weakest = false;
+      state.filter.hard = false;
       state.filter.search = '';
       state.currentIndex = 0;
       state._orderCache = null;
@@ -1995,6 +2083,11 @@ function filterBarHTML() {
               title="Your lowest-accuracy cards">
         ${state.filter.weakest ? '✓ ' : ''}🎯 Weakest (${weakestCount()})
       </button>
+      <button class="hard-chip ${state.filter.hard ? 'active' : ''}" data-filter="hard"
+              aria-pressed="${state.filter.hard ? 'true' : 'false'}"
+              title="Cards you most recently rated Hard or Again — drill these before the exam">
+        ${state.filter.hard ? '✓ ' : ''}🔥 Hard (${hardCount()})
+      </button>
       <button class="${state.filter.obj === null ? 'active' : ''}" data-filter="all"
               aria-pressed="${state.filter.obj === null ? 'true' : 'false'}">All (${state.questions.length})</button>
       ${objs.map(o => `
@@ -2012,6 +2105,7 @@ function renderFilterBar() {
     const f = btn.dataset.filter;
     if (f === 'due')          state.filter.due = !state.filter.due;
     else if (f === 'weakest') state.filter.weakest = !state.filter.weakest;
+    else if (f === 'hard')    state.filter.hard = !state.filter.hard;
     else if (f === 'all')     state.filter.obj = null;
     else                      state.filter.obj = f;
     state.currentIndex = 0;
@@ -2233,8 +2327,11 @@ function renderImageHTML(q) {
   // Support both `image` (single path) and `images` (array)
   const imgs = q.images || (q.image ? [q.image] : []);
   if (imgs.length > 0) {
+    // Wrapped in a button so the image is keyboard-focusable and
+    // screen-readers announce "tap to enlarge". The click handler is
+    // attached in installImageZoom() at app init time.
     return `<div class="q-images">${imgs.map(src =>
-      `<img src="${escapeHtml(src)}" alt="Question figure" loading="lazy">`
+      `<button type="button" class="q-image-zoom" aria-label="Enlarge question figure"><img src="${escapeHtml(src)}" alt="Question figure" loading="lazy"></button>`
     ).join('')}</div>`;
   }
   // PBQ with no image → make it clear it's missing
@@ -2531,6 +2628,9 @@ function setMode(mode) {
     t.classList.toggle('active', active);
     t.setAttribute('aria-selected', active ? 'true' : 'false');
   });
+  // Hold the screen on while the user is actively studying or quizzing.
+  if (mode === 'study' || mode === 'quiz') acquireWakeLock();
+  else releaseWakeLock();
   if (mode === 'study') renderStudy();
   else if (mode === 'quiz') renderQuiz();
   else if (mode === 'reading') renderReading();
@@ -2760,6 +2860,7 @@ function speakCard(q, { revealed } = {}) {
   speech.speakingForQ = q.id;
   window.speechSynthesis.speak(utter);
   syncListenButton(true);
+  acquireWakeLock();
 }
 
 // Wire up the persistent top-bar Listen button (works in study + quiz modes,
@@ -3083,6 +3184,80 @@ function installKeyboard() {
   });
 }
 
+//─── IMAGE ZOOM (PBQ figures) ────────────────────────────────
+// Click any question image to open it in a fullscreen overlay. Tap or
+// press Escape to close. Delegated handler so it works for cards that
+// haven't been rendered yet at install time.
+function installImageZoom() {
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.q-image-zoom');
+    if (!btn) return;
+    e.preventDefault();
+    const img = btn.querySelector('img');
+    if (!img) return;
+    openImageZoom(img.src, img.alt);
+  });
+}
+function openImageZoom(src, alt) {
+  // Bail if one is already open (rapid double-tap)
+  if (document.getElementById('img-zoom-overlay')) return;
+  const overlay = document.createElement('div');
+  overlay.id = 'img-zoom-overlay';
+  overlay.className = 'img-zoom-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-label', 'Enlarged figure — tap or press Escape to close');
+  overlay.innerHTML = `
+    <button type="button" class="img-zoom-close" aria-label="Close enlarged figure">✕</button>
+    <img src="${src}" alt="${escapeHtml(alt || '')}">
+  `;
+  const close = () => {
+    document.removeEventListener('keydown', onKey);
+    overlay.remove();
+  };
+  const onKey = (e) => { if (e.key === 'Escape') close(); };
+  overlay.addEventListener('click', close);
+  document.addEventListener('keydown', onKey);
+  document.body.appendChild(overlay);
+  overlay.querySelector('.img-zoom-close')?.focus();
+}
+
+//─── SCREEN WAKE LOCK ────────────────────────────────────────
+// Keeps the screen on during study/quiz/read-aloud. Browsers auto-release
+// the wake lock when the tab goes hidden, so we re-acquire on visibility
+// change. No-op on browsers without the API (Safari < 16.4, etc.).
+const wake = { lock: null, wanted: false };
+async function acquireWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  wake.wanted = true;
+  if (wake.lock) return;
+  try {
+    wake.lock = await navigator.wakeLock.request('screen');
+    wake.lock.addEventListener('release', () => { wake.lock = null; });
+  } catch {
+    // Permission denied or NotAllowed (Safari requires a user gesture for
+    // the first request); we'll retry next time the user does something.
+  }
+}
+function releaseWakeLock() {
+  wake.wanted = false;
+  if (wake.lock) wake.lock.release().catch(() => {});
+  wake.lock = null;
+}
+function installWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && wake.wanted) acquireWakeLock();
+  });
+  // Acquire on first user interaction in study/quiz so we satisfy the
+  // user-gesture requirement on browsers that need one.
+  const onFirst = () => {
+    if (state.mode === 'study' || state.mode === 'quiz') acquireWakeLock();
+  };
+  document.addEventListener('pointerdown', onFirst, { once: true, passive: true });
+  document.addEventListener('keydown', onFirst, { once: true });
+}
+
 //─── INPUT MODE DETECTION ────────────────────────────────────
 // Mark <html> with .is-touch the first time we see a touch event so CSS
 // can hide keyboard-hint chips on touch-only devices. We don't toggle it
@@ -3335,7 +3510,17 @@ function buildTodaysPlan() {
   const tasks = [];
 
   // Primary: what will hurt the most if skipped today?
-  if (due > 0) {
+  // Within 3 days of the exam, override everything with a cram-mode push:
+  // due-queue scheduling can't catch up that late and the user benefits
+  // most from a single full-deck loop with everything they got wrong
+  // cycled back until cleared.
+  if (daysLeft !== null && daysLeft >= 0 && daysLeft <= 3) {
+    tasks.push({
+      id: 'cram', icon: '🔥', title: 'Cram mode — every card, looping wrongs',
+      sub: `Exam in ${daysLeft === 0 ? '<24 hours' : daysLeft + ' day' + (daysLeft === 1 ? '' : 's')}. Walks through all ${state.questions.length} cards once; anything you rate Again/Hard cycles back until you clear it.`,
+      primary: true,
+    });
+  } else if (due > 0) {
     tasks.push({
       id: 'due', icon: '📚', title: 'Clear your due queue',
       sub: `${due} card${due === 1 ? '' : 's'} due right now. Spaced repetition works when you show up.`,
@@ -3483,12 +3668,13 @@ function showWelcome() {
     if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
       previouslyFocused.focus();
     }
-    const studyActions = new Set(['due', 'weakest', 'micro', 'session15', 'rapid']);
+    const studyActions = new Set(['due', 'weakest', 'micro', 'session15', 'rapid', 'cram']);
     if (action === 'due')            { state.filter.due = true; setMode('study'); }
     else if (action === 'weakest')   { state.filter.weakest = true; setMode('study'); }
     else if (action === 'micro')     { startSession({ targetCards: 5 }); setMode('study'); }
     else if (action === 'session15') { startSession({ minutes: 15 }); setMode('study'); }
     else if (action === 'rapid')     { startSession({ minutes: 1, rapid: true }); setMode('study'); }
+    else if (action === 'cram')      { startCram(); }
     else if (action === 'reading')   { setMode('reading'); }
     else if (action === 'stats')     { setMode('stats'); }
     // For Study-focused actions, auto-enter Focus Mode: hides tab bar, filter
@@ -3573,6 +3759,8 @@ async function init() {
   installKeyboard();
   installListenButton();
   installInputModeDetection();
+  installWakeLock();
+  installImageZoom();
   setMode('study');
 
   // Show welcome on first visit (or every load until user ticks "don't show again").

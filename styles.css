@@ -2151,3 +2151,88 @@ html.is-touch .kbd-hint { display: none; }
   height: 110px;
   display: block;
 }
+
+/*─── Image-zoom overlay (PBQ figure tap-to-enlarge) ──────────*/
+.img-zoom-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 1400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  cursor: zoom-out;
+  animation: imgZoomFade 0.15s ease-out;
+}
+@keyframes imgZoomFade { from { opacity: 0; } to { opacity: 1; } }
+.img-zoom-overlay img {
+  max-width: 100%;
+  max-height: calc(100vh - 80px);
+  object-fit: contain;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+}
+.img-zoom-close {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  right: 16px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+button.q-image-zoom {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: zoom-in;
+  display: block;
+  width: 100%;
+}
+button.q-image-zoom img { width: 100%; height: auto; display: block; border-radius: 8px; }
+button.q-image-zoom:hover img { box-shadow: 0 0 0 2px var(--accent); }
+
+/*─── Print stylesheet — cram the mnemonics page onto paper ───
+   When the user prints from Reading mode, hide everything except
+   the section content. The mnemonics tables become a 1-2 page
+   reference they can review right before walking into the exam. */
+@media print {
+  body { background: #fff !important; color: #000 !important; }
+  header, #tabbar, .filter-bar, .search-row, .reading-toc,
+  #help-btn, #focus-btn, #theme-btn, #listen-btn, #toast-host,
+  .reading-top-link, .scratchpad-wrap, .skip-link,
+  .img-zoom-overlay { display: none !important; }
+  #main { padding: 0 !important; max-width: 100% !important; }
+  .reading-wrap { display: block !important; }
+  .reading-list { max-width: 100% !important; }
+  .obj-section {
+    page-break-inside: avoid;
+    margin-bottom: 24px;
+    padding: 0 !important;
+    background: #fff !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+  .obj-section h2 { page-break-after: avoid; font-size: 16pt; margin-top: 0; }
+  .obj-section h3 { page-break-after: avoid; font-size: 12pt; }
+  .obj-section table { page-break-inside: avoid; font-size: 9pt; width: 100%; }
+  .obj-section table th, .obj-section table td {
+    border: 1px solid #999 !important;
+    padding: 4px 6px;
+    color: #000 !important;
+  }
+  .obj-section p, .obj-section li { font-size: 10pt; line-height: 1.35; color: #000 !important; }
+  .obj-section code { font-size: 9pt; background: #eee !important; color: #000 !important; }
+  .obj-section strong { color: #000 !important; }
+  /* If the user prints from Study/Quiz, just print the visible card */
+  .card { box-shadow: none !important; border-color: #ccc !important; page-break-inside: avoid; }
+}
