@@ -351,7 +351,7 @@ flag on the extract scripts to target a future deck other than Core 2.
 
 ## Known limitations
 
-- **PBQ images aren't always populated.** PBQs reference motherboard diagrams, router dashboards, etc. The app shows a clear yellow banner for PBQs without images and tells you where to drop the file.
-- **Interactive (drag/order/match) PBQs aren't supported.** PBQ support is image-based; ordering/matching-style PBQs are out of scope.
+- **No Performance-Based Questions (PBQs) yet.** The real Core 2 exam includes a few image / simulation PBQs (motherboard diagrams, router admin screens, etc.). The renderer is image-ready (drop a question with `qtype: "PBQ"` and `image:` / `images:` path and it just works), but the current bank doesn't include any. Tracked in the project handoff.
+- **Interactive (drag/order/match) PBQs aren't supported.** PBQ support is image + multiple-choice; drag-to-reorder interactions are out of scope.
 - **Cross-device sync is manual.** iPhone and iPad keep separate progress unless you wire up Supabase (see "Cloud sync" below) and tap Push/Pull. Stats → Export/Import works as a no-backend alternative.
 
