@@ -1256,7 +1256,6 @@ function renderQuizCard() {
   const sinceAns = Date.now() - (state._revealedAt || 0);
   const quizCardClass = 'card card-fresh' + (answered && sinceAns < 800 ? ' card-just-revealed' : '');
   $('#main').innerHTML = `
-    ${filterBarHTML()}
     <div class="${quizCardClass}">
       <div class="quiz-progress-bar" role="progressbar" aria-valuenow="${current}" aria-valuemin="0" aria-valuemax="${total}" aria-label="Question ${current + 1} of ${total}">
         <div class="quiz-progress-fill" style="width:${pct}%"></div>
@@ -1272,7 +1271,8 @@ function renderQuizCard() {
       ${actionBar}
     </div>
   `;
-  renderFilterBar();
+  // (no renderFilterBar here — the filter+search bar is intentionally
+  // hidden during an active quiz; chips don't apply to a fixed session.)
 
   $('.quiz-abandon-btn')?.addEventListener('click', () => {
     if (Object.keys(session.answers).length === 0 || confirm('End this quiz? Your progress will be lost.')) {
