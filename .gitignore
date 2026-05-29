@@ -1,0 +1,37 @@
+# ─── Personal study materials (NEVER commit these) ──────────
+# Reference PDFs, study books, etc. — copyrighted; belong on your
+# device only. Use the in-app Stats → Reference book upload instead.
+*.pdf
+*.epub
+*.mobi
+*.docx
+*.xlsx
+*.pptx
+
+# ─── Local secrets / environment ────────────────────────────
+.env
+.env.*
+!.env.example
+*.secret
+*.key
+secrets.json
+
+# ─── Local data dumps / exports ─────────────────────────────
+# (the app's Stats → Export downloads JSON; don't commit those)
+aplus-study-progress-*.json
+aplus-study-overrides-*.json
+
+# ─── OS + editor junk ───────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# ─── Build / install artifacts ──────────────────────────────
+node_modules/
+dist/
+build/
+*.log

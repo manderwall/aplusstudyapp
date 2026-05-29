@@ -1,0 +1,21 @@
+{
+  "name": "aplusstudyapp",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Offline-first PWA for the CompTIA A+ Core 2 (220-1202) exam — vanilla JS, zero runtime deps.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/manderwall/aplusstudyapp.git"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "validate": "node scripts/validate-questions.mjs data/core2/questions.json",
+    "check": "node --check app.js && node --check lib.mjs && node --check crypto.mjs && node --check sw.js",
+    "serve": "python3 -m http.server 8000"
+  }
+}
