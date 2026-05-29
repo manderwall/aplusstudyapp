@@ -1,0 +1,2528 @@
+/* A+ Study — iPad + iPhone stylesheet */
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+/* ─── Accessibility primitives ─── */
+/* Skip link: visually hidden until a keyboard user focuses it. */
+.skip-link {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -200%);
+  z-index: 2000;
+  background: var(--accent, #5aa6ff);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 0 0 10px 10px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.15s;
+}
+.skip-link:focus {
+  transform: translate(-50%, 0);
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* Single consistent focus ring for keyboard users across all interactive
+   elements. Uses :focus-visible so mouse clicks don't leave a ring. */
+:where(button, a, input, textarea, select, [role="tab"], [role="radio"], [tabindex]):focus-visible {
+  outline: 2px solid var(--accent, #5aa6ff);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+
+:root {
+  --bg: #0f0f0f;
+  --surface: #1a1a1a;
+  --surface-2: #252525;
+  --border: #333;
+  --text: #f0f0f0;
+  --text-dim: #a0a0a0;
+  --accent: #5aa6ff;
+  --good: #4ade80;
+  --warn: #fbbf24;
+  --bad: #f87171;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --surface-2: #f0f0f0;
+    --border: #d0d0d0;
+    --text: #1a1a1a;
+    --text-dim: #606060;
+  }
+}
+
+/* ─── Accessibility / preference overrides ─── */
+
+/* Text size scales the whole app via the `zoom` CSS property — every
+   font-size in this stylesheet is in px (no rem/em), so the simpler
+   `font-size: 15px` on html doesn't propagate. zoom proportionally
+   scales font, padding, margin, dimensions — supported by all current
+   evergreen browsers (Chromium, Safari, Firefox 126+). */
+html[data-size="small"]  body { zoom: 0.9; }
+html[data-size="medium"] body { zoom: 1; }
+html[data-size="large"]  body { zoom: 1.15; }
+html[data-size="xlarge"] body { zoom: 1.35; }
+
+/* Dyslexia-friendly fonts (loaded as @font-face below). Form controls
+   don't inherit font-family by default — force them to so the chosen
+   font applies to buttons, inputs, textareas, selects too. */
+html[data-font="atkinson"] body { font-family: 'Atkinson Hyperlegible', -apple-system, system-ui, sans-serif; }
+html[data-font="opendyslexic"] body { font-family: 'OpenDyslexic', -apple-system, system-ui, sans-serif; letter-spacing: 0.02em; }
+html[data-font="atkinson"] button,
+html[data-font="atkinson"] input,
+html[data-font="atkinson"] textarea,
+html[data-font="atkinson"] select,
+html[data-font="opendyslexic"] button,
+html[data-font="opendyslexic"] input,
+html[data-font="opendyslexic"] textarea,
+html[data-font="opendyslexic"] select { font-family: inherit; letter-spacing: inherit; }
+
+/* Reduced motion respects OS setting by default; explicit override forces it off too */
+html[data-motion="reduced"] *,
+html[data-motion="reduced"] *::before,
+html[data-motion="reduced"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Anxiety Mode: hide numeric progress feedback, keep streak + timer */
+html[data-anxiety="on"] .numeric-ui,
+html[data-anxiety="on"] .card-meta .tag.numeric {
+  display: none !important;
+}
+
+/* Focus mode: hides chrome so only the card is visible */
+html[data-focus] #tabbar,
+html[data-focus] .filter-bar,
+html[data-focus] .search-row,
+html[data-focus] .card-meta,
+html[data-focus] #progress-hud { display: none !important; }
+html[data-focus] header { border-bottom: none; }
+html[data-focus] #main { padding-top: 12px; }
+
+/* Segmented control for S/M/L/XL + font picker */
+.seg-control {
+  display: inline-flex;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.seg-control button {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 500;
+  border-right: 1px solid var(--border);
+}
+.seg-control button:last-child { border-right: none; }
+.seg-control button.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Fonts (Atkinson Hyperlegible, OpenDyslexic) are loaded dynamically by JS
+   only when the user selects them — keeps the default path network-free. */
+
+/* Manual theme overrides (higher specificity than :root + @media) */
+html[data-theme="dark"] {
+  --bg: #0f0f0f;
+  --surface: #1a1a1a;
+  --surface-2: #252525;
+  --border: #333;
+  --text: #f0f0f0;
+  --text-dim: #a0a0a0;
+}
+html[data-theme="light"] {
+  --bg: #fafafa;
+  --surface: #ffffff;
+  --surface-2: #f0f0f0;
+  --border: #d0d0d0;
+  --text: #1a1a1a;
+  --text-dim: #606060;
+}
+
+/* High contrast — declared AFTER theme overrides so it wins source-order when
+   both attributes are set. Forces near-pure-black + brighter text for both
+   auto and dark themes; mirrors for predictability. */
+html[data-contrast="high"] {
+  --bg:        #000;
+  --surface:   #111;
+  --surface-2: #1c1c1c;
+  --border:    #777;
+  --text:      #ffffff;
+  --text-dim:  #dddddd;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.5;
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  padding-top: var(--safe-top);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+}
+
+header {
+  padding: 16px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+header h1 {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#progress-hud {
+  color: var(--text-dim);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+#progress-hud.hud-soon    { color: var(--warn); }
+#progress-hud.hud-urgent  { color: var(--bad); font-weight: 600; }
+#progress-hud.hud-past    { color: var(--text-dim); font-style: italic; }
+
+/* Exam-date inputs (native date picker styled to match settings rows) */
+.exam-date-input {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 140px;
+}
+.exam-date-input:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+.settings-meta.hud-soon   { color: var(--warn); font-weight: 500; }
+.settings-meta.hud-urgent { color: var(--bad); font-weight: 600; }
+.settings-meta.hud-past   { color: var(--text-dim); font-style: italic; }
+
+#theme-btn, #focus-btn, #help-btn, #listen-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  color: var(--text);
+  transition: transform 0.1s, background 0.1s;
+}
+#theme-btn:active, #focus-btn:active, #help-btn:active, #listen-btn:active { transform: scale(0.92); }
+#theme-btn:hover, #focus-btn:hover, #help-btn:hover, #listen-btn:hover { background: var(--border); }
+#listen-btn[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ─── Welcome / landing overlay ─── */
+#welcome-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+}
+.welcome-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  max-width: 560px;
+  width: 100%;
+  padding: 32px 28px 28px;
+  position: relative;
+  color: var(--text);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+.welcome-card h2 {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+  padding-right: 36px; /* clear the absolute close button */
+}
+.welcome-card .welcome-sub {
+  color: var(--text-dim);
+  margin-bottom: 24px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+.welcome-card .welcome-intro {
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+.welcome-card .welcome-countdown {
+  display: block;
+  color: var(--text-dim);
+  font-size: 14px;
+  margin-bottom: 20px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+}
+button.welcome-countdown-cta {
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 500;
+}
+button.welcome-countdown-cta:hover { background: var(--surface); border-color: var(--accent); }
+.welcome-card .welcome-countdown.hud-soon   { color: var(--warn); border-color: var(--warn); background: rgba(251, 191, 36, 0.08); }
+.welcome-card .welcome-countdown.hud-urgent { color: var(--bad); border-color: var(--bad); background: rgba(248, 113, 113, 0.12); font-weight: 600; }
+.welcome-card .welcome-countdown.hud-past   { font-style: italic; }
+.welcome-more { gap: 8px !important; }
+.welcome-more .welcome-btn {
+  padding: 8px 12px;
+  font-size: 13px;
+  flex-direction: row;
+  gap: 6px;
+}
+.welcome-card h3 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+  font-weight: 600;
+  margin: 12px 0 10px;
+}
+.welcome-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface-2);
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.welcome-close:hover { background: var(--border); color: var(--text); }
+
+.welcome-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.welcome-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 14px 16px;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 15px;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  transition: background 0.1s, border-color 0.1s, transform 0.08s;
+}
+.welcome-btn:hover { background: var(--surface); border-color: var(--accent); }
+.welcome-btn:active { transform: scale(0.99); }
+.welcome-btn.primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.welcome-btn.primary:hover { background: var(--accent); filter: brightness(1.1); }
+.wbtn-title { font-weight: 600; font-size: 15px; }
+.wbtn-sub { font-size: 12px; opacity: 0.75; }
+
+.welcome-help {
+  margin: 16px 0;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border-radius: 10px;
+}
+.welcome-help summary {
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  user-select: none;
+}
+.welcome-help[open] summary { margin-bottom: 8px; }
+.welcome-help ul { list-style: none; padding: 0; }
+.welcome-help li {
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 6px;
+  color: var(--text-dim);
+}
+.welcome-help strong { color: var(--text); }
+.welcome-help kbd {
+  background: var(--border);
+  color: var(--text);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 11px;
+  border: 1px solid var(--surface);
+}
+
+.welcome-dismiss {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+/* Small screens: welcome takes full width */
+@media (max-width: 600px) {
+  #welcome-overlay { padding: 12px; }
+  .welcome-card { padding: 24px 20px 20px; }
+  .welcome-card h2 { font-size: 20px; }
+  .welcome-btn { padding: 12px 14px; }
+}
+
+#main {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 24px;
+}
+
+/* Navigation bar */
+#tabbar {
+  display: flex;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding-bottom: var(--safe-bottom);
+  flex-shrink: 0;
+}
+
+.tab {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 13px;
+  padding: 10px 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.15s;
+  min-height: 60px;
+}
+
+.tab:active { opacity: 0.6; }
+.tab.active { color: var(--accent); }
+.tab-icon { font-size: 22px; }
+.tab-label { font-size: 11px; font-weight: 500; }
+
+/* Card (used by Study + Quiz modes) */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 28px;
+  max-width: 760px;
+  margin: 0 auto 20px;
+  position: relative;
+}
+/* Subtle fade-and-lift when a new card loads. Only applied when the question
+   actually changes — reveal-toggle rerenders keep the existing card in place. */
+.card.card-fresh {
+  animation: cardEnter 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes cardEnter {
+  0%   { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+html[data-motion="reduced"] .card.card-fresh { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .card.card-fresh { animation: none; }
+}
+
+.card-meta {
+  display: flex;
+  gap: 12px;
+  color: var(--text-dim);
+  font-size: 13px;
+  margin-bottom: 16px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.card-meta .tag {
+  background: var(--surface-2);
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+
+.card-meta .tag.pbq { background: var(--warn); color: #000; }
+.card-meta .tag.obj { color: var(--accent); }
+.card-meta .tag.edited { background: var(--good); color: #000; }
+/* Internal question source IDs (P6 Q6, c2-os-003, yt001, etc.) are useful
+   for the maintainer's debugging but noise for a beginner. Hidden by
+   default. The Edit button still surfaces the question identity. */
+.card-meta .tag.tag-source-id { display: none; }
+.card-meta .tag.repeats {
+  background: var(--bad);
+  color: #fff;
+  font-weight: 700;
+}
+
+/* Pretest-miss footnote — appears inside the green explanation block on reveal
+   as a small labeled note about what you originally picked on the pretest(s).
+   Deliberately quiet: separator line above, muted text, so it doesn't compete
+   with the primary answer/explanation content. */
+.pretest-miss {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.55;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+}
+.pretest-miss-label {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.pretest-miss-item {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.card-meta .tag-btn {
+  border: 1px dashed var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-left: auto;
+}
+.card-meta .tag-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+.card-question {
+  font-size: 19px;
+  line-height: 1.55;
+  margin-bottom: 20px;
+}
+.card-question .q-para {
+  margin: 0 0 12px;
+}
+.card-question .q-para:last-child {
+  margin-bottom: 0;
+}
+
+.card-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.card-section .label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.card-section.right .label { color: var(--good); }
+
+.card-section p {
+  line-height: 1.6;
+}
+
+/* Explanation lead paragraph: states the answer, made scannable */
+.card-section .expl-lead {
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--text);
+}
+.card-section .expl-para {
+  font-size: 15px;
+  color: var(--text-dim);
+  margin-top: 10px;
+}
+.card-section .expl-para strong {
+  color: var(--text);
+  background: none;
+  padding: 0;
+}
+
+.card-section .expl-tip {
+  background: rgba(90, 166, 255, 0.08);
+  border-left: 3px solid var(--accent);
+  padding: 10px 14px;
+  border-radius: 0 10px 10px 0;
+  margin-top: 16px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.card-section .expl-tip strong {
+  display: block;
+  color: var(--accent);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  background: none;
+  padding: 0;
+}
+.card-section .expl-tip p {
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.card-section strong {
+  background: rgba(90, 166, 255, 0.15);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+/* Buttons */
+.btn-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+/* Pre-reveal nav row: keep Prev/Skip as compact arrow buttons so all three
+   fit on one line on a 414px viewport. The full-width Skip wrap was making
+   it easy to mis-tap during a Reveal press because finger drift moved the
+   touchend down onto the wrapped Skip button. */
+.btn-row-nav { flex-wrap: nowrap; }
+.btn-row-nav button.action.nav-btn {
+  flex: 0 0 56px;
+  min-width: 56px;
+  width: 56px;
+  padding: 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+.btn-row-nav button.action.primary { flex: 1; min-width: 0; }
+
+button.action {
+  flex: 1;
+  min-height: 52px;
+  min-width: 140px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.1s, background 0.1s;
+  padding: 0 16px;
+}
+button.action:active { transform: scale(0.97); }
+button.action.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+button.action.good { background: var(--good); color: #000; border-color: var(--good); }
+button.action.warn { background: var(--warn); color: #000; border-color: var(--warn); }
+button.action.bad { background: var(--bad); color: #fff; border-color: var(--bad); }
+
+/* One-time SRS explainer above the rating row on the first reveal */
+.rate-hint {
+  position: relative;
+  margin: 18px 0 8px;
+  padding: 12px 36px 12px 14px;
+  background: rgba(90, 166, 255, 0.08);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+}
+.rate-hint strong { color: var(--accent); }
+.rate-hint em { font-style: normal; font-weight: 600; }
+.rate-hint-dismiss {
+  position: absolute;
+  top: 6px; right: 6px;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 12px;
+  font-family: inherit;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 6px;
+}
+.rate-hint-dismiss:hover { background: var(--surface-2); color: var(--text); }
+
+/* SM-2 rating row (Again / Hard / Good / Easy) shown after reveal in Study. */
+.rate-header {
+  margin-top: 24px;
+  margin-bottom: 10px;
+  text-align: center;
+  position: relative;
+}
+.rate-back-btn {
+  position: absolute;
+  left: 0;
+  top: -2px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+.rate-back-btn:hover { background: var(--surface-2); color: var(--text); border-color: var(--text-dim); }
+.rate-back-btn:active { transform: scale(0.96); }
+.rate-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.2px;
+}
+.rate-sub {
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.rate-sub em {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: capitalize;
+}
+.btn-row.rate-row {
+  margin-top: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+/* Disarmed for 500ms after reveal so a ghost-click from the original tap
+   on Reveal/Skip can't land on a rate button. JS removes this class on a
+   timer; see attachStudyEvents in app.js. */
+.btn-row.rate-row.rate-row-arming,
+.rate-header.rate-row-arming {
+  pointer-events: none;
+}
+.btn-row.rate-row.rate-row-arming { opacity: 0.85; }
+
+/* Catch-all post-Reveal lock. For 500ms after Reveal fires, ALL clicks on
+   the card itself are dropped — a ghost-click, double-tap, accidental
+   swipe-end-on-button, or any other touch artifact simply cannot navigate
+   the card. The class is set in renderStudy and removed via setTimeout. */
+.card.card-just-revealed { pointer-events: none; }
+button.action.rate-btn {
+  flex: unset;
+  min-width: 0;
+  min-height: 64px;
+  padding: 8px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  opacity: 0.72;
+  position: relative;
+}
+button.action.rate-btn .rate-label {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+button.action.rate-btn .rate-interval {
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.85;
+  letter-spacing: 0.2px;
+}
+button.action.rate-btn.recommended {
+  opacity: 1;
+  box-shadow: 0 0 0 3px var(--accent), 0 4px 12px rgba(0, 0, 0, 0.18);
+  transform: translateY(-1px);
+}
+button.action.rate-btn.recommended::after {
+  content: '★';
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 11px;
+  color: var(--accent);
+  background: var(--surface);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 1px var(--accent);
+}
+@media (max-width: 480px) {
+  .btn-row.rate-row { gap: 6px; }
+  button.action.rate-btn { min-height: 58px; padding: 6px 4px; }
+  button.action.rate-btn .rate-label { font-size: 14px; }
+  button.action.rate-btn .rate-interval { font-size: 10px; }
+}
+
+/* Scratch pad (Apple Pencil) */
+.scratchpad-wrap {
+  max-width: 760px;
+  margin: 0 auto 20px;
+}
+
+.scratchpad-controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+.scratchpad-controls button {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  min-height: 36px;
+}
+.scratchpad-controls button.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.scratchpad {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 100%;
+  height: 280px;
+  touch-action: none;
+  display: block;
+}
+
+/* Overlay mode: canvas on top of the question image for annotation */
+.scratchpad-wrap.overlay { max-width: 760px; }
+.scratchpad-overlay-container {
+  position: relative;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  line-height: 0;
+}
+.scratchpad-underlay {
+  width: 100%;
+  height: auto;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.scratchpad.overlay-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+/* Subtle hint above the overlay explaining what to do.
+   The `[data-revealed]` attribute on <html> is set by app.js once the user
+   hits Reveal, so the "before revealing" nudge disappears post-answer. */
+.scratchpad-wrap.overlay::before {
+  content: '✏️ Annotate directly on the image — label components from memory before revealing';
+  display: block;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  font-style: italic;
+}
+html[data-revealed] .scratchpad-wrap.overlay::before {
+  content: '✏️ Annotations are saved per card — keep your notes or tap Clear to start fresh.';
+}
+
+/* Brief fade-in when switching between Study / Quiz / Reading / Stats so
+   the mode swap doesn't feel like a hard cut. Reduced motion turns it off. */
+#main.mode-entering { animation: mode-fade-in 200ms ease-out; }
+@keyframes mode-fade-in {
+  from { opacity: 0.4; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+html[data-motion="reduced"] #main.mode-entering { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  #main.mode-entering { animation: none; }
+}
+
+/* Search + filter chip strip collapses for fresh users (see filterBarHTML).
+   Closed: a small inline "🔍 Filter & search" toggle. Open: behaves
+   exactly like the legacy always-visible bar. The browser handles the
+   open/close with a native <details>; no JS needed. */
+.filter-collapse { margin-bottom: 10px; }
+.filter-collapse > summary.filter-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--text-dim);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+.filter-collapse > summary.filter-summary::-webkit-details-marker { display: none; }
+.filter-collapse > summary.filter-summary:hover { color: var(--text); border-color: var(--accent); }
+.filter-collapse[open] > summary.filter-summary { margin-bottom: 10px; }
+.filter-summary-pill {
+  font-size: 11px; padding: 2px 8px; border-radius: 999px;
+  background: var(--accent); color: #fff;
+}
+
+/* Search bar (above filter bar in Study/Quiz) */
+.search-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+.search-row input[type="search"] {
+  flex: 1;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.search-row input[type="search"]:focus {
+  border-color: var(--accent);
+}
+
+/* Filter bar */
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  padding: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+.filter-bar button {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 36px;
+  flex-shrink: 0;
+}
+.filter-bar button.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.filter-bar button.due-chip {
+  border-color: var(--good);
+  color: var(--good);
+  font-weight: 600;
+}
+.filter-bar button.due-chip.active {
+  background: var(--good);
+  color: #000;
+  border-color: var(--good);
+}
+.filter-bar button.weakest-chip {
+  border-color: var(--warn);
+  color: var(--warn);
+  font-weight: 600;
+}
+.filter-bar button.weakest-chip.active {
+  background: var(--warn);
+  color: #000;
+  border-color: var(--warn);
+}
+
+/* Question images (for PBQs when available) */
+.q-images {
+  margin: 4px 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.q-images img {
+  max-width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.q-image-missing {
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid var(--warn);
+  color: var(--text);
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 4px 0 18px;
+}
+.q-image-missing strong { display: block; margin-bottom: 4px; color: var(--warn); }
+.q-image-missing code {
+  background: var(--surface-2);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 12px;
+}
+
+/* Multiple-choice option list. Each row is a flex layout of:
+   [letter badge] [option text, flex:1] [status icon, only after reveal].
+   Distinct visual states drive everything — no prefix text labels like
+   "Your pick ·" to clutter the reveal. */
+.ma-hint {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.q-options {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.q-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s, opacity 0.2s;
+  min-height: 56px;
+}
+.q-option:hover:not(.correct):not(.wrong):not(.revealed-other) {
+  border-color: var(--accent);
+  background: var(--surface);
+}
+.q-option:active { transform: scale(0.98); }
+
+.q-letter {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 15px;
+  display: grid;
+  place-items: center;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  font-variant-numeric: tabular-nums;
+}
+.q-text {
+  flex: 1;
+  line-height: 1.45;
+  font-size: 16px;
+  color: var(--text);
+  min-width: 0;
+}
+.q-status {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  font-weight: 800;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+/* Pre-reveal picked state — blue accent on both the row and the letter badge */
+.q-option.picked {
+  border-color: var(--accent);
+  background: rgba(90, 166, 255, 0.12);
+}
+.q-option.picked .q-letter {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* Post-reveal: correct answer — green row, green letter badge, ✓ on the right */
+.q-option.correct {
+  border-color: var(--good);
+  background: rgba(74, 222, 128, 0.14);
+}
+.q-option.correct .q-letter {
+  background: var(--good);
+  border-color: var(--good);
+  color: #08210f;
+}
+.q-option.correct .q-status { opacity: 1; color: var(--good); }
+.q-option.correct .q-status::before { content: '✓'; }
+
+/* Post-reveal: your wrong pick — red row, red letter badge, ✕ on the right */
+.q-option.wrong {
+  border-color: var(--bad);
+  background: rgba(248, 113, 113, 0.14);
+}
+.q-option.wrong .q-letter {
+  background: var(--bad);
+  border-color: var(--bad);
+  color: #fff;
+}
+.q-option.wrong .q-status { opacity: 1; color: var(--bad); }
+.q-option.wrong .q-status::before { content: '✕'; }
+
+/* Post-reveal: the other options (not correct, not your pick) fade back so
+   the eye goes straight to the two that matter. */
+.q-option.revealed-other {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* Reading mode */
+.reading-wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Sticky table of contents — appears as a banner at the top on mobile,
+   a sidebar on desktop (≥ 900px, see media query below). */
+.reading-toc {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  font-size: 13px;
+}
+.reading-toc-title {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+.reading-toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 4px 12px;
+}
+.reading-toc-link {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 0;
+  color: var(--text);
+  text-decoration: none;
+  border-radius: 4px;
+}
+.reading-toc-link:hover { color: var(--accent); }
+.reading-toc-num {
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.reading-toc-text {
+  color: var(--text-dim);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* "Back to top" link inside each section */
+.reading-top-link {
+  display: inline-block;
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--text-dim);
+  text-decoration: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+}
+.reading-top-link:hover { color: var(--accent); border-color: var(--accent); }
+
+/* Anchor scroll offset so the section heading doesn't disappear under
+   the fixed header when jumping via TOC. */
+.obj-section { scroll-margin-top: 12px; }
+
+@media (min-width: 900px) {
+  .reading-wrap {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 28px;
+    align-items: start;
+  }
+  .reading-toc {
+    position: sticky;
+    top: 12px;
+    margin-bottom: 0;
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
+  }
+  .reading-toc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .reading-toc-link {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    padding: 6px 8px;
+  }
+  .reading-toc-link:hover { background: var(--surface-2); }
+  .reading-toc-text { font-size: 11px; max-width: 100%; }
+}
+
+.reading-list {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.reading-list .obj-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+}
+
+.reading-list h2 {
+  font-size: 20px;
+  margin-bottom: 12px;
+  color: var(--accent);
+}
+
+.reading-list h3 {
+  font-size: 16px;
+  margin-top: 16px;
+  margin-bottom: 8px;
+  color: var(--warn);
+}
+
+.reading-list p, .reading-list li {
+  margin-bottom: 10px;
+  line-height: 1.6;
+}
+
+.reading-list ul {
+  padding-left: 20px;
+  margin-bottom: 12px;
+}
+
+.reading-list table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 14px;
+}
+
+.reading-list th, .reading-list td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.reading-list th {
+  background: var(--surface-2);
+  font-weight: 600;
+}
+
+.reading-list code {
+  background: var(--surface-2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 14px;
+}
+
+/* Stats */
+.stats-wrap {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.stats-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  flex: 1;
+  min-width: 140px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+
+.stat-card .number {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-card .label {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+.obj-bar-list {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px 4px;
+}
+
+/* obj-bar is now an interactive button: tap to drill that objective in Study */
+button.obj-bar {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  gap: 12px;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  border-radius: 6px;
+  transition: background 0.1s;
+}
+button.obj-bar:hover { background: var(--surface-2); }
+button.obj-bar:active { transform: scale(0.99); }
+button.obj-bar:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+button.obj-bar .obj-label {
+  min-width: 70px;
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+button.obj-bar .bar-track {
+  flex: 1;
+  height: 8px;
+  background: var(--surface-2);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+button.obj-bar .bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--good) 100%);
+  border-radius: 4px;
+  transition: width 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+/* Color-tier the bar so weak objectives stand out without reading numbers */
+button.obj-bar[data-tier="low"] .bar-fill { background: var(--bad); }
+button.obj-bar[data-tier="mid"] .bar-fill { background: var(--warn); }
+button.obj-bar[data-tier="high"] .bar-fill { background: var(--good); }
+
+button.obj-bar .obj-count {
+  min-width: 50px;
+  text-align: right;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+button.obj-bar .obj-acc {
+  min-width: 42px;
+  text-align: right;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Stats subtitle under section headings */
+.stats-sub {
+  margin: -8px 0 10px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+/*─── Exam-readiness banner ───────────────────────────────────*/
+.readiness {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 2px solid;
+  margin-bottom: 16px;
+}
+.readiness-pct {
+  font-size: 32px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.readiness-text { flex: 1; }
+.readiness-verdict { font-weight: 600; color: var(--text); margin-bottom: 3px; }
+.readiness-meta { font-size: 13px; color: var(--text-dim); line-height: 1.45; }
+.readiness-high { border-color: var(--good); background: rgba(74, 222, 128, 0.08); }
+.readiness-high .readiness-pct { color: var(--good); }
+.readiness-mid  { border-color: var(--warn); background: rgba(251, 191, 36, 0.08); }
+.readiness-mid  .readiness-pct { color: var(--warn); }
+.readiness-low  { border-color: var(--bad);  background: rgba(248, 113, 113, 0.08); }
+.readiness-low  .readiness-pct { color: var(--bad); }
+
+/*─── "Your pick" callout in the explanation ──────────────────*/
+.your-pick {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin: 0 0 14px;
+  border-left: 4px solid;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.your-pick-label { font-weight: 700; }
+.your-pick-value { color: var(--text); }
+.your-pick-correct {
+  flex-basis: 100%;
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.your-pick-correct::before { content: '→ '; color: var(--good); font-weight: 700; }
+.your-pick-right {
+  background: rgba(74, 222, 128, 0.10);
+  border-left-color: var(--good);
+}
+.your-pick-right .your-pick-label { color: var(--good); }
+.your-pick-wrong {
+  background: rgba(248, 113, 113, 0.10);
+  border-left-color: var(--bad);
+}
+.your-pick-wrong .your-pick-label { color: var(--bad); }
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-dim);
+}
+.empty-state h3 { font-size: 18px; margin-bottom: 8px; color: var(--text); }
+.empty-state p { max-width: 360px; margin: 0 auto; line-height: 1.5; }
+
+/* Utilities */
+.hidden { display: none !important; }
+
+/* Reset button */
+.reset-btn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 13px;
+  text-decoration: underline;
+  padding: 12px;
+  display: block;
+  margin: 20px auto;
+  cursor: pointer;
+}
+
+/* Stats headings */
+.stats-h {
+  margin: 20px 0 12px;
+  font-size: 13px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+/* Settings panel (Stats page) */
+.settings-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 15px;
+}
+.settings-row:last-child { border-bottom: none; }
+.settings-row input[type="checkbox"] {
+  width: 44px;
+  height: 26px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.settings-row input[type="checkbox"]::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: var(--text-dim);
+  border-radius: 50%;
+  transition: left 0.15s, background 0.15s;
+}
+.settings-row input[type="checkbox"]:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.settings-row input[type="checkbox"]:checked::after {
+  left: 20px;
+  background: #fff;
+}
+.settings-actions { display: flex; gap: 8px; }
+
+.small-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 500;
+}
+.small-btn:active { transform: scale(0.97); }
+.small-btn:hover { background: var(--border); }
+
+.settings-count {
+  background: var(--surface-2);
+  color: var(--text-dim);
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  margin-left: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.settings-stack { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+.settings-vrow { display: flex; flex-direction: column; gap: 4px; }
+.settings-vlabel { font-size: 12px; color: var(--text-dim); }
+.settings-vrow input {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.settings-vrow input:focus { border-color: var(--accent); }
+.settings-meta { font-size: 12px; color: var(--text-dim); }
+
+/* ─── Help & Setup overlay ─── */
+/* Uses the same modal scaffolding as #welcome-overlay so behavior is
+   consistent (centered card on a dimmed page, ESC to close). */
+#help-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.55);
+  overflow-y: auto;
+}
+.help-card { max-width: 640px; padding-bottom: 24px; }
+.help-section {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  background: var(--surface-2);
+}
+.help-section > summary {
+  cursor: pointer;
+  user-select: none;
+  padding: 12px 14px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text);
+  list-style: none;
+}
+.help-section > summary::-webkit-details-marker { display: none; }
+.help-section > summary::before {
+  content: '▸';
+  display: inline-block;
+  width: 14px;
+  color: var(--text-dim);
+  transition: transform 0.15s;
+}
+.help-section[open] > summary::before { transform: rotate(90deg); }
+.help-body {
+  padding: 4px 16px 14px 32px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text);
+}
+.help-body p { margin-bottom: 8px; }
+.help-body ol, .help-body ul { margin: 4px 0 10px 18px; }
+.help-body li { margin-bottom: 4px; }
+.help-body code,
+.help-body pre {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 12px;
+}
+.help-body code { padding: 1px 5px; }
+.help-body pre {
+  display: block;
+  padding: 10px;
+  margin: 6px 0;
+  overflow-x: auto;
+  white-space: pre;
+  line-height: 1.4;
+}
+.help-body kbd {
+  background: var(--border);
+  color: var(--text);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 11px;
+  border: 1px solid var(--surface);
+}
+.help-body a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.help-kbd-table { width: 100%; border-collapse: collapse; }
+.help-kbd-table td { padding: 4px 8px 4px 0; vertical-align: top; }
+.help-kbd-table td:first-child { white-space: nowrap; width: 1%; }
+.help-footer { margin-top: 16px; }
+
+/* Welcome dialog's "open setup & help" footer link */
+.welcome-help-link {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  line-height: 1.5;
+}
+.welcome-help-link a { color: var(--accent); text-decoration: none; font-weight: 500; }
+.welcome-help-link a:hover { text-decoration: underline; }
+
+/* Stats — friendly empty state for fresh users (seen === 0) */
+.stats-empty {
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  padding: 24px 20px;
+  text-align: center;
+  color: var(--text-dim);
+}
+.stats-empty-title { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.stats-empty-sub { font-size: 14px; line-height: 1.5; max-width: 480px; margin: 0 auto; }
+
+/* Stats → Share this app */
+.share-panel { padding: 16px; }
+.share-row { display: flex; gap: 16px; align-items: center; }
+.share-qr {
+  width: 160px; height: 160px; flex: 0 0 160px;
+  background: #fff; padding: 8px; border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.share-text { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.share-blurb { font-size: 14px; color: var(--text); line-height: 1.4; }
+button.share-copy {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--surface-2); color: var(--text);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 12px; font-family: inherit; font-size: 14px;
+  cursor: pointer; align-self: flex-start;
+}
+button.share-copy:hover { border-color: var(--accent); }
+button.share-copy.share-copied { background: var(--good); color: #000; border-color: var(--good); }
+.share-url { font-family: ui-monospace, SFMono-Regular, monospace; }
+.share-meta { font-size: 12px; }
+@media (max-width: 540px) {
+  .share-row { flex-direction: column; align-items: stretch; }
+  .share-qr { align-self: center; }
+}
+
+/* In-app editor */
+.edit-card { padding: 22px; }
+.edit-title { font-size: 17px; margin-bottom: 6px; }
+.edit-id {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-dim);
+  background: var(--surface-2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+}
+.edit-question {
+  color: var(--text-dim);
+  font-size: 14px;
+  margin-bottom: 16px;
+  font-style: italic;
+}
+.edit-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }
+.edit-label { font-size: 13px; font-weight: 600; color: var(--text); }
+.edit-hint { font-size: 12px; color: var(--text-dim); }
+.edit-hint code {
+  background: var(--surface-2);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 11px;
+}
+.edit-field textarea, .edit-field input {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  resize: vertical;
+}
+.edit-field textarea:focus, .edit-field input:focus { border-color: var(--accent); }
+
+/* Smaller screens (iPhone portrait) */
+@media (max-width: 600px) {
+  #main { padding: 14px 14px 20px; }
+  .card { padding: 18px; border-radius: 14px; margin-bottom: 14px; }
+  .card-question { font-size: 17px; }
+
+  /* Sticky rate row keeps the Again/Hard/Good/Easy buttons visible while
+     reading a long explanation. Scope this ONLY to .rate-row — applying it
+     to every .card .btn-row makes the pre-reveal nav row and the quiz
+     button rows also sticky, which causes them to overlap with the options
+     behind them and steal clicks (looks to the user like "I tapped an
+     option but Reveal/Skip fired", or "Reveal skipped my card"). */
+  .card .btn-row.rate-row {
+    position: sticky;
+    bottom: -4px;
+    background: var(--surface);
+    margin: 24px -18px 0;
+    padding: 14px 18px 14px;
+    border-top: 1px solid var(--border);
+    border-radius: 0 0 14px 14px;
+    z-index: 2;
+  }
+  header { padding: 10px 14px; }
+  header h1 { font-size: 16px; }
+  #progress-hud { font-size: 12px; }
+
+  /* Pencil-only feature: hide scratchpad on narrow screens */
+  .scratchpad-wrap { display: none; }
+
+  /* Thumb-friendly 2x2 button grid instead of 1x4 squeeze */
+  .btn-row { gap: 8px; }
+  button.action {
+    min-width: 0;
+    flex-basis: calc(50% - 4px);
+    min-height: 56px;
+    font-size: 15px;
+    padding: 0 10px;
+    border-radius: 14px;
+  }
+
+  .card-meta { flex-wrap: wrap; gap: 6px; font-size: 11px; }
+  .card-meta .tag { padding: 2px 8px; }
+
+  /* Filter bar: edge-to-edge scroller so chips reach thumb */
+  .filter-bar {
+    margin: 0 -14px 12px;
+    padding: 4px 14px;
+    scrollbar-width: none;
+  }
+  .filter-bar::-webkit-scrollbar { display: none; }
+
+  /* Stats: 2x2 grid, tighter */
+  .stats-row { gap: 8px; }
+  .stat-card { min-width: calc(50% - 4px); padding: 14px 10px; }
+  .stat-card .number { font-size: 26px; }
+
+  /* Search bar: edge-to-edge */
+  .search-row { margin: 0 0 10px; }
+  .search-row input[type="search"] { padding: 9px 12px; font-size: 14px; }
+
+  /* Options list: tighter padding + smaller text on narrow screens */
+  .q-option { padding: 11px 12px; gap: 11px; min-height: 50px; }
+  .q-letter { width: 30px; height: 30px; font-size: 14px; }
+  .q-text { font-size: 15px; }
+  .q-status { width: 22px; height: 22px; font-size: 16px; }
+
+  /* Reading mode: less side padding */
+  .reading-list .obj-section { padding: 16px; }
+  .reading-list h2 { font-size: 18px; }
+
+  /* Settings rows: stack label + control vertically when cramped so
+     seg-controls never clip off-screen. Keep checkboxes inline. */
+  .settings-row:has(.seg-control) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .settings-row .seg-control { width: 100%; justify-content: stretch; }
+  .settings-row .seg-control button { flex: 1; padding: 8px 6px; }
+
+  /* Stats "Options" panel — stack label + Export/Import buttons too */
+  .settings-row .settings-actions { flex-wrap: wrap; }
+
+  /* Tab bar: tighter labels */
+  .tab-icon { font-size: 20px; }
+  .tab-label { font-size: 10px; }
+  .tab { min-height: 54px; padding: 8px 4px; }
+}
+
+/* Very small phones (iPhone SE portrait) */
+@media (max-width: 360px) {
+  button.action { flex-basis: 100%; }
+}
+
+/* ─── Lock screen (PIN unlock) ─── */
+#lock-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  padding-top: calc(var(--safe-top) + 20px);
+  padding-bottom: calc(var(--safe-bottom) + 20px);
+}
+.lock-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 28px 24px;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+}
+.lock-icon { font-size: 40px; line-height: 1; margin-bottom: 8px; }
+.lock-card h2 { font-size: 20px; margin-bottom: 6px; }
+.lock-sub { color: var(--text-dim); font-size: 14px; margin-bottom: 20px; }
+#lock-form { display: flex; flex-direction: column; gap: 12px; }
+#lock-pin {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 14px 16px;
+  border-radius: 12px;
+  font-size: 18px;
+  font-family: inherit;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  text-align: center;
+  letter-spacing: 0.3em;
+}
+#lock-pin:focus { border-color: var(--accent); }
+.lock-error {
+  color: var(--bad);
+  font-size: 13px;
+  min-height: 1em;
+  text-align: left;
+}
+#lock-submit { margin-top: 4px; }
+.lock-forgot {
+  margin-top: 20px;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 6px;
+}
+.lock-forgot:hover { color: var(--bad); }
+
+/* ─── Confetti (celebration bursts) ─── */
+.confetti-host {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1500;
+  width: 0;
+  height: 0;
+}
+.confetti-piece {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  opacity: 0;
+  animation: confettiFly forwards ease-out;
+  --dx: 0px;
+  --dy: 0px;
+  --rot: 360deg;
+}
+@keyframes confettiFly {
+  0%   { transform: translate(-50%, -50%) rotate(0deg); opacity: 1; }
+  80%  { opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy) + 160px)) rotate(var(--rot)); opacity: 0; }
+}
+html[data-motion="reduced"] .confetti-host { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .confetti-host { display: none; }
+}
+
+/* ─── 90-day activity heatmap ─── */
+.heatmap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.heatmap-grid {
+  display: flex;
+  gap: 3px;
+  min-width: min-content;
+}
+.heatmap-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.heatmap-cell {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--surface-2);
+  flex-shrink: 0;
+  display: inline-block;
+}
+.heatmap-cell-empty { background: transparent; }
+.heatmap-cell[data-lvl="0"] { background: var(--surface-2); }
+.heatmap-cell[data-lvl="1"] { background: rgba(74, 222, 128, 0.25); }
+.heatmap-cell[data-lvl="2"] { background: rgba(74, 222, 128, 0.50); }
+.heatmap-cell[data-lvl="3"] { background: rgba(74, 222, 128, 0.75); }
+.heatmap-cell[data-lvl="4"] { background: var(--good); }
+.heatmap-legend {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  color: var(--text-dim);
+  font-size: 12px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.heatmap-scale {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.heatmap-scale .heatmap-cell { width: 10px; height: 10px; }
+
+/* ─── Toast (non-blocking notice) ─── */
+#toast-host {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--safe-bottom) + 80px);
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+  padding: 0 16px;
+}
+.toast {
+  pointer-events: auto;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  max-width: 520px;
+  font-size: 14px;
+  line-height: 1.45;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.2s, transform 0.2s;
+  cursor: pointer;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast-success { border-color: var(--good); }
+.toast-error   { border-color: var(--bad); color: var(--text); }
+html[data-motion="reduced"] .toast { transition: none; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .toast { transition: none; transform: none; }
+}
+
+/*─── QUIZ MODE ────────────────────────────────────────────────*/
+.quiz-start {
+  text-align: center;
+  padding: 28px 20px;
+}
+.quiz-start-icon { font-size: 48px; margin-bottom: 12px; }
+.quiz-start-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 10px;
+  color: var(--text);
+}
+.quiz-start-desc {
+  color: var(--text-dim);
+  font-size: 15px;
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+.quiz-avail {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 20px;
+}
+.quiz-size-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 300px;
+  margin: 0 auto 16px;
+}
+.quiz-size-btn { width: 100%; justify-content: center; }
+.quiz-start-warn {
+  color: var(--warn);
+  font-size: 13px;
+}
+
+/* Progress bar across the top of the quiz card */
+.quiz-progress-bar {
+  height: 5px;
+  background: var(--border);
+  border-radius: 3px;
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+.quiz-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.35s ease;
+}
+html[data-motion="reduced"] .quiz-progress-fill { transition: none; }
+
+/* Counter tag inside the quiz card meta row */
+.tag.quiz-counter { font-weight: 600; color: var(--accent); }
+.quiz-abandon-btn { margin-left: auto; color: var(--text-dim); }
+
+/* Results screen */
+.quiz-results { text-align: center; padding-bottom: 24px; }
+.quiz-score-circle {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 144px;
+  height: 144px;
+  border-radius: 50%;
+  border: 5px solid;
+  margin: 20px auto 14px;
+}
+.quiz-score-circle.pass {
+  border-color: var(--good);
+  background: rgba(74, 222, 128, 0.12);
+}
+.quiz-score-circle.fail {
+  border-color: var(--bad);
+  background: rgba(248, 113, 113, 0.12);
+}
+.quiz-score-pct {
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text);
+}
+.quiz-score-label {
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 5px;
+  color: var(--text-dim);
+}
+.quiz-result-detail {
+  color: var(--text-dim);
+  font-size: 15px;
+  margin: 0 0 6px;
+}
+.quiz-pass-note {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin: 0 0 20px;
+  line-height: 1.45;
+}
+
+/* Missed questions list */
+.quiz-missed { text-align: left; margin-top: 8px; }
+.quiz-missed-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 16px 0 10px;
+  color: var(--text);
+}
+.quiz-missed-list { list-style: none; padding: 0; margin: 0; }
+.quiz-missed-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.quiz-missed-q { font-size: 13px; color: var(--text); line-height: 1.4; }
+.quiz-missed-ans { font-size: 12px; color: var(--good); font-weight: 600; }
+.quiz-missed-ans.quiz-skipped { color: var(--text-dim); font-style: italic; }
+
+/*─── Desktop / wide-window layout ────────────────────────────
+   On screens ≥ 900px the app stops looking like a phone column
+   stranded in the middle. We widen the card to use the available
+   space and bump up some chrome densities. */
+@media (min-width: 900px) {
+  #main { padding: 28px 32px; max-width: 1100px; margin: 0 auto; }
+  .card { max-width: 100%; padding: 32px; }
+  .card-question { font-size: 18px; line-height: 1.55; }
+  .q-options { gap: 12px; }
+  .q-option { padding: 16px 20px; min-height: 56px; }
+  .q-text { font-size: 16px; }
+
+  /* Tab bar slides into the header strip on desktop instead of taking
+     a fixed bottom row, so the card uses the full viewport height. */
+  #tabbar {
+    position: static;
+    background: transparent;
+    border-top: none;
+    padding: 0;
+    margin: 12px auto 0;
+    max-width: 1100px;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+  #tabbar .tab {
+    flex: 0 0 auto;
+    min-width: 96px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    flex-direction: row;
+    gap: 8px;
+  }
+  #tabbar .tab.active {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+  }
+  #tabbar .tab-icon { font-size: 16px; }
+  #tabbar .tab-label { font-size: 14px; }
+
+  /* Stats: 2-column grid on desktop so OBJ list + heatmap fit side-by-side */
+  .stats-wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; }
+  .stats-wrap > h3, .stats-wrap > .readiness, .stats-wrap > .stats-sub { grid-column: 1 / -1; }
+  .stats-wrap > .settings-panel { grid-column: 1 / -1; }
+  .stats-wrap > .stats-row { grid-column: 1 / -1; }
+}
+
+/* Keyboard-shortcut hint chips. Shown by default; hidden on touch-only
+   devices via the .is-touch class on <html> (set in app.js by detecting
+   the user's first input event). Media queries on (any-pointer) are
+   unreliable because headless / dev tools / iPad-as-Mac mis-report. */
+.kbd-hint {
+  display: inline-block;
+  font-size: 11px;
+  color: var(--text-dim);
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin-left: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  vertical-align: middle;
+}
+html.is-touch .kbd-hint { display: none; }
+
+/*─── Quiz history chart ──────────────────────────────────────*/
+.quiz-history {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.qh-meta {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.qh-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.qh-num {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.qh-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.qh-chart {
+  width: 100%;
+  height: 110px;
+  display: block;
+}
+
+/*─── "Learn more" footer below the explanation ──────────────*/
+.learn-more {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.learn-more-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s;
+}
+.learn-more-btn:hover { background: var(--border); border-color: var(--text-dim); }
+.learn-more-btn.pageref { background: rgba(90, 166, 255, 0.10); border-color: var(--accent); color: var(--accent); }
+.learn-more-btn.suggest { font-style: italic; color: var(--text-dim); }
+.learn-more-btn.external::after { content: '↗'; opacity: 0.6; margin-left: 2px; }
+
+/*─── PDF viewer (reference book) ─────────────────────────────*/
+.pdf-viewer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 1500;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: 12px;
+  animation: imgZoomFade 0.15s ease-out;
+}
+.pdf-viewer-frame {
+  background: var(--surface);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 1100px;
+  max-height: calc(100vh - 24px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.pdf-viewer-toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+  flex-shrink: 0;
+}
+.pdf-pageinfo { font-size: 13px; color: var(--text-dim); }
+.pdf-pageinfo strong { color: var(--text); }
+.pdf-jump {
+  width: 80px;
+  padding: 6px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+}
+.pdf-nav {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 16px;
+  cursor: pointer;
+}
+.pdf-nav:hover { background: var(--border); }
+.pdf-viewer-close {
+  margin-left: auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 14px;
+  cursor: pointer;
+}
+.pdf-viewer-close:hover { background: var(--bad); border-color: var(--bad); color: #fff; }
+.pdf-viewer-canvas-wrap {
+  flex: 1;
+  overflow: auto;
+  padding: 12px;
+  background: #2a2a2a;
+  display: flex;
+  justify-content: center;
+}
+.pdf-viewer-canvas {
+  max-width: 100%;
+  height: auto;
+  background: #fff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+/*─── Image-zoom overlay (PBQ figure tap-to-enlarge) ──────────*/
+.img-zoom-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 1400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  cursor: zoom-out;
+  animation: imgZoomFade 0.15s ease-out;
+}
+@keyframes imgZoomFade { from { opacity: 0; } to { opacity: 1; } }
+.img-zoom-overlay img {
+  max-width: 100%;
+  max-height: calc(100vh - 80px);
+  object-fit: contain;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+}
+.img-zoom-close {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  right: 16px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+button.q-image-zoom {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: zoom-in;
+  display: block;
+  width: 100%;
+}
+button.q-image-zoom img { width: 100%; height: auto; display: block; border-radius: 8px; }
+button.q-image-zoom:hover img { box-shadow: 0 0 0 2px var(--accent); }
+
+/*─── Print stylesheet — cram the mnemonics page onto paper ───
+   When the user prints from Reading mode, hide everything except
+   the section content. The mnemonics tables become a 1-2 page
+   reference they can review right before walking into the exam. */
+@media print {
+  body { background: #fff !important; color: #000 !important; }
+  header, #tabbar, .filter-bar, .search-row, .reading-toc,
+  #help-btn, #focus-btn, #theme-btn, #listen-btn, #toast-host,
+  .reading-top-link, .scratchpad-wrap, .skip-link,
+  .img-zoom-overlay { display: none !important; }
+  #main { padding: 0 !important; max-width: 100% !important; }
+  .reading-wrap { display: block !important; }
+  .reading-list { max-width: 100% !important; }
+  .obj-section {
+    page-break-inside: avoid;
+    margin-bottom: 24px;
+    padding: 0 !important;
+    background: #fff !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+  .obj-section h2 { page-break-after: avoid; font-size: 16pt; margin-top: 0; }
+  .obj-section h3 { page-break-after: avoid; font-size: 12pt; }
+  .obj-section table { page-break-inside: avoid; font-size: 9pt; width: 100%; }
+  .obj-section table th, .obj-section table td {
+    border: 1px solid #999 !important;
+    padding: 4px 6px;
+    color: #000 !important;
+  }
+  .obj-section p, .obj-section li { font-size: 10pt; line-height: 1.35; color: #000 !important; }
+  .obj-section code { font-size: 9pt; background: #eee !important; color: #000 !important; }
+  .obj-section strong { color: #000 !important; }
+  /* If the user prints from Study/Quiz, just print the visible card */
+  .card { box-shadow: none !important; border-color: #ccc !important; page-break-inside: avoid; }
+}

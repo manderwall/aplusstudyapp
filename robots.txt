@@ -1,0 +1,5 @@
+# This is the private personal version of the A+ study app. If it's ever
+# served publicly by accident, search engines should not index it. The clean
+# public version is at aplus-adaptive-study.pages.dev.
+User-agent: *
+Disallow: /

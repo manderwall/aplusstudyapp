@@ -1,0 +1,139 @@
+# Adding a question pack
+
+This is the contract for any `data/**/questions.json` file. The validator
+runs automatically as part of `node --test tests/`, and `node
+scripts/validate-questions.mjs --all` runs it standalone. **A failing
+validator blocks the deploy.**
+
+## Where files live
+
+```
+data/
+  core2/
+    questions.json          ← Core 2 deck
+    concept-fixes.json      ← Reading-mode prose per objective
+  <future-exam>/
+    questions.json
+    concept-fixes.json
+images/
+  <any-png-or-jpg>          ← referenced by `image:` / `images:` fields
+```
+
+The app picks up any subfolder under `data/` automatically — no code
+changes needed to add a new exam. To switch decks at runtime, the user
+uses the Stats → "Active exam" toggle.
+
+## Question schema (one entry in the top-level array)
+
+```jsonc
+{
+  "id":           "p1q36",                    // REQUIRED. Unique. Convention for pretest-derived items: p<pretest>q<num>; NotebookLM batches use c2q<N>.
+  "pretest":      1,                          // optional metadata — set when ingested from a pretest source
+  "qnum":         36,                         // optional metadata — original question number in that pretest
+  "obj":          "3.3",                      // REQUIRED. CompTIA objective number "N.M"
+  "qtype":        "Multiple Choice",          // REQUIRED. "Multiple Choice" | "Multiple Answer" | "PBQ"
+  "question":     "Which …?",                 // REQUIRED. MUST end with . ? or !
+  "options":      ["A", "B", "C", "D"],       // REQUIRED for graded questions, ≥2 entries, no duplicates
+  "correct_short":"B",                        // REQUIRED for Multiple Choice / PBQ. MUST be exactly one of the options.
+  "correct_picks":["A", "C"],                 // REQUIRED for Multiple Answer. ≥2 entries, all in options.
+  "wrong_pick":   "D",                        // optional. The pretest-miss the user originally picked. Drives the "originally picked" footnote.
+  "wrong_picks":  ["A", "D"],                 // optional. Multiple miss history across reruns of the same pretest question.
+  "explanation":  "OBJ 3.3: …",               // REQUIRED. Should start with "OBJ <obj>:" matching the obj field.
+  "image":        "images/p1q36_mobo.png",    // optional. REQUIRED for qtype=PBQ. Path must exist on disk.
+  "images":       ["images/x.png"],           // optional alternative — array of paths
+  "learnMore":    "https://example.com/x",    // optional. URL or [{url, label}] for "Learn more →" link.
+  "sources":      [{"pretest":1,"qnum":36}]   // optional dedupe trace. Populated by scripts/dedupe.mjs when the same question appears on multiple pretests.
+}
+```
+
+## What the validator catches
+
+If you add a pack and any of these are wrong, the test suite fails and
+you'll see a clear message like
+`p4q55: question references a visual ("in this picture") but no image is bundled`:
+
+| Problem | Why it matters |
+|---|---|
+| Missing `id`, `obj`, `qtype`, `question`, or `explanation` | The card can't render |
+| Duplicate `id` across questions | Progress data collides |
+| `obj` not in `N.M` form | Per-objective filtering breaks |
+| Explanation `OBJ X.Y:` prefix doesn't match `obj` | Card files under wrong objective; user can't find it via filter |
+| Question text doesn't end with `.`, `?`, or `!` | Almost always a paste truncation |
+| Question references a visual ("this picture", "in the figure", "floor plan", "Using the image", `labeled as X`) but no `image` is bundled | User sees a broken question with no way to answer |
+| `qtype: PBQ` but no `image` | Falls back to "image not available" banner |
+| `correct_short` not present in `options` | Question is **unwinnable** — every pick grades as wrong (this was the [escapeHtml-quote bug](https://example.com) class) |
+| Any `correct_picks` value not in `options` | Same — partial unwinnability for MA |
+| `correct_short` equals `wrong_pick` | Logic conflict — the user's recorded pretest pick matches the correct answer |
+| `wrong_pick` not in `options` | Pretest-miss footnote points to a non-existent option |
+| Duplicate `options` (after case-and-whitespace normalization) | Two of the four choices look the same |
+| Empty / non-string option | Renders as a blank tappable row |
+| Long option that's a substring of the question | Almost always an extraction artifact (the parser pulled a sentence into the options array) |
+| `qtype: Multiple Answer` without `correct_picks[]` of length ≥2 | Only one option highlights as correct |
+| Question stem says "Select TWO/THREE/N" but `correct_picks.length` doesn't match | The user can't satisfy the picker |
+| `image` / `images[]` path that doesn't exist on disk | Broken image when the card renders |
+| Stray HTML tags or `U+FFFD` replacement characters in any text field | Encoding bug or paste mistake |
+
+## Workflow for a new pack
+
+```bash
+# 1. Drop your questions.json into data/<exam>/
+# 2. Drop any referenced images into images/
+# 3. Run validation
+node scripts/validate-questions.mjs data/<exam>/questions.json
+
+# 4. Run the test suite — does data validation as part of it
+node --test tests/pure.test.mjs tests/crypto.test.mjs tests/data.test.mjs
+
+# 5. Open the app and switch to the new exam in Stats → Active exam.
+```
+
+If the validator complains about a question text that LOOKS conceptual
+("the image on the monitor changes per second" = refresh rate, not a
+literal image), check whether the trigger phrase is actually a deictic
+reference. If not, rewrite the question to be self-contained — usually
+it's worth the rewrite anyway, because users who don't see the image
+need to be able to answer.
+
+## Reference-book feature (personal use)
+
+The app supports linking individual cards to specific pages of a PDF you
+upload — e.g. your own A+ study book. The PDF lives entirely in
+IndexedDB on your device; nothing is sent to a server, nothing is
+bundled with the app, and the data store is per-exam.
+
+How it works:
+
+1. **Upload**: Stats → Reference book → Upload PDF.
+2. **Index**: After upload, click "Index for auto-suggest". The app
+   extracts text from each page (via PDF.js) and caches it. Big books
+   take a few seconds.
+3. **Per-card page link**: After answering and revealing a card, you'll
+   see a "📖 Suggest p. N" button below the explanation if the indexer
+   found a likely match. Click it to lock that page reference for the
+   card. The button changes to "📖 Open p. N" — clicking opens an
+   in-app PDF viewer at that page.
+4. **Manual override**: page refs are stored as `pageRef` in
+   `state.overrides` (the same store as user-edited options). They sync
+   via the regular cloud-sync mechanism if you have it on.
+
+The validator does not check `pageRef` because it's user data attached
+to whatever PDF you happen to have loaded — every user's page numbers
+will differ.
+
+## Adding `concept-fixes.json` content
+
+Free-form HTML in `content`, free-form `title`. Two reserved keys for
+priority sections (rendered above numeric OBJ entries in Reading):
+
+```jsonc
+{
+  "mnemonics":      { "title": "...", "content": "<HTML>" },  // memory aids cheat sheet
+  "troubleshooting":{ "title": "...", "content": "<HTML>" },  // CompTIA 6-step
+  "1.1":            { "title": "Mobile Device Hardware", "content": "<HTML>" },
+  "2.5":            { "title": "Networking Hardware",    "content": "<HTML>" },
+  // ...
+}
+```
+
+The app sorts numerically by `N.M`. Any non-numeric key besides the two
+reserved ones will sort to the end — fine for "appendix"-style sheets.
