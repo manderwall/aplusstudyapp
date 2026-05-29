@@ -3781,16 +3781,100 @@ async function rekeyAllDrawings(newKey, oldKey) {
   } catch (e) { console.warn('Drawing re-key failed', e); }
 }
 
+// Reusable custom-styled PIN dialog used by setup / change / remove flows.
+// Each field has a label + numeric password input. Resolves to a map of the
+// entered values (e.g. { pin, confirm }) when the user submits, or null if
+// cancelled. Validation (length, match) happens in the caller — the dialog
+// can render an inline error string via the `error` callback signature for
+// per-field complaints. Replaces native window.prompt() chains so the flow
+// matches the rest of the app's modal styling and isn't blocked by iOS
+// PWA prompt quirks.
+function pinDialog({ title, intro, fields, submit: submitLabel = 'Set', destructive = false }) {
+  return new Promise((resolve) => {
+    const id = (k) => `pind-${k}`;
+    const fieldRows = fields.map(f => `
+      <label class="pind-field">
+        <span class="pind-label">${escapeHtml(f.label)}</span>
+        <input id="${id(f.key)}" type="password" inputmode="numeric"
+               autocomplete="off" autocorrect="off" autocapitalize="off"
+               spellcheck="false" enterkeyhint="${f === fields[fields.length - 1] ? 'go' : 'next'}"
+               aria-label="${escapeHtml(f.label)}" placeholder="${escapeHtml(f.placeholder || '')}">
+      </label>
+    `).join('');
+    const html = `
+      <div id="pin-overlay" role="dialog" aria-modal="true" aria-labelledby="pind-title">
+        <div class="pind-card">
+          <button class="welcome-close" id="pind-close" aria-label="Cancel">✕</button>
+          <h2 id="pind-title" class="pind-title">${escapeHtml(title)}</h2>
+          ${intro ? `<p class="pind-intro">${escapeHtml(intro)}</p>` : ''}
+          <form id="pind-form">
+            ${fieldRows}
+            <div class="pind-error" id="pind-error" role="alert" hidden></div>
+            <div class="pind-actions">
+              <button type="button" class="action" id="pind-cancel">Cancel</button>
+              <button type="submit" class="action ${destructive ? 'bad' : 'primary'}" id="pind-submit">${escapeHtml(submitLabel)}</button>
+            </div>
+          </form>
+        </div>
+      </div>`;
+    document.body.insertAdjacentHTML('beforeend', html);
+    const overlay = $('#pin-overlay');
+    const firstInput = overlay.querySelector('input');
+    setTimeout(() => firstInput?.focus(), 50);
+
+    const setError = (msg) => {
+      const e = $('#pind-error');
+      e.textContent = msg || '';
+      e.hidden = !msg;
+    };
+    const cancel = () => { overlay.remove(); resolve(null); };
+    const onKey = (e) => {
+      if ($('#pin-overlay') !== overlay) return;
+      if (e.key === 'Escape') { cancel(); document.removeEventListener('keydown', onKey); }
+    };
+    document.addEventListener('keydown', onKey);
+    $('#pind-close').addEventListener('click', () => { document.removeEventListener('keydown', onKey); cancel(); });
+    $('#pind-cancel').addEventListener('click', () => { document.removeEventListener('keydown', onKey); cancel(); });
+    $('#pind-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const values = {};
+      for (const f of fields) values[f.key] = ($(`#${id(f.key)}`).value || '');
+      document.removeEventListener('keydown', onKey);
+      overlay.remove();
+      resolve(values);
+    });
+    // Inline next-field navigation: pressing Enter on a non-last input
+    // jumps to the next, rather than submitting.
+    const inputs = [...overlay.querySelectorAll('input')];
+    inputs.forEach((inp, i) => {
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && i < inputs.length - 1) {
+          e.preventDefault();
+          inputs[i + 1].focus();
+        }
+      });
+    });
+  });
+}
+
 async function pinSetupFlow() {
-  const pin  = prompt('Choose a PIN. 4+ characters. This encrypts your progress on this device — losing it means losing local data unless you\'ve pushed to Supabase.');
-  if (pin == null) return;  // cancelled
-  if (pin.length < 4) { toast('PIN must be at least 4 characters.', 'error'); return; }
-  const confirmPin = prompt('Re-enter the PIN to confirm.');
-  if (confirmPin !== pin) { toast('PINs didn\'t match. PIN not set.', 'error'); return; }
+  const v = await pinDialog({
+    title: 'Set a PIN',
+    intro: 'Encrypts your progress, edits, and drawings on this device. ' +
+           'Losing the PIN means losing local data unless you\'ve pushed to Supabase.',
+    fields: [
+      { key: 'pin',     label: 'New PIN (4+ characters)',  placeholder: '••••' },
+      { key: 'confirm', label: 'Re-enter to confirm',      placeholder: '••••' },
+    ],
+    submit: 'Set PIN',
+  });
+  if (!v) return;
+  if (v.pin.length < 4) { toast('PIN must be at least 4 characters.', 'error'); return; }
+  if (v.confirm !== v.pin) { toast('PINs didn\'t match. PIN not set.', 'error'); return; }
 
   toast('Encrypting local data…', 'info', 4000);
   const salt = randomSaltB64();
-  const key = await deriveKey(pin, salt);
+  const key = await deriveKey(v.pin, salt);
   const verification = await makeVerificationBlob(key);
   // Encrypt everything currently in memory/disk under the new key.
   state._cryptoKey = key;
@@ -3804,22 +3888,28 @@ async function pinSetupFlow() {
 
 async function pinChangeFlow() {
   if (!state._cryptoKey) { toast('Unlock required — reload and enter current PIN.', 'error'); return; }
-  const current = prompt('Enter your CURRENT PIN.');
-  if (current == null) return;
+  const v = await pinDialog({
+    title: 'Change PIN',
+    intro: 'Re-encrypts all local data under the new PIN.',
+    fields: [
+      { key: 'current', label: 'Current PIN',               placeholder: '••••' },
+      { key: 'next',    label: 'New PIN (4+ characters)',   placeholder: '••••' },
+      { key: 'confirm', label: 'Re-enter new PIN',          placeholder: '••••' },
+    ],
+    submit: 'Change PIN',
+  });
+  if (!v) return;
   const setup = getPinSetup();
-  const testKey = await deriveKey(current, setup.salt, setup.iterations);
+  const testKey = await deriveKey(v.current, setup.salt, setup.iterations);
   if (!(await verifyPin(testKey, setup.verification))) {
     toast('Current PIN is wrong.', 'error'); return;
   }
-  const next = prompt('Choose a NEW PIN. 4+ characters.');
-  if (next == null) return;
-  if (next.length < 4) { toast('New PIN must be at least 4 characters.', 'error'); return; }
-  const confirmNext = prompt('Re-enter the new PIN to confirm.');
-  if (confirmNext !== next) { toast('New PINs didn\'t match. PIN unchanged.', 'error'); return; }
+  if (v.next.length < 4) { toast('New PIN must be at least 4 characters.', 'error'); return; }
+  if (v.confirm !== v.next) { toast('New PINs didn\'t match. PIN unchanged.', 'error'); return; }
 
   toast('Re-encrypting local data…', 'info', 4000);
   const salt = randomSaltB64();
-  const newKey = await deriveKey(next, salt);
+  const newKey = await deriveKey(v.next, salt);
   const verification = await makeVerificationBlob(newKey);
   const oldKey = state._cryptoKey;
   state._cryptoKey = newKey;
