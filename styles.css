@@ -838,27 +838,10 @@ button.action.rate-btn .rate-interval {
   opacity: 0.85;
   letter-spacing: 0.2px;
 }
-button.action.rate-btn.recommended {
-  opacity: 1;
-  box-shadow: 0 0 0 3px var(--accent), 0 4px 12px rgba(0, 0, 0, 0.18);
-  transform: translateY(-1px);
-}
-button.action.rate-btn.recommended::after {
-  content: '★';
-  position: absolute;
-  top: 4px;
-  right: 6px;
-  font-size: 11px;
-  color: var(--accent);
-  background: var(--surface);
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 0 1px var(--accent);
-}
+/* .rate-btn.recommended styles removed — UI no longer pre-selects a
+   rating button (see renderRatingButtonsHTML comment in app.js).
+   Kept the class name reserved in case a future "show me a hint"
+   opt-in toggle reintroduces it. */
 @media (max-width: 480px) {
   .btn-row.rate-row { gap: 6px; }
   button.action.rate-btn { min-height: 58px; padding: 6px 4px; }
