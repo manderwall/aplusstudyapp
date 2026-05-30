@@ -41,33 +41,19 @@ export const FSRS_W = [
   0.4, 0.6, 2.4, 5.8, 4.93, 0.94, 0.86, 0.01, 1.49, 0.14,
   0.94, 2.18, 0.05, 0.34, 1.26, 0.29, 2.61,
 ];
-// Target retention used when solving for the next interval.
+// Target retention used when solving for the next interval. The caller
+// (recordRating in app.js) can override this per-rate based on how
+// close the exam is — see EXAM_RETENTION_SCHEDULE in app.js.
 export const FSRS_TARGET_RETENTION = 0.9;
-// Decay constant in the forgetting curve R(t) = (1 + t/(9·S))^DECAY.
+// Forgetting curve: R(t) = (1 + t/(9·S))^DECAY.
 //
-// ⚠️ CURVE NOTE (accurate as of the 2026-05-30 audit re-read):
-// This is a HYBRID, not a canonical FSRS curve. It pairs the `9·S`
-// denominator from FSRS v3/v4 with the `-0.5` exponent from FSRS v4.5+.
-// Canonical versions never mix these:
-//   • FSRS-4:    R = (1 + t/(9S))^-1        → interval at r=0.9 is exactly S
-//   • FSRS-4.5+: R = (1 + (19/81)·t/S)^-0.5 → interval at r=0.9 is exactly S
-//   • THIS code: R = (1 + t/(9S))^-0.5      → interval at r=0.9 is ~2.11·S
-// Effect: every card is scheduled ~2.11× further out than a canonical
-// FSRS at the same stability. If real memory follows the standard curve,
-// the user is actually being tested at ~81% retention, not the 0.9 the
-// FSRS_TARGET_RETENTION constant implies. The scheduler is internally
-// SELF-CONSISTENT (the same curve drives both retrievability and the
-// interval solve), so nothing breaks — intervals are just longer / the
-// effective retention is lower than the constant suggests.
-//
-// Two ways to make it canonical IF a deliberate ~81% target isn't wanted
-// (both change live scheduling — would shorten everyone's intervals and
-// spike due-counts, so they're a product decision, not a silent fix):
-//   (a) FSRS-4:    set FSRS_DECAY = -1
-//   (b) FSRS-4.5:  R = (1 + (19/81)·t/S)^-0.5 and interval solve to match
-// Until then, treat FSRS_TARGET_RETENTION as a tuning knob, not a
-// literal retention guarantee.
-const FSRS_DECAY = -0.5;
+// This is canonical FSRS-4: with DECAY = -1, the interval where R hits
+// 0.9 is exactly S (stability days). Prior to PR #65 this was an
+// accidental hybrid (-0.5 exponent / 9S denominator) that produced
+// ~2.11·S intervals — effective retention ~0.81, not the 0.9 the
+// constant implied. Fixed per the deep-research synthesis (Cepeda 2008
+// ratio rule + FSRS community consensus for short-horizon exam prep).
+const FSRS_DECAY = -1;
 
 // Helpers
 const clamp = (x, lo, hi) => Math.min(hi, Math.max(lo, x));
@@ -79,9 +65,11 @@ export function fsrsRetrievability(days, stability) {
   return Math.pow(1 + days / (9 * stability), FSRS_DECAY);
 }
 
-// Days until retention drops to FSRS_TARGET_RETENTION.
+// Days until retention drops to the target.
 // Derivation: R(t) = (1 + t/(9S))^DECAY → t = 9S · (R^(1/DECAY) - 1).
-// With DECAY = -0.5 and r = 0.9: t ≈ 9S · (0.9^-2 - 1) ≈ 2.11 · S.
+// With DECAY = -1 and r = 0.9: t = 9S · (1/0.9 - 1) = S exactly.
+// With DECAY = -1 and r = 0.95: t ≈ S · 0.474 (~halves the interval).
+// With DECAY = -1 and r = 0.97: t ≈ S · 0.278.
 export function fsrsNextIntervalDays(stability, retention = FSRS_TARGET_RETENTION) {
   if (stability <= 0) return 0;
   const i = 9 * stability * (Math.pow(retention, 1 / FSRS_DECAY) - 1);
@@ -177,7 +165,7 @@ export function migrateProgress(p) {
   return p;
 }
 
-export function schedule(p, rate, now = Date.now(), capDays = MAX_INTERVAL_DAYS) {
+export function schedule(p, rate, now = Date.now(), capDays = MAX_INTERVAL_DAYS, targetRetention = FSRS_TARGET_RETENTION) {
   // Coerce + sanitize `now`. A non-finite or string-typed `now` (which
   // can happen if the caller pulled a timestamp from a corrupted sync
   // payload or a future refactor passes state.now through) would otherwise
@@ -231,7 +219,7 @@ export function schedule(p, rate, now = Date.now(), capDays = MAX_INTERVAL_DAYS)
     p.interval = Math.round(subDayDays * 10) / 10;
     p.status = p.status === 'new' ? 'learning' : p.status;
   } else {
-    const intervalDays = Math.min(cap, fsrsNextIntervalDays(p.S));
+    const intervalDays = Math.min(cap, fsrsNextIntervalDays(p.S, targetRetention));
     p.due = now + intervalDays * DAY;
     p.interval = Math.round(intervalDays * 10) / 10;
     p.status = p.status === 'new' ? 'learning' : (G >= 3 ? 'good' : 'learning');
@@ -331,11 +319,11 @@ export function orderDeck(qs, progressById, { mode = 'smart', seed = 1, now = Da
 
 // Human-readable label for what tapping each rating button will do.
 // Used in the rating UI so the learner knows "Good = 1 day" etc.
-export function nextIntervalLabel(p, rate, now = Date.now()) {
+export function nextIntervalLabel(p, rate, now = Date.now(), capDays, targetRetention) {
   const sim = { ...p };
   if (sim.ease === undefined) sim.ease = 2.5;
   if (sim.interval === undefined) sim.interval = 0;
-  schedule(sim, rate, now);
+  schedule(sim, rate, now, capDays, targetRetention);
   const ms = sim.due - now;
   if (ms < 60 * 1000) return '<1 min';
   if (ms < 60 * MIN) return `${Math.round(ms / MIN)} min`;

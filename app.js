@@ -1231,7 +1231,19 @@ function recordRating(qid, rate) {
   // the exam itself — testing a card 5 days after the exam wastes effort
   // and inflates the readiness "covered" count.
   const days = daysUntilExam(state.exam);
-  schedule(p, rate, undefined, days !== null && days > 0 ? days : undefined);
+  // Exam-aware retention escalation (deep-research / FSRS community consensus
+  // for short-horizon high-stakes prep). Sits on top of the canonical
+  // FSRS-4 curve (PR #65) so the constant actually means what it says:
+  //   - no exam date / >14 days:  0.90 (canonical default)
+  //   - 8-14 days out:            0.93 (~half the canonical interval)
+  //   - <=7 days out:             0.95 (~1/3 the canonical interval)
+  // Above 0.95 the relearning-cost curve goes U-shaped per fsrs4anki
+  // tutorial; capping at 0.95 trades off insurance against last-week
+  // forgetting against review-load explosion.
+  const targetRetention = days === null || days > 14 ? 0.90
+                        : days >  7 ? 0.93
+                        : 0.95;
+  schedule(p, rate, undefined, days !== null && days > 0 ? days : undefined, targetRetention);
   haptic(10);
   saveProgress();
   onCardRated(qid);
@@ -2776,6 +2788,13 @@ function renderYourPickHTML(q) {
 function renderRatingButtonsHTML(q) {
   const p = state.progress[q.id] || {};
   const now = Date.now();
+  // Mirror recordRating's exam-aware schedule so the interval labels
+  // shown under each rate button match what'll actually happen.
+  const days = daysUntilExam(state.exam);
+  const previewCap = days !== null && days > 0 ? days : undefined;
+  const previewRetention = days === null || days > 14 ? 0.90
+                         : days >  7 ? 0.93
+                         : 0.95;
   // One-time SRS explainer (first reveal). Dismissed implicitly the
   // moment they tap any rate button.
   const srsHintSeen = localStorage.getItem('srsHintSeen') === '1';
@@ -2827,9 +2846,9 @@ function renderRatingButtonsHTML(q) {
       ${rates.map(r => `
         <button class="action rate-btn ${r.cls}"
                 data-rate="${r.key}"
-                aria-label="${r.label} (key ${r.kbd}), next review in ${nextIntervalLabel(p, r.key, now)}">
+                aria-label="${r.label} (key ${r.kbd}), next review in ${nextIntervalLabel(p, r.key, now, previewCap, previewRetention)}">
           <span class="rate-label">${r.label}<span class="kbd-hint" aria-hidden="true">${r.kbd}</span></span>
-          <span class="rate-interval">${nextIntervalLabel(p, r.key, now)}</span>
+          <span class="rate-interval">${nextIntervalLabel(p, r.key, now, previewCap, previewRetention)}</span>
         </button>
       `).join('')}
     </div>`;
