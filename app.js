@@ -497,18 +497,30 @@ function todayKey() {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
+// Minimum cards rated before today counts as a streak day. Tying the
+// streak to real retrieval — not a single "tap to keep the flame" —
+// makes the habit signal more honest. 3 is small enough to feel
+// achievable, big enough to require actual recall practice.
+const STREAK_MIN_CARDS = 3;
 function bumpStreak() {
   const today = todayKey();
-  const last = localStorage.getItem('streak.lastDay');
-  if (last === today) {
-    const n = Number(localStorage.getItem('streak.todayCards') || '0') + 1;
-    localStorage.setItem('streak.todayCards', String(n));
-    return;
+  const lastEarned = localStorage.getItem('streak.lastDay');
+  // Reset today's counter if the calendar day rolled over since it was set.
+  const cardsDay = localStorage.getItem('streak.cardsDay');
+  let cardsToday = Number(localStorage.getItem('streak.todayCards') || '0');
+  if (cardsDay !== today) {
+    cardsToday = 0;
+    localStorage.setItem('streak.cardsDay', today);
   }
-  // New day: check if yesterday → increment, else reset to 1
+  cardsToday += 1;
+  localStorage.setItem('streak.todayCards', String(cardsToday));
+  if (cardsToday < STREAK_MIN_CARDS) return;     // threshold not met
+  if (lastEarned === today) return;              // already earned today
+
+  // Earn today: compute new count from prior earned day.
   let count = Number(localStorage.getItem('streak.count') || '0');
-  if (last) {
-    const [ly, lm, ld] = last.split('-').map(Number);
+  if (lastEarned) {
+    const [ly, lm, ld] = lastEarned.split('-').map(Number);
     const lastDate = new Date(ly, lm - 1, ld);
     const now = new Date();
     const y = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -519,7 +531,8 @@ function bumpStreak() {
   }
   localStorage.setItem('streak.lastDay', today);
   localStorage.setItem('streak.count', String(count));
-  localStorage.setItem('streak.todayCards', '1');
+  // Subtle celebration the first time the threshold is crossed today.
+  toast(`🔥 ${count}-day streak — today's earned.`, 'success', 2500);
   maybeFireStreakCelebration(count);
 }
 
@@ -1096,7 +1109,12 @@ function recordRating(qid, rate) {
   p.updated_at = p.lastSeen;
   p.lastRating = rate;  // remembered for the "Hard" filter chip
   if (rate === 'good' || rate === 'easy') p.correct++;
-  schedule(p, rate);
+  // Pass an exam-aware interval cap. With no exam date set, schedule()
+  // falls back to its 30-day default. With one set, never schedule past
+  // the exam itself — testing a card 5 days after the exam wastes effort
+  // and inflates the readiness "covered" count.
+  const days = daysUntilExam(state.exam);
+  schedule(p, rate, undefined, days !== null && days > 0 ? days : undefined);
   haptic(10);
   saveProgress();
   onCardRated(qid);
@@ -1561,10 +1579,22 @@ function renderReading() {
     const fix = state.conceptFixes[obj];
     const isNumeric = /^\d+\.\d+$/.test(obj);
     const heading = isNumeric ? `OBJ ${obj} — ${escapeHtml(fix.title)}` : escapeHtml(fix.title);
+    // Numeric OBJ sheets get a "Test yourself" CTA that jumps into Study
+    // filtered to that objective. Reading alone is encoding, not
+    // retrieval — converting passive reading into a read→retrieve loop
+    // is the highest-impact retention move at near-zero cost.
+    const testYourselfBtn = isNumeric ? `
+        <div class="reading-test-row">
+          <button type="button" class="action primary reading-test-btn" data-test-obj="${escapeHtml(obj)}">
+            🎯 Test yourself on OBJ ${obj}
+          </button>
+          <span class="reading-test-note">Skim ≠ remember. A 3-question retrieval check beats re-reading.</span>
+        </div>` : '';
     return `
       <section class="obj-section" id="${sectionId(obj)}" aria-labelledby="${sectionId(obj)}-h">
         <h2 id="${sectionId(obj)}-h">${heading}</h2>
         ${fix.content}
+        ${testYourselfBtn}
         <a href="#" class="reading-top-link" aria-label="Back to top">↑ Top</a>
       </section>
     `;
@@ -1592,6 +1622,20 @@ function renderReading() {
       e.preventDefault();
       window.scrollTo({ top: 0, behavior: 'smooth' });
       history.replaceState(null, '', '#');
+    });
+  });
+  // "Test yourself on OBJ N.M" — filter Study to that objective + start
+  // an N-card micro-session so the user actually retrieves what they
+  // just read instead of just scrolling on.
+  $$('.reading-test-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const obj = btn.dataset.testObj;
+      if (!obj) return;
+      state.filter = { obj, due: false, weakest: false, hard: false, search: '' };
+      state.currentIndex = 0;
+      state._orderCache = null;
+      startSession({ targetCards: 3 });
+      setMode('study');
     });
   });
   // If the URL already has a hash, jump there after layout settles
@@ -1677,28 +1721,62 @@ function renderStats() {
       </div>
 
       ${(() => {
-        // Exam-readiness indicator: rough score blending accuracy + coverage.
-        // CompTIA A+ pass threshold is ~75%. We weight by how much of the
-        // deck the user has seen so they don't get a fake-green "100%" off
-        // a single right answer.
-        const coverage = qs.length ? seen.length / qs.length : 0;
-        // Blend: half weight to the accuracy you've shown, half to coverage.
-        const ready = Math.round(((acc / 100) * 0.6 + coverage * 0.4) * 100);
-        const tier = ready >= 80 ? 'high' : ready >= 65 ? 'mid' : 'low';
-        const verdict = ready >= 80 ? 'On track to pass'
-                      : ready >= 65 ? 'Getting there — keep going'
-                      : seen.length === 0 ? 'Start studying to see your readiness'
-                      : 'Below the ~75% pass mark — drill weak areas';
+        // Exam-readiness, calibrated on cold-retrieval evidence (quiz scores)
+        // rather than self-rated study accuracy. The old formula blended
+        // lifetime study accuracy 0.6 + coverage 0.4, which inflated easily:
+        // a learner who breezed through reveals rating "Good" could show
+        // 85% "readiness" without ever being tested cold — a classic
+        // pre-exam overconfidence trap (Koriat & Bjork foresight bias).
+        //
+        // New formula:
+        //   - If <= 40 quiz questions answered total → don't show a %.
+        //     Show a "not enough cold-test data yet" prompt instead. (We
+        //     suggest a 40-Q quiz threshold since that's the half-exam
+        //     option; 20 is also fine but noisier.)
+        //   - Otherwise: average of the user's most-recent quiz sessions
+        //     totaling >= 40 questions, weighted equally per question.
+        //     Capped at the last 5 sessions to stay recent.
+        //
+        // Coverage still shown as context but no longer part of the score.
         const exam = daysUntilExam(state.exam);
         const examNote = exam === null ? '' : exam < 0 ? '' : exam <= 14
           ? ` · exam in <strong>${exam} day${exam === 1 ? '' : 's'}</strong>` : '';
+        const QUIZ_MIN_QUESTIONS = 40;
+        const RECENT_SESSIONS = 5;
+        const history = loadQuizHistory(state.exam);
+        const recent = history.slice(-RECENT_SESSIONS);
+        const totalQ = recent.reduce((n, e) => n + (e.total || 0), 0);
+        const correctQ = recent.reduce((n, e) => n + (e.correct || 0), 0);
+        const sessionsLabel = `${recent.length} recent quiz${recent.length === 1 ? '' : 'zes'}`;
+        if (totalQ < QUIZ_MIN_QUESTIONS) {
+          const need = QUIZ_MIN_QUESTIONS - totalQ;
+          return `
+            <div class="readiness numeric-ui readiness-low" role="status" aria-label="Exam readiness not yet measurable">
+              <div class="readiness-pct" style="font-size:36px">📊</div>
+              <div class="readiness-text">
+                <div class="readiness-verdict">Take a quiz to see your readiness</div>
+                <div class="readiness-meta">
+                  Readiness is now based on cold-test quizzes, not self-rated study.
+                  ${totalQ === 0 ? 'Tap Quiz → 40 questions to start.' :
+                    `${need} more quiz question${need === 1 ? '' : 's'} until we can show a calibrated score (${totalQ} of ${QUIZ_MIN_QUESTIONS} so far).`}
+                  ${examNote}
+                </div>
+              </div>
+            </div>`;
+        }
+        const ready = Math.round((correctQ / totalQ) * 100);
+        const tier = ready >= 80 ? 'high' : ready >= 70 ? 'mid' : 'low';
+        const verdict = ready >= 80 ? 'On track to pass (cold-test ≥ 80%)'
+                      : ready >= 70 ? 'Close to the pass mark — keep drilling'
+                      : 'Below the ~75% pass mark — drill weak areas';
+        const coverageNote = qs.length ? ` · ${seen.length}/${qs.length} cards seen` : '';
         return `
-          <div class="readiness numeric-ui readiness-${tier}" role="status" aria-label="Exam readiness ${ready} percent">
+          <div class="readiness numeric-ui readiness-${tier}" role="status" aria-label="Exam readiness ${ready} percent based on recent quiz performance">
             <div class="readiness-pct">${ready}%</div>
             <div class="readiness-text">
               <div class="readiness-verdict">${verdict}</div>
               <div class="readiness-meta">
-                ${seen.length} of ${qs.length} cards seen · ${acc}% accuracy${examNote}
+                ${correctQ}/${totalQ} correct on ${sessionsLabel}${coverageNote}${examNote}
               </div>
             </div>
           </div>`;
@@ -4121,8 +4199,8 @@ function buildTodaysPlan() {
   // cycled back until cleared.
   if (daysLeft !== null && daysLeft >= 0 && daysLeft <= 3) {
     tasks.push({
-      id: 'cram', icon: '🔥', title: 'Cram mode — every card, looping wrongs',
-      sub: `Exam in ${daysLeft === 0 ? '<24 hours' : daysLeft + ' day' + (daysLeft === 1 ? '' : 's')}. Walks through all ${state.questions.length} cards once; anything you rate Again/Hard cycles back until you clear it.`,
+      id: 'cram', icon: '🔥', title: 'Cram mode — last-resort review',
+      sub: `Exam in ${daysLeft === 0 ? '<24 hours' : daysLeft + ' day' + (daysLeft === 1 ? '' : 's')}. Walks every card once, looping anything you rate Again/Hard. Heads-up: massed practice helps short-term recall but spacing remembers longer — only run cram when spacing isn't possible anymore.`,
       primary: true,
     });
   } else if (isFreshUser) {
