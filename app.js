@@ -567,7 +567,22 @@ function bumpStreak() {
     const now = new Date();
     const y = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const diffDays = Math.round((y - lastDate) / (24*60*60*1000));
-    count = diffDays === 1 ? count + 1 : 1;
+    if (diffDays === 1) {
+      count = count + 1;                      // streak continues
+    } else if (diffDays === 0 || diffDays === -1) {
+      // diffDays=0: edge case (today === lastEarned but lastEarned !==
+      // today check passed before reaching here — possible during a clock
+      // adjustment); preserve count.
+      // diffDays=-1: user crossed an international date line backwards
+      // OR system clock just adjusted backward by ~24h. Preserve count
+      // rather than punish a traveler / NTP-correcting device.
+      count = Math.max(1, count);
+    } else {
+      // diffDays >= 2: real gap, reset.
+      // diffDays <= -2: clock jumped backwards by multiple days — likely
+      // wrong-clock state, also reset to 1 so we don't double-credit.
+      count = 1;
+    }
   } else {
     count = 1;
   }
@@ -3578,7 +3593,8 @@ function installKeyboard() {
           // and the previous check silently swallowed deliberate "Space to
           // reveal, then Space to rate Good" patterns.
           const qs = filteredQuestions();
-          if (qs.length > 0) { recordRating(qs[state.currentIndex].id, 'good'); nextQuestion(); }
+          const cur = qs[state.currentIndex];
+          if (cur) { recordRating(cur.id, 'good'); nextQuestion(); }
         }
         return;
       }
@@ -3586,7 +3602,8 @@ function installKeyboard() {
         e.preventDefault();
         const rate = ['again', 'hard', 'good', 'easy'][Number(key) - 1];
         const qs = filteredQuestions();
-        if (qs.length > 0) { recordRating(qs[state.currentIndex].id, rate); nextQuestion(); }
+        const cur = qs[state.currentIndex];
+        if (cur) { recordRating(cur.id, rate); nextQuestion(); }
         return;
       }
     }
