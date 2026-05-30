@@ -21,5 +21,7 @@ jobs:
           node --check sw.js
       - name: Validate questions.json
         run: node scripts/validate-questions.mjs data/core2/questions.json
+      - name: Validate concept-fixes (no executable HTML)
+        run: node scripts/validate-concept-fixes.mjs
       - name: Unit tests
         run: node --test tests/*.test.mjs
