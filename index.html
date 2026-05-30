@@ -18,6 +18,13 @@
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="icon" type="image/png" href="icons/icon-192.png">
   <link rel="stylesheet" href="styles.css">
+  <!-- Preload the critical-path data + script so they fetch in parallel
+       with the rest of <head>, instead of serially after app.js parses.
+       Saves ~150ms RTT on cold mobile loads. concept-fixes.json is NOT
+       preloaded — it's deferred until the user opens Reading. -->
+  <link rel="preload" href="app.js" as="script" crossorigin>
+  <link rel="preload" href="lib.mjs" as="script" crossorigin>
+  <link rel="preload" href="data/core2/questions.json" as="fetch" crossorigin>
   <title>A+ Study</title>
 </head>
 <body>
