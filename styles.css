@@ -1745,6 +1745,100 @@ button.obj-bar .obj-acc {
   .pind-actions .action { width: 100%; }
 }
 
+/* ─── Feedback / bug-report dialog ─── */
+#feedback-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1001;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 16px;
+  padding-top: 8vh;
+  background: rgba(0, 0, 0, 0.55);
+  overflow-y: auto;
+}
+.feedback-card { max-width: 520px; }
+.fbk-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.fbk-field textarea {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.45;
+  resize: vertical;
+  min-height: 100px;
+}
+.fbk-field textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(90, 166, 255, 0.18);
+}
+.fbk-include {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: var(--text-dim);
+  cursor: pointer;
+  line-height: 1.4;
+}
+.fbk-include input { margin-top: 3px; }
+.fbk-diag-preview {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  margin-bottom: 14px;
+}
+.fbk-diag-preview > summary {
+  cursor: pointer;
+  user-select: none;
+  padding: 8px 12px;
+  color: var(--text-dim);
+  list-style: none;
+}
+.fbk-diag-preview > summary::-webkit-details-marker { display: none; }
+.fbk-diag-preview > summary::before { content: '▸ '; color: var(--text-dim); }
+.fbk-diag-preview[open] > summary::before { content: '▾ '; }
+.fbk-diag-preview pre {
+  margin: 0;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 11px;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+/* small inline CTA + helper text used in the help overlay's bug-report bullet */
+.feedback-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 4px;
+  padding: 6px 12px !important;
+  font-size: 13px;
+}
+.help-aux {
+  display: block;
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
 /* ─── Help & Setup overlay ─── */
 /* Uses the same modal scaffolding as #welcome-overlay so behavior is
    consistent (centered card on a dimmed page, ESC to close). */
