@@ -1871,8 +1871,8 @@ function renderStats() {
             <div class="label">Total</div>
           </div>
           <div class="stat-card" title="${accReady ? `Average correct across your last ${accHistory.length} quiz${accHistory.length===1?'':'zes'} (${accTotal} questions).` : `Take a quiz to see your cold-test accuracy. ${accTotal}/${ACC_MIN_QS} questions answered.`}">
-            <div class="number">${accReady ? `${acc}%` : '—'}</div>
-            <div class="label">Quiz accuracy</div>
+            <div class="number">${accReady ? `${acc}%` : `${accTotal}/${ACC_MIN_QS}`}</div>
+            <div class="label">${accReady ? 'Quiz accuracy' : 'Quiz Qs answered'}</div>
           </div>
         </div>
         <div class="stats-row">

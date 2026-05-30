@@ -52,6 +52,34 @@ test('validator allows benign HTML (tables, code, em, strong, lists)', () => {
   assert.deepEqual(validate(safe), []);
 });
 
+// ── Adversarial corpus added in PR after #56 (response to "is there ──
+// anything else though"). When I first wrote this validator I tested
+// the obvious patterns I designed it for, which is exactly the failure
+// mode the question was probing. Trying to BREAK the validator with
+// real-world XSS bypasses surfaced 4 misses; each is now caught.
+test('validator catches SVG self-closing event handler', () => {
+  // <svg/onload=...> is valid HTML5 — the / between tag and attr
+  // satisfies the "must have separator" requirement.
+  assert.ok(validate('<svg/onload=alert(1)>').length > 0);
+});
+test('validator catches HTML-entity-escaped javascript: URLs', () => {
+  // Browsers decode &#106; → "j" BEFORE running href, so "&#106;avascript:"
+  // is a working XSS vector against a regex that only matches literal
+  // "javascript:".
+  assert.ok(validate('<a href="&#106;avascript:alert(1)">x</a>').length > 0);
+  assert.ok(validate('<a href="javascript&#58;alert(1)">x</a>').length > 0);
+  assert.ok(validate('<a href="&#x6A;avascript:alert(1)">x</a>').length > 0);  // hex entity
+  assert.ok(validate('<a href="&#106avascript:alert(1)">x</a>').length > 0);   // no trailing ;
+});
+test('validator catches javascript: inside <style> blocks', () => {
+  assert.ok(validate('<style>body{background:url("javascript:alert(1)")}</style>').length > 0);
+});
+test('validator catches tab/newline between tag and attr', () => {
+  // \t and \n satisfy the attribute-separator requirement in HTML5.
+  assert.ok(validate('<a\thref="javascript:alert(1)">x</a>').length > 0);
+  assert.ok(validate('<img src=x\nonerror=alert(1)>').length > 0);
+});
+
 test('validator allows data:image URLs but blocks data:text/html', () => {
   assert.deepEqual(validate('<img src="data:image/png;base64,iVBOR...">'), []);
   assert.equal(validate('<a href="data:text/html,<script>x</script>">x</a>').length >= 1, true);

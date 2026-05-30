@@ -35,26 +35,65 @@ const DANGER_PATTERNS = [
   { re: /<\s*embed\b[^>]*>/i,                             name: '<embed> element' },
   { re: /<\s*frame\b[^>]*>/i,                             name: '<frame> element' },
   { re: /<\s*meta\b[^>]*http-equiv[^>]*refresh/i,         name: '<meta http-equiv="refresh">' },
-  { re: /\son[a-z]+\s*=\s*["'][^"']*["']/i,               name: 'inline event handler (on*=)' },
-  { re: /\son[a-z]+\s*=\s*[^\s"'>]+/i,                    name: 'inline event handler (unquoted on*=)' },
-  // javascript: and vbscript: URLs in href/src/action
+  // Event handlers: HTML5 allows whitespace OR a self-closing slash between
+  // the tag name and the attribute. `<svg/onload=alert(1)>` is valid markup.
+  // [\s/] matches both. Earlier version only had \s and missed the /-variant.
+  { re: /[\s/]on[a-z]+\s*=\s*["'][^"']*["']/i,            name: 'inline event handler (on*=)' },
+  { re: /[\s/]on[a-z]+\s*=\s*[^\s"'>]+/i,                 name: 'inline event handler (unquoted on*=)' },
+  // javascript: and vbscript: URLs in href/src/action.
+  // \s* allows tab/newline between attr and value (`<a\thref="...">` works).
   { re: /\b(?:href|src|action|formaction|data)\s*=\s*["']?\s*(?:javascript|vbscript|data):(?!image\/(?:png|jpe?g|gif|svg\+xml|webp);)/i,
                                                           name: 'javascript:/vbscript:/data: URL in attribute' },
   // srcdoc lets you embed a whole document
   { re: /\bsrcdoc\s*=/i,                                  name: 'srcdoc attribute (inline frame document)' },
+  // <style> blocks that embed a javascript: URL via CSS url(). Legacy IE
+  // ran these as script; modern browsers don't. Defense in depth: never
+  // ship CSS that LOOKS like it wants to run JS.
+  { re: /<\s*style\b[\s\S]*?(?:javascript|vbscript):[\s\S]*?<\s*\/\s*style\s*>/i,
+                                                          name: 'javascript: URL inside <style> block' },
 ];
+
+// HTML entity-escape bypass: a content author can write
+// `<a href="&#106;avascript:alert(1)">` and the browser will decode
+// `&#106;` to `j` BEFORE applying any URL handler. The regex above sees
+// "&#106;avascript:" which doesn't match "javascript:" literally. Fix:
+// decode numeric entities (both decimal &#NN; and hex &#xNN;, with or
+// without trailing semicolon since Firefox/Chrome accept missing ;) +
+// the handful of named entities a real attacker would use, then re-run
+// the regex on the decoded copy.
+const NAMED_ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", colon: ':', sol: '/', tab: '\t', newline: '\n' };
+function decodeEntities(s) {
+  return s
+    .replace(/&#x([0-9a-f]+);?/gi, (_, h) => {
+      const n = parseInt(h, 16);
+      return n > 0 && n < 0x110000 ? String.fromCodePoint(n) : _;
+    })
+    .replace(/&#([0-9]+);?/g, (_, d) => {
+      const n = parseInt(d, 10);
+      return n > 0 && n < 0x110000 ? String.fromCodePoint(n) : _;
+    })
+    .replace(/&([a-z]+);/gi, (m, n) => NAMED_ENTITIES[n.toLowerCase()] ?? m);
+}
 
 export function validate(text, label = '<input>') {
   const findings = [];
+  // Run the regex against the raw text AND the entity-decoded text so
+  // `&#106;avascript:` and `javascript:` both get caught.
+  const decoded = decodeEntities(text);
+  const variants = decoded === text ? [text] : [text, decoded];
   for (const { re, name } of DANGER_PATTERNS) {
-    const m = text.match(re);
-    if (m) {
-      // Locate which content section the match landed in, for actionable errors.
-      const idx = m.index;
+    for (const variant of variants) {
+      const m = variant.match(re);
+      if (!m) continue;
+      // Locate in the ORIGINAL text where possible; if the match is only
+      // in the decoded copy, fall back to the decoded position.
+      const origIdx = text.indexOf(m[0]);
+      const idx = origIdx >= 0 ? origIdx : m.index;
       const before = text.slice(0, idx);
       const snippet = m[0].slice(0, 80);
       const lineNo = (before.match(/\n/g) || []).length + 1;
       findings.push({ name, line: lineNo, snippet, file: label });
+      break;  // one finding per pattern per content string
     }
   }
   return findings;
