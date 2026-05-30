@@ -114,6 +114,7 @@ html[data-anxiety="on"] .card-meta .tag.numeric {
 html[data-focus] #tabbar,
 html[data-focus] .filter-bar,
 html[data-focus] .search-row,
+html[data-focus] .filter-collapse,
 html[data-focus] .card-meta,
 html[data-focus] #progress-hud { display: none !important; }
 html[data-focus] header { border-bottom: none; }
