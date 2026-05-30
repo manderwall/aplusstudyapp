@@ -83,8 +83,8 @@
     "id": "yt005",
     "obj": "4.4",
     "qtype": "Multiple Choice",
-    "question": "What information does an MSDS document provide?",
-    "explanation": "OBJ 4.4: A Material Safety Data Sheet (MSDS) documents hazardous chemicals contained in a product and how to handle spills, exposure, fires, and disposal.",
+    "question": "What information does a Safety Data Sheet (SDS, formerly MSDS) provide?",
+    "explanation": "OBJ 4.4: A Safety Data Sheet (SDS) — called a Material Safety Data Sheet (MSDS) before the OSHA/GHS terminology update in 2015 — documents the hazardous chemicals contained in a product and how to handle spills, exposure, fires, and disposal. Both terms still appear in field materials; the modern standard is SDS.",
     "options": [
       "UPS and battery system setup",
       "Hazard response procedure",
@@ -1128,8 +1128,8 @@
     "id": "yt057",
     "obj": "1.6",
     "qtype": "Multiple Choice",
-    "question": "Which of the following is the best reason for a network engineering team to provide a help-desk technician with IP address information to use on a workstation being deployed in a secure network segment?",
-    "explanation": "OBJ 1.6: A secure network segment commonly omits DHCP so the team can track every machine by static assignment. That is why the engineering team hands out specific IPs to use on the workstation.",
+    "question": "A help-desk technician is deploying a workstation onto a secure network segment. Why must the workstation be configured with a static IP rather than left to obtain an address automatically?",
+    "explanation": "OBJ 1.6: A secure network segment commonly disables DHCP so every host's address can be tracked, audited, and pinned to a known asset. With no DHCP server replying, the workstation has to be assigned a static address — which is why engineering hands the technician the specific IP, mask, gateway, and DNS values to enter. Upstream allow-lists / NAC posture checks may also exist, but those policies don't change the fact that without DHCP the host needs static config to talk to anything.",
     "options": [
       "Only specific DNS servers are allowed outbound access",
       "The network allow list is set to specific addresses",
@@ -1352,8 +1352,8 @@
     "id": "yt068",
     "obj": "1.4",
     "qtype": "Multiple Choice",
-    "question": "A technician is setting up a Windows server to allow remote-desktop connections for multiple users. Which of the following should the technician configure on the workstation?",
-    "explanation": "OBJ 1.4: Each remote user needs their own account so RDP sessions can be authenticated and isolated. Enabling Remote Desktop already opens the firewall port automatically.",
+    "question": "A technician is configuring a Windows 10/11 Pro workstation so that multiple existing local users can connect over Remote Desktop. After enabling Remote Desktop in Settings, which tool grants these specific users RDP access?",
+    "explanation": "OBJ 1.4: Granting Remote Desktop access means adding the user accounts to the local Remote Desktop Users group. Computer Management → Local Users and Groups → Groups → Remote Desktop Users → Add is the canonical GUI path on Windows 10/11 Pro. The Settings → System → Remote Desktop → 'Select users' button is a shortcut for the same operation, but among these options Computer Management is the tool. The User Accounts applet (control userpasswords2 / netplwiz) creates and manages local accounts but does not place them in the RDP group. Firewall rules for RDP are toggled automatically when Remote Desktop is enabled. Ease of Use (Ease of Access) is unrelated.",
     "options": [
       "Firewall",
       "Computer Management",
@@ -1366,7 +1366,7 @@
         "qnum": 68
       }
     ],
-    "correct_short": "User Accounts"
+    "correct_short": "Computer Management"
   },
   {
     "id": "yt069",
@@ -3555,8 +3555,8 @@
     "obj": "4.5",
     "qtype": "Multiple Choice",
     "question": "An IT technician accidentally breaks an old uninterruptible power supply (UPS) and a chemical substance leaks out. Where should the technician look to find first aid information and safe cleanup procedures?",
-    "correct_short": "The Material Safety Data Sheet (MSDS)",
-    "explanation": "OBJ 4.5: A Material Safety Data Sheet (MSDS) contains crucial safety information about hazardous ingredients, health hazards, first aid, and procedures for safe cleanup of leaks or spills.",
+    "correct_short": "The Safety Data Sheet (SDS)",
+    "explanation": "OBJ 4.5: A Safety Data Sheet (SDS) — called a Material Safety Data Sheet (MSDS) before the 2015 OSHA/GHS update — contains the hazardous-ingredient list, health hazards, first-aid steps, and safe cleanup procedures for spills. Field materials still use both terms; the modern standard is SDS.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -3564,7 +3564,7 @@
       }
     ],
     "options": [
-      "The Material Safety Data Sheet (MSDS)",
+      "The Safety Data Sheet (SDS)",
       "The knowledge base FAQ",
       "The end-user license agreement (EULA)",
       "The configuration management database (CMDB)"
@@ -5487,8 +5487,8 @@
     "obj": "4.5",
     "qtype": "Multiple Choice",
     "question": "A technician spills a large amount of toner inside a laser printer. Where should they look to find the official manufacturer instructions regarding the health hazards and proper cleanup procedures for this specific chemical?",
-    "correct_short": "The material safety data sheet (MSDS)",
-    "explanation": "OBJ 4.5 (Operational Procedures): A material safety data sheet (MSDS) provides crucial safety documentation for handling, storing, and disposing of hazardous materials like printer toner and batteries.",
+    "correct_short": "The safety data sheet (SDS)",
+    "explanation": "OBJ 4.5 (Operational Procedures): A safety data sheet (SDS) — formerly called a material safety data sheet (MSDS) before the 2015 OSHA/GHS terminology update — provides crucial safety documentation for handling, storing, and disposing of hazardous materials like printer toner and batteries. Both terms still appear in field materials; the modern standard is SDS.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -5499,7 +5499,7 @@
       "The service-level agreement (SLA)",
       "The acceptable use policy (AUP)",
       "The configuration management database (CMDB)",
-      "The material safety data sheet (MSDS)"
+      "The safety data sheet (SDS)"
     ],
     "origin": "NotebookLM 220-1202 objective-mapped (generated 2026-05-27)"
   },
