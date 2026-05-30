@@ -2462,6 +2462,44 @@ html[data-motion="reduced"] .quiz-progress-fill { transition: none; }
 .tag.quiz-counter { font-weight: 600; color: var(--accent); }
 .quiz-abandon-btn { margin-left: auto; color: var(--text-dim); }
 
+/* Exam-outcome log (PR #67) ─ Stats section + capture dialog ─────── */
+.outcomes-loading { color: var(--text-dim); font-size: 13px; padding: 8px 0; }
+.outcomes-blurb { color: var(--text-dim); font-size: 13px; margin-bottom: 12px; line-height: 1.5; }
+.outcomes-empty { color: var(--text-dim); font-size: 13px; padding: 12px 0; }
+.outcome-anecdote { padding: 12px 14px; background: var(--surface-2); border: 1px dashed var(--warn); border-radius: 8px; margin-bottom: 14px; font-size: 13px; line-height: 1.5; color: var(--text); }
+.outcome-anecdote strong { display: block; margin-bottom: 4px; color: var(--warn); }
+.outcome-scatter-wrap { display: flex; justify-content: center; margin-bottom: 14px; }
+.outcome-scatter { max-width: 280px; width: 100%; height: auto; }
+.outcome-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.outcome-metric { padding: 10px 12px; background: var(--surface-2); border-radius: 8px; text-align: center; }
+.outcome-metric-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+.outcome-metric-value { font-size: 22px; font-weight: 600; margin: 4px 0; font-variant-numeric: tabular-nums; }
+.outcome-metric-value.over { color: var(--bad); }
+.outcome-metric-value.under { color: var(--accent); }
+.outcome-metric-help { font-size: 11px; color: var(--text-dim); }
+.outcome-list { margin: 12px 0; }
+.outcome-list summary { cursor: pointer; font-size: 13px; color: var(--text-dim); padding: 4px 0; }
+.outcome-list ul { list-style: none; padding: 8px 0 0; margin: 0; font-size: 13px; }
+.outcome-list li { padding: 6px 0; border-bottom: 1px solid var(--border); color: var(--text-dim); }
+.outcome-list li:last-child { border-bottom: none; }
+
+#outcome-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 1300; display: flex; align-items: center; justify-content: center; padding: 16px; overflow-y: auto; }
+.outcome-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px 20px; max-width: 480px; width: 100%; max-height: calc(100vh - 32px); overflow-y: auto; position: relative; }
+.outcome-card h2 { font-size: 18px; margin-bottom: 6px; padding-right: 32px; }
+.outcome-intro { color: var(--text-dim); font-size: 13px; margin-bottom: 16px; line-height: 1.5; }
+.outcome-group { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; }
+.outcome-group legend { font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; padding: 0 6px; }
+.outcome-field { display: block; margin-bottom: 12px; }
+.outcome-field:last-child { margin-bottom: 0; }
+.outcome-label { display: block; font-size: 13px; margin-bottom: 4px; color: var(--text); }
+.outcome-meta { color: var(--text-dim); font-weight: normal; font-size: 11px; }
+.outcome-field input[type="number"], .outcome-field input[type="date"], .outcome-field textarea { width: 100%; padding: 8px 10px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: inherit; font-size: 14px; }
+.outcome-field textarea { resize: vertical; min-height: 60px; }
+.outcome-strategies { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.outcome-strategy { display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: var(--surface-2); border-radius: 6px; font-size: 13px; cursor: pointer; }
+.outcome-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+.outcome-actions .action { padding: 10px 16px !important; }
+
 /* Mock-exam start CTA — separate row beneath the practice-quiz buttons,
    bigger + bordered so it doesn't get tapped accidentally. */
 .mock-start-row { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--border); text-align: center; }

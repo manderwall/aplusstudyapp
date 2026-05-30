@@ -627,11 +627,12 @@ function scheduleAutoSync() {
 }
 
 const DB_NAME = 'aplus-study';
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 const STORE = 'progress';
 const OSTORE = 'overrides';   // per-question edits: { [qid]: {options?, image?, images?} }
 const DSTORE = 'drawings';    // per-question scratchpad canvas PNGs (base64 dataURL)
 const RSTORE = 'reference';   // user's reference book PDF (per-exam): { blob, name, size, pageCount, uploadedAt, pageText? }
+const ESTORE = 'examEvents';  // outcome-loop log: { [examEventId]: ExamEvent }. PR #67. See ExamEvent shape comment near loadExamEvents().
 
 function openDB() {
   return new Promise((resolve, reject) => {
@@ -642,6 +643,7 @@ function openDB() {
       if (!db.objectStoreNames.contains(OSTORE)) db.createObjectStore(OSTORE);
       if (!db.objectStoreNames.contains(DSTORE)) db.createObjectStore(DSTORE);
       if (!db.objectStoreNames.contains(RSTORE)) db.createObjectStore(RSTORE);
+      if (!db.objectStoreNames.contains(ESTORE)) db.createObjectStore(ESTORE);
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
@@ -739,6 +741,284 @@ async function loadOverrides(examId = state.exam) {
 async function saveOverrides(examId = state.exam) {
   try { await idbPut(OSTORE, examId, await maybeEncrypt(state.overrides)); }
   catch (e) { console.warn('Save overrides failed', e); }
+}
+
+//─── EXAM-OUTCOME LOG (PR #67) ───────────────────────────────
+// Stored shape (per exam attempt — one record per exam taken):
+//   {
+//     id: 'evt-<ms>',                  // primary key, sortable
+//     exam: 'core2',                   // dataset id (state.exam)
+//     examDateISO: '2026-07-15',       // user-supplied
+//     loggedAtMs: 1721059200000,
+//     // Pre-exam (may be null if user only logs after the fact):
+//     pre: { predictedReadinessPct: 78, selfPredictedPct: 75, confidencePct: 60 } | null,
+//     // Post-exam:
+//     post: {
+//       actualScorePct: 82,            // user types from CompTIA score report
+//       postdictionPct: 70,            // gut % right after, before learning score
+//       passed: true,                  // derived vs MOCK_EXAM_PASS_PCT
+//       lovettGap: 'I overestimated…',
+//       lovettStrategies: ['mocks','quiz','reading'],
+//       lovettForward: 'More mocks earlier next time.',
+//     } | null,
+//   }
+// Persisted under a single IDB key per exam dataset (the value is an
+// ARRAY of events), encrypted under the PIN if one's set. Calibration
+// metrics only compute meaningfully at n >= 3 per the WWC SCED standard
+// surfaced by the metacognition research; below that, the UI labels
+// the data 'anecdotal'.
+async function loadExamEvents(examId = state.exam) {
+  try {
+    const raw = await idbGet(ESTORE, examId);
+    return (await maybeDecrypt(raw, [])) || [];
+  } catch (e) { if (e.message === 'locked') throw e; return []; }
+}
+async function saveExamEvents(events, examId = state.exam) {
+  try { await idbPut(ESTORE, examId, await maybeEncrypt(events)); }
+  catch (e) { console.warn('Save exam events failed', e); }
+}
+async function appendExamEvent(event) {
+  const list = await loadExamEvents();
+  list.push(event);
+  await saveExamEvents(list);
+  return list;
+}
+// Compute calibration metrics on the events that have both pre.predictedReadinessPct
+// and post.actualScorePct. Returns null when n < 3 — the threshold the
+// metacognition research flagged as the WWC single-case-design floor
+// for "without reservations."
+function computeCalibrationMetrics(events) {
+  const ws = events.filter(e => e?.pre?.predictedReadinessPct != null && e?.post?.actualScorePct != null);
+  if (ws.length < 3) return null;
+  const diffs = ws.map(e => e.pre.predictedReadinessPct - e.post.actualScorePct);
+  const signedBias = diffs.reduce((s, d) => s + d, 0) / diffs.length;
+  const mae = diffs.reduce((s, d) => s + Math.abs(d), 0) / diffs.length;
+  // Brier-style component for the "are they expected to pass?" prediction.
+  // Treats predicted probability of pass as predicted/100, outcome as 0/1.
+  const brierItems = ws.filter(e => e.post.passed !== undefined);
+  const brier = brierItems.length === 0 ? null
+    : brierItems.reduce((s, e) => {
+        const p = (e.pre.predictedReadinessPct || 0) / 100;
+        const o = e.post.passed ? 1 : 0;
+        return s + (p - o) * (p - o);
+      }, 0) / brierItems.length;
+  return { n: ws.length, signedBias, mae, brier };
+}
+
+async function hydrateOutcomesPanel() {
+  const host = $('#outcomes-panel');
+  if (!host) return;
+  let events;
+  try { events = await loadExamEvents(); }
+  catch (e) { if (e.message === 'locked') { host.innerHTML = '<p class="outcomes-empty">Unlock with your PIN to view the outcome log.</p>'; return; } events = []; }
+
+  // Compute calibration stats only when we have ≥3 attempts. Below that
+  // threshold, the metacognition research's punchline applies: anything
+  // we'd display is anecdotal, so just say so honestly.
+  const metrics = computeCalibrationMetrics(events);
+  const n = events.length;
+
+  // Calibration scatter — a tiny SVG showing predicted vs actual %.
+  // Diagonal = perfect calibration. Above = under-confident; below =
+  // over-confident. One dot per attempt; pass/fail tints the dot.
+  const SVG_SIZE = 240, PAD = 24;
+  const dots = events.map(e => {
+    const p = e?.pre?.predictedReadinessPct;
+    const a = e?.post?.actualScorePct;
+    if (p == null || a == null) return '';
+    const x = PAD + (p / 100) * (SVG_SIZE - 2 * PAD);
+    const y = SVG_SIZE - PAD - (a / 100) * (SVG_SIZE - 2 * PAD);
+    const tint = e.post.passed ? 'var(--good)' : 'var(--bad)';
+    return `<circle cx="${x}" cy="${y}" r="5" fill="${tint}" stroke="var(--surface)" stroke-width="2"></circle>`;
+  }).join('');
+  const scatter = `
+    <svg viewBox="0 0 ${SVG_SIZE} ${SVG_SIZE}" class="outcome-scatter" role="img" aria-label="Predicted vs actual exam scores">
+      <rect x="${PAD}" y="${PAD}" width="${SVG_SIZE-2*PAD}" height="${SVG_SIZE-2*PAD}" fill="var(--surface-2)" stroke="var(--border)" />
+      <line x1="${PAD}" y1="${SVG_SIZE-PAD}" x2="${SVG_SIZE-PAD}" y2="${PAD}" stroke="var(--border)" stroke-dasharray="3,3" />
+      <text x="${SVG_SIZE/2}" y="${SVG_SIZE-4}" text-anchor="middle" font-size="10" fill="var(--text-dim)">predicted readiness %</text>
+      <text x="6" y="${SVG_SIZE/2}" text-anchor="middle" font-size="10" fill="var(--text-dim)" transform="rotate(-90, 6, ${SVG_SIZE/2})">actual score %</text>
+      ${dots}
+    </svg>`;
+
+  const metricsHTML = metrics ? `
+    <div class="outcome-metrics">
+      <div class="outcome-metric"><div class="outcome-metric-label">Mean signed bias</div><div class="outcome-metric-value ${metrics.signedBias > 5 ? 'over' : metrics.signedBias < -5 ? 'under' : ''}">${metrics.signedBias > 0 ? '+' : ''}${metrics.signedBias.toFixed(1)}%</div><div class="outcome-metric-help">${metrics.signedBias > 5 ? 'overconfident' : metrics.signedBias < -5 ? 'underconfident' : 'well-calibrated'}</div></div>
+      <div class="outcome-metric"><div class="outcome-metric-label">Mean absolute error</div><div class="outcome-metric-value">${metrics.mae.toFixed(1)}%</div><div class="outcome-metric-help">avg |pred − actual|</div></div>
+      ${metrics.brier != null ? `<div class="outcome-metric"><div class="outcome-metric-label">Brier (pass)</div><div class="outcome-metric-value">${metrics.brier.toFixed(3)}</div><div class="outcome-metric-help">lower = better</div></div>` : ''}
+    </div>` : '';
+
+  const anecdoteBanner = n < 3 ? `
+    <div class="outcome-anecdote">
+      <strong>Anecdotal until ${3 - n} more attempt${3 - n === 1 ? '' : 's'}.</strong>
+      Calibration metrics need ≥3 exam events per the WWC single-case-design
+      standard. Until then, the dots are just dots.
+    </div>` : '';
+
+  const list = events.length === 0 ? '' : `
+    <details class="outcome-list">
+      <summary>${events.length} attempt${events.length === 1 ? '' : 's'} logged</summary>
+      <ul>
+        ${events.slice().reverse().map(e => `
+          <li>
+            <strong>${escapeHtml(e.examDateISO || new Date(e.loggedAtMs).toISOString().slice(0,10))}</strong>
+            ${e.post?.actualScorePct != null ? `· ${e.post.actualScorePct}% ${e.post.passed ? '✓' : '✗'}` : '· result pending'}
+            ${e.pre?.predictedReadinessPct != null ? `· predicted ${e.pre.predictedReadinessPct}%` : ''}
+          </li>`).join('')}
+      </ul>
+    </details>`;
+
+  host.innerHTML = `
+    <p class="outcomes-blurb">
+      Log every real exam attempt — even one. Future attempts get compared
+      against your predicted readiness so you can see whether the app's
+      number is trustworthy. Local only; not synced.
+    </p>
+    ${anecdoteBanner}
+    ${n > 0 ? `<div class="outcome-scatter-wrap">${scatter}</div>` : ''}
+    ${metricsHTML}
+    ${list}
+    <div class="settings-actions" style="margin-top: 12px;">
+      <button class="action" id="outcome-log-btn">📊 Log an exam attempt</button>
+    </div>
+  `;
+  $('#outcome-log-btn')?.addEventListener('click', () => openOutcomeLogDialog());
+}
+
+// Single dialog that captures the full ExamEvent in one form. Skip
+// fields don't break anything — predictedReadiness is auto-filled from
+// the current readiness number; everything else is optional but
+// strongly suggested in the prompt copy.
+function openOutcomeLogDialog() {
+  // Snapshot the current app-predicted readiness so we capture what
+  // the user actually saw at log time, not at form-submit time.
+  const currentReadiness = (() => {
+    const history = loadQuizHistory(state.exam).slice(-5);
+    const totalQ = history.reduce((n, e) => n + (e.total || 0), 0);
+    const correctQ = history.reduce((n, e) => n + (e.correct || 0), 0);
+    return totalQ >= 40 ? Math.round((correctQ / totalQ) * 100) : null;
+  })();
+  const today = new Date().toISOString().slice(0,10);
+  const overlay = document.createElement('div');
+  overlay.id = 'outcome-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-labelledby', 'outcome-title');
+  overlay.innerHTML = `
+    <div class="outcome-card">
+      <button class="welcome-close" id="outcome-close" aria-label="Cancel">✕</button>
+      <h2 id="outcome-title">Log an exam attempt</h2>
+      <p class="outcome-intro">
+        Capture what the app predicted, what you guessed, and what you actually scored.
+        After 3+ attempts the calibration view starts to mean something.
+      </p>
+      <form id="outcome-form">
+        <label class="outcome-field">
+          <span class="outcome-label">Exam date</span>
+          <input type="date" id="outcome-date" value="${today}" required>
+        </label>
+
+        <fieldset class="outcome-group">
+          <legend>Before the exam</legend>
+          <label class="outcome-field">
+            <span class="outcome-label">App's predicted readiness % <span class="outcome-meta">(auto)</span></span>
+            <input type="number" id="outcome-app-pred" min="0" max="100" step="1" value="${currentReadiness ?? ''}" placeholder="e.g. 78">
+          </label>
+          <label class="outcome-field">
+            <span class="outcome-label">Your own prediction %</span>
+            <input type="number" id="outcome-self-pred" min="0" max="100" step="1" placeholder="What did you guess you'd score?">
+          </label>
+          <label class="outcome-field">
+            <span class="outcome-label">Your confidence (0–100)</span>
+            <input type="number" id="outcome-confidence" min="0" max="100" step="1" placeholder="How sure were you?">
+          </label>
+        </fieldset>
+
+        <fieldset class="outcome-group">
+          <legend>After the exam</legend>
+          <label class="outcome-field">
+            <span class="outcome-label">Actual score % (from CompTIA score report)</span>
+            <input type="number" id="outcome-actual" min="0" max="100" step="0.1" placeholder="e.g. 82" required>
+          </label>
+          <label class="outcome-field">
+            <span class="outcome-label">Postdiction % <span class="outcome-meta">(your guess right after — before seeing the score)</span></span>
+            <input type="number" id="outcome-postdict" min="0" max="100" step="1">
+          </label>
+        </fieldset>
+
+        <fieldset class="outcome-group">
+          <legend>Reflection (Lovett wrapper)</legend>
+          <label class="outcome-field">
+            <span class="outcome-label">One sentence on the prediction-vs-actual gap</span>
+            <textarea id="outcome-gap" rows="2" placeholder="e.g. I overestimated my OBJ 2.x readiness — I'd skipped a domain."></textarea>
+          </label>
+          <span class="outcome-label">Which study activities did you use?</span>
+          <div class="outcome-strategies">
+            ${['Study cards', 'Practice quizzes', 'Reading sheets', 'Timed mocks', 'Reference book'].map(s =>
+              `<label class="outcome-strategy"><input type="checkbox" value="${escapeHtml(s)}"> ${escapeHtml(s)}</label>`
+            ).join('')}
+          </div>
+          <label class="outcome-field" style="margin-top: 10px;">
+            <span class="outcome-label">One concrete change for next cycle</span>
+            <textarea id="outcome-forward" rows="2" placeholder="e.g. Take a timed 90-Q mock under exam conditions every Sunday."></textarea>
+          </label>
+        </fieldset>
+
+        <div class="outcome-actions">
+          <button type="button" class="action" id="outcome-cancel">Cancel</button>
+          <button type="submit" class="action primary" id="outcome-save">Save attempt</button>
+        </div>
+      </form>
+    </div>`;
+  document.body.appendChild(overlay);
+  const previouslyFocused = document.activeElement;
+  setAppInert(true);
+  const releaseTrap = trapFocus(overlay);
+  const close = () => {
+    releaseTrap();
+    setAppInert(false);
+    document.removeEventListener('keydown', onKey);
+    overlay.remove();
+    if (previouslyFocused && typeof previouslyFocused.focus === 'function') previouslyFocused.focus();
+  };
+  const onKey = (e) => { if (e.key === 'Escape') close(); };
+  document.addEventListener('keydown', onKey);
+  $('#outcome-close').addEventListener('click', close);
+  $('#outcome-cancel').addEventListener('click', close);
+  $('#outcome-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const intField = (id) => {
+      const v = $(`#${id}`)?.value?.trim();
+      if (v === '' || v == null) return null;
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    };
+    const actual = intField('outcome-actual');
+    if (actual == null) { toast('Actual score is required.', 'error'); return; }
+    const strategies = [...overlay.querySelectorAll('.outcome-strategy input:checked')].map(c => c.value);
+    const event = {
+      id: 'evt-' + Date.now(),
+      exam: state.exam,
+      examDateISO: $('#outcome-date').value || today,
+      loggedAtMs: Date.now(),
+      pre: {
+        predictedReadinessPct: intField('outcome-app-pred'),
+        selfPredictedPct: intField('outcome-self-pred'),
+        confidencePct: intField('outcome-confidence'),
+      },
+      post: {
+        actualScorePct: actual,
+        postdictionPct: intField('outcome-postdict'),
+        passed: actual >= MOCK_EXAM_PASS_PCT,
+        lovettGap: $('#outcome-gap').value.trim(),
+        lovettStrategies: strategies,
+        lovettForward: $('#outcome-forward').value.trim(),
+      },
+    };
+    await appendExamEvent(event);
+    close();
+    toast('Logged. The calibration view will sharpen as you add more attempts.', 'success', 4500);
+    hydrateOutcomesPanel();
+  });
 }
 
 //─── DATA LOAD ───────────────────────────────────────────────
@@ -2170,6 +2450,14 @@ function renderStats() {
         `}
       </div>
 
+      <h3 class="stats-h">Exam outcomes</h3>
+      <div class="settings-panel" id="outcomes-panel">
+        <!-- Populated asynchronously by hydrateOutcomesPanel() below.
+             Placeholder copy stays put on render-fail, so the section
+             always shows something. -->
+        <div class="outcomes-loading">Loading outcome log…</div>
+      </div>
+
       <h3 class="stats-h">Accessibility</h3>
       <div class="settings-panel">
         <div class="settings-row">
@@ -2363,6 +2651,8 @@ function renderStats() {
       renderStats();
     }
   });
+  // Outcome log: populate asynchronously so renderStats stays sync.
+  hydrateOutcomesPanel();
   $('#export-btn')?.addEventListener('click', exportProgress);
   $('#import-btn')?.addEventListener('click', importProgress);
   $('#export-overrides-btn')?.addEventListener('click', exportOverrides);
@@ -3734,7 +4024,8 @@ function installKeyboard() {
     // listener runs first because it's installed later in DOM order.
     if (document.querySelector(
       '#welcome-overlay, #help-overlay, #feedback-overlay, ' +
-      '#pin-overlay, #lock-overlay, #img-zoom-overlay, #pdf-viewer-overlay'
+      '#pin-overlay, #lock-overlay, #img-zoom-overlay, #pdf-viewer-overlay, ' +
+      '#outcome-overlay'
     )) return;
 
     const key = e.key.toLowerCase();
