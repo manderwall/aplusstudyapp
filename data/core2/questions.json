@@ -2023,7 +2023,7 @@
     "qtype": "Multiple Choice",
     "question": "Which of the following Microsoft Windows editions is the minimum requirement to support BitLocker drive encryption and joining a Windows Domain?",
     "correct_short": "Windows 10 Pro",
-    "explanation": "OBJ 1.1: Windows 10 Pro is the minimum edition that supports joining a domain and using BitLocker, as Windows Home editions lack these advanced networking and security features.",
+    "explanation": "OBJ 1.1: Windows 10 Pro is the minimum edition that supports BitLocker drive encryption and Active Directory domain join. Both Windows 10 Home and Windows 11 Home are consumer editions — they can sign in to a Microsoft account and use Device Encryption on some hardware, but they cannot join an AD domain and they lack the BitLocker management UI. Windows 10 Home Single Language is the same Home SKU restricted to one display language; it has the same Home-tier limitations. Education and Enterprise editions also qualify, but Pro is the cheapest/most-common minimum the exam expects.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -2032,7 +2032,7 @@
     ],
     "options": [
       "Windows 10 Pro",
-      "Windows 10 N",
+      "Windows 10 Home Single Language",
       "Windows 10 Home",
       "Windows 11 Home"
     ],
@@ -5990,12 +5990,12 @@
     "id": "c2-trbl-001",
     "obj": "3.1",
     "qtype": "Multiple Choice",
-    "question": "A Windows 10 computer displays a blue screen of death (BSOD) with a MEMORY_MANAGEMENT error code. What is the most likely cause?",
-    "explanation": "OBJ 3.1: The MEMORY_MANAGEMENT stop error typically indicates a problem with physical RAM, such as a faulty module, incompatible memory, or incorrect memory timing settings. While outdated drivers can contribute, the MEMORY_MANAGEMENT code specifically points to hardware-level memory issues. Running Windows Memory Diagnostic or MemTest86 can confirm a RAM fault. [OBJ:3.1]",
+    "question": "A Windows 10 computer displays a blue screen of death (BSOD) with a MEMORY_MANAGEMENT error code. What is the MOST likely cause to investigate first?",
+    "explanation": "OBJ 3.1: The MEMORY_MANAGEMENT stop code most directly indicates that the Windows memory manager detected an inconsistency — usually a faulty/incompatible RAM module, mismatched timings/voltages, or aggressive XMP. Running Windows Memory Diagnostic (mdsched.exe) or MemTest86 from a bootable USB confirms a hardware fault. Storage or display drivers can cause it indirectly, so updating drivers is the next step if memory tests come back clean, but the code itself points at memory first. A corrupt user profile causes sign-in failures, not BSODs. Insufficient disk space causes 'out of disk' errors and slow paging, not MEMORY_MANAGEMENT.",
     "options": [
       "Corrupt user profile",
       "Faulty or incompatible RAM",
-      "Outdated device drivers only",
+      "Page file fragmentation",
       "Insufficient disk space"
     ],
     "sources": [
