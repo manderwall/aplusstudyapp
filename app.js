@@ -59,6 +59,7 @@ const state = {
   revealed: false,
   selectedOption: null,  // option text the user tapped pre-reveal (single-answer Qs)
   selectedOptions: [],   // option texts the user has toggled on (Multiple Answer Qs)
+  committed: false,      // true once the user has either picked OR tapped "I don't know" — gates Reveal
   editing: false,  // when true, render the edit form instead of the question card
   focus: false,    // Focus Mode: hides filter/meta chrome to show just the card
   history: [],     // stack of previous currentIndex values for Prev nav
@@ -963,13 +964,37 @@ function renderStudy() {
           ${renderLearnMoreHTML(q)}
         </div>
         ${renderRatingButtonsHTML(q)}
-      ` : `
+      ` : (() => {
+        // Reveal is gated on a real retrieval attempt: the user must either
+        // pick an answer or explicitly tap "I don't know" (free-recall
+        // commit). The audit's biggest pedagogy gain — converts a recognition
+        // task (seeing the answer with options visible) into actual
+        // retrieval. The "I don't know" affordance prevents getting stuck
+        // when the user genuinely doesn't have a guess.
+        const hasOptions = Array.isArray(q.options) && q.options.length > 0;
+        const ma = isMultipleAnswer(q);
+        const picked = ma ? (state.selectedOptions || []).length > 0
+                          : !!state.selectedOption;
+        // No-options qtype (free-text, image-only PBQ stems): Reveal is
+        // always enabled; the question itself IS the retrieval prompt.
+        const armed = !hasOptions || picked || state.committed;
+        const revealLabel = armed ? 'Reveal answer'
+                                  : (ma ? 'Pick your answers, then reveal'
+                                        : 'Pick an answer, then reveal');
+        return `
         <div class="btn-row btn-row-nav">
           <button class="action nav-btn" id="prev-btn" aria-label="Previous card" title="Previous">←</button>
-          <button class="action primary" id="reveal-btn">Reveal answer</button>
+          <button class="action primary" id="reveal-btn"${armed ? '' : ' disabled aria-disabled="true"'}>${revealLabel}</button>
           <button class="action nav-btn" id="skip-btn" aria-label="Skip without rating" title="Skip without rating">→</button>
         </div>
-      `}
+        ${hasOptions && !picked && !state.committed ? `
+          <button type="button" class="action idk-btn" id="idk-btn"
+                  aria-label="I don't know — reveal without picking">
+            🤷 I don't know — show me
+          </button>
+          <p class="idk-note">Tip: even a guess is better than skipping. The point is committing first, then learning.</p>
+        ` : ''}`;
+      })()}
     </div>
   `;
   renderFilterBar();
@@ -984,8 +1009,19 @@ function renderStudy() {
 }
 
 function attachStudyEvents(q) {
+  // "I don't know — show me" — explicit free-recall commit. Arms Reveal
+  // without requiring a guess so users aren't stuck when they truly can't
+  // produce an answer (still pedagogically better than skipping: the
+  // commit "I don't know this one" is itself a useful self-assessment
+  // for the rating step).
+  $('#idk-btn')?.addEventListener('click', () => {
+    state.committed = true;
+    haptic(5);
+    renderStudy();
+  });
   const reveal = $('#reveal-btn');
   if (reveal) reveal.addEventListener('click', () => {
+    if (reveal.disabled) return;  // belt-and-suspenders against keyboard chord bypass
     state.revealed = true;
     state._revealedAt = Date.now();  // timestamp so rating buttons ignore ghost clicks
     stopSpeaking();
@@ -1132,6 +1168,7 @@ function nextQuestion() {
   stopSpeaking();
   state.selectedOption = null;
   state.selectedOptions = [];
+  state.committed = false;
   if (qs.length === 0) { renderStudy(); return; }
   // Push the current card's ID (not its index) so Prev finds the right card
   // even if the deck reorders or shrinks (e.g. after rating with a Due filter).
@@ -1149,6 +1186,7 @@ function prevQuestion() {
   stopSpeaking();
   state.selectedOption = null;
   state.selectedOptions = [];
+  state.committed = false;
   if (qs.length === 0) { renderStudy(); return; }
   if (state.history.length > 0) {
     const prevId = state.history.pop();
@@ -1218,6 +1256,7 @@ function startQuiz(n, available) {
   };
   state.selectedOption = null;
   state.selectedOptions = [];
+  state.committed = false;
   renderQuizCard();
 }
 
@@ -1410,6 +1449,7 @@ function recordQuizAnswer(q, picked) {
   state._revealedAt = Date.now();
   state.selectedOption = null;
   state.selectedOptions = [];
+  state.committed = false;
   // Announce verdict to screen readers — visual marking alone isn't
   // accessible. Built from session.answers so it stays consistent with
   // what the card now displays.
@@ -1430,6 +1470,7 @@ function advanceQuiz() {
   session.current++;
   state.selectedOption = null;
   state.selectedOptions = [];
+  state.committed = false;
   if (session.current >= session.questions.length) {
     session.done = true;
     renderQuizResults();
@@ -2809,6 +2850,7 @@ async function switchExam(newExam) {
   state.editing = false;
   state.selectedOption = null;
   state.selectedOptions = [];
+  state.committed = false;
   state.history = [];
   state._orderCache = null;
   try { await loadData(); }
@@ -2826,6 +2868,7 @@ function setMode(mode) {
   state.editing = false;
   state.selectedOption = null;
   state.selectedOptions = [];
+  state.committed = false;
   state.history = [];
   state._orderCache = null;
   state._currentQ = null;  // was leaking across modes — diagnostics showed last study/quiz card as "current" even from Stats
@@ -3382,6 +3425,23 @@ function installKeyboard() {
       if (key === ' ' || key === 'enter' || key === 'r') {
         e.preventDefault();
         if (!state.revealed) {
+          // Mirror the disabled-button gate from the click handler: don't
+          // reveal until the user has either picked or committed via IDK.
+          // For no-options qtypes, hasOptions is false and we reveal freely.
+          const qs0 = filteredQuestions();
+          const cur = qs0[state.currentIndex];
+          const hasOptions = cur && Array.isArray(cur.options) && cur.options.length > 0;
+          const ma = cur && isMultipleAnswer(cur);
+          const picked = ma ? (state.selectedOptions || []).length > 0
+                            : !!state.selectedOption;
+          if (hasOptions && !picked && !state.committed) {
+            // Re-render to focus the IDK button so the user sees the gate.
+            // Quick toast as feedback for keyboard users who can't see why
+            // Space appeared to do nothing.
+            toast('Pick an answer or tap "I don\'t know" first.', 'info', 2200);
+            $('#idk-btn')?.focus();
+            return;
+          }
           state.revealed = true;
           state._revealedAt = Date.now();
           renderStudy();
