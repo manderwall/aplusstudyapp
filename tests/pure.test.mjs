@@ -8,6 +8,7 @@ import {
   escapeHtml, normalizeOption, formatExplanation, formatQuestion,
   orderDeck, nextIntervalLabel, recommendedRating,
   shuffleOptionsForCard,
+  FSRS_W, FSRS_TARGET_RETENTION, fsrsRetrievability, fsrsNextIntervalDays,
 } from '../lib.mjs';
 
 const NOW = 1_700_000_000_000;  // fixed for deterministic assertions
@@ -39,52 +40,131 @@ test('migrateProgress is idempotent', () => {
   assert.deepEqual(p, snapshot);
 });
 
-test('schedule again: 1-minute relearn + ease drops', () => {
+// ─── FSRS scheduler tests ───────────────────────────────────────────────
+// Tests below validate the FSRS-4 behavior the schedule() function now
+// implements. They focus on invariants (monotonicity, bounds, recovery)
+// rather than pinning exact numbers — the algorithm's exact outputs
+// depend on the public weight vector and are correct by reference, not
+// by hand-derived assertion.
+
+test('schedule again: short relearn window + difficulty rises', () => {
   const p = defaultProgress();
-  p.ease = 2.5; p.interval = 10;
-  schedule(p, 'again', NOW);
-  assert.equal(p.interval, 0);
-  assert.equal(p.due, NOW + MIN);
-  assert.equal(p.status, 'learning');
-  assert.ok(Math.abs(p.ease - 2.3) < 1e-9);
+  schedule(p, 'good', NOW);             // first review establishes S, D
+  const dBefore = p.D;
+  schedule(p, 'again', NOW + DAY);      // 1 day later, user forgets
+  assert.equal(p.due, NOW + DAY + MIN, '1-min relearn step on lapse');
+  assert.equal(p.status, 'learning', 'lapsed card drops back to learning');
+  assert.ok(p.D > dBefore, `difficulty should rise on lapse (was ${dBefore.toFixed(2)}, now ${p.D.toFixed(2)})`);
+  assert.ok(p.S > 0, 'stability stays positive (FSRS preserves a floor)');
 });
 
-test('schedule again: ease floors at 1.3', () => {
-  const p = defaultProgress();
-  p.ease = 1.3;
-  schedule(p, 'again', NOW);
-  assert.equal(p.ease, 1.3);
-});
-
-test('schedule good: fresh card → 1-day interval', () => {
+test('schedule good: fresh card → ~1 day, status transitions to learning', () => {
   const p = defaultProgress();
   schedule(p, 'good', NOW);
-  assert.equal(p.interval, 1);
-  assert.equal(p.due, NOW + DAY);
-  assert.equal(p.status, 'learning');  // new → learning on first "good"
+  // FSRS-4 initial stability for G=3 (Good) is w[2] = 2.4 days, then capped
+  // by the interval cap. Just assert it's in the learning-window ballpark.
+  assert.ok(p.interval >= 1 && p.interval <= MAX_INTERVAL_DAYS, `interval ${p.interval} out of [1, ${MAX_INTERVAL_DAYS}]`);
+  assert.ok(p.due > NOW, 'due is in the future');
+  assert.equal(p.status, 'learning', 'new card transitions to learning on first Good');
+  assert.ok(p.S > 0, 'FSRS stability initialized');
+  assert.ok(p.D >= 1 && p.D <= 10, 'FSRS difficulty in [1, 10]');
 });
 
-test('schedule good: learning card graduates to good', () => {
+test('schedule good: stability grows monotonically over a Good streak', () => {
   const p = defaultProgress();
-  p.status = 'learning'; p.interval = 1; p.ease = 2.5;
   schedule(p, 'good', NOW);
-  assert.equal(p.interval, 2.5);
-  assert.equal(p.status, 'good');
+  const s1 = p.S;
+  schedule(p, 'good', NOW + p.interval * DAY);
+  const s2 = p.S;
+  schedule(p, 'good', NOW + 2 * p.interval * DAY);
+  const s3 = p.S;
+  assert.ok(s2 > s1, `stability should grow: s1=${s1.toFixed(2)}, s2=${s2.toFixed(2)}`);
+  assert.ok(s3 > s2, `and keep growing: s2=${s2.toFixed(2)}, s3=${s3.toFixed(2)}`);
 });
 
-test('schedule easy: interval caps at MAX_INTERVAL_DAYS', () => {
+test('schedule easy gives a longer next interval than good', () => {
+  const pGood = defaultProgress();
+  const pEasy = defaultProgress();
+  schedule(pGood, 'good', NOW);
+  schedule(pEasy, 'easy', NOW);
+  assert.ok(pEasy.interval > pGood.interval,
+    `easy interval ${pEasy.interval}d should exceed good interval ${pGood.interval}d`);
+  // On a fresh card, FSRS-4's initDifficulty for both G=3 and G=4 with the
+  // default weights clamps to D=1, so the post-clamp values can match.
+  // The interval-vs-interval comparison above is what users actually feel.
+});
+
+test('schedule honors the exam-runway capDays argument', () => {
   const p = defaultProgress();
-  p.interval = 20; p.ease = 3.0;
+  // Build up a card with high stability via many Goods
   schedule(p, 'easy', NOW);
-  assert.ok(p.interval <= MAX_INTERVAL_DAYS);
-  assert.equal(p.due, NOW + p.interval * DAY);
+  schedule(p, 'good', NOW + p.interval * DAY);
+  schedule(p, 'good', NOW + 2 * p.interval * DAY);
+  // Now schedule with a 5-day cap — even a high-stability card should not exceed.
+  schedule(p, 'good', NOW + 30 * DAY, 5);
+  assert.ok(p.interval <= 5, `interval ${p.interval} exceeded the 5-day cap`);
 });
 
-test('schedule hard: learning fresh → 10-minute retry', () => {
+test('schedule hard: fresh card → small initial step', () => {
   const p = defaultProgress();
   schedule(p, 'hard', NOW);
-  assert.equal(p.due, NOW + 10 * MIN);
+  // FSRS-4 init stability for G=2 is w[1] = 0.6 days → due in <1 day
+  // (specifically minutes via the in-day learning step).
+  assert.ok(p.due > NOW, 'due in the future');
   assert.equal(p.status, 'learning');
+  assert.ok(p.D >= 1 && p.D <= 10);
+});
+
+// ─── FSRS-specific math invariants ──────────────────────────────────────
+
+test('fsrsRetrievability decreases over time', () => {
+  const S = 5;
+  assert.equal(fsrsRetrievability(0, S), 1, 'R(0) = 1');
+  assert.ok(fsrsRetrievability(2, S) > fsrsRetrievability(10, S));
+  assert.ok(fsrsRetrievability(10, S) > fsrsRetrievability(30, S));
+  assert.equal(fsrsRetrievability(-1, 0), 0, 'zero stability → zero retrievability');
+});
+
+test('fsrsNextIntervalDays scales linearly with stability', () => {
+  const i1 = fsrsNextIntervalDays(1);
+  const i5 = fsrsNextIntervalDays(5);
+  const i10 = fsrsNextIntervalDays(10);
+  assert.ok(i5 > i1 && i10 > i5);
+  // 5×S input gives ≈5×I out (within floating-point rounding).
+  assert.ok(Math.abs(i5 / i1 - 5) < 0.01, `i5/i1 should be ~5, got ${(i5/i1).toFixed(2)}`);
+});
+
+test('FSRS_W is the 17-element FSRS-4 default vector', () => {
+  assert.equal(FSRS_W.length, 17, 'FSRS-4 expects 17 weights');
+  assert.equal(FSRS_TARGET_RETENTION, 0.9, 'default desired retention');
+});
+
+// ─── Legacy SM-2 → FSRS migration ───────────────────────────────────────
+
+test('migrateProgress initializes FSRS state from legacy ease+interval', () => {
+  const legacy = { status: 'good', seen: 5, correct: 4, lastSeen: NOW, ease: 2.5, interval: 10, due: NOW + 10 * DAY };
+  migrateProgress(legacy);
+  assert.ok(legacy.S !== undefined, 'S initialized');
+  assert.ok(legacy.D !== undefined, 'D initialized');
+  assert.ok(legacy.S >= 10, `S should be at least the prior interval (got ${legacy.S})`);
+  // ease 2.5 should map to mid-range difficulty (not extreme).
+  assert.ok(legacy.D > 2 && legacy.D < 8, `D should be mid-range (got ${legacy.D.toFixed(2)})`);
+});
+
+test('migrateProgress on a brand-new card leaves FSRS state undefined', () => {
+  const fresh = { status: 'new', seen: 0, correct: 0, lastSeen: 0, ease: 2.5, interval: 0, due: 0 };
+  migrateProgress(fresh);
+  assert.equal(fresh.S, undefined, 'S undefined until first rating');
+  assert.equal(fresh.D, undefined, 'D undefined until first rating');
+});
+
+test('schedule on a migrated legacy card uses its imported S/D', () => {
+  const p = { status: 'good', seen: 5, correct: 4, lastSeen: NOW, ease: 2.0, interval: 7, due: NOW + 7 * DAY };
+  migrateProgress(p);
+  const sBefore = p.S;
+  // Rate good after the prior due time → stability should grow
+  schedule(p, 'good', NOW + 7 * DAY);
+  assert.ok(p.S > sBefore, `S grew: ${sBefore.toFixed(2)} → ${p.S.toFixed(2)}`);
 });
 
 test('escapeHtml escapes the angle brackets and ampersand', () => {
@@ -197,11 +277,16 @@ test('orderDeck random: returns all input items (no loss/duplication)', () => {
 
 //─── nextIntervalLabel ──────────────────────────────────────────────────
 
-test('nextIntervalLabel: fresh card → again = 1 min, good = 1 day', () => {
+test('nextIntervalLabel: fresh card produces sensible labels', () => {
+  // FSRS produces algorithm-specific values; assert label shape + ordering
+  // instead of pinning exact numbers. Again should be tiny; easy > good.
   const p = defaultProgress();
-  assert.equal(nextIntervalLabel(p, 'again', NOW), '1 min');
-  assert.equal(nextIntervalLabel(p, 'good', NOW), '1 day');
-  assert.equal(nextIntervalLabel(p, 'easy', NOW), '3 days');
+  const again = nextIntervalLabel(p, 'again', NOW);
+  const good = nextIntervalLabel(p, 'good', NOW);
+  const easy = nextIntervalLabel(p, 'easy', NOW);
+  assert.ok(/min|hr/.test(again), `again label "${again}" should be sub-day`);
+  assert.ok(/day|days/.test(good) || /hr/.test(good), `good label "${good}" should be hours-to-days`);
+  assert.ok(/day/.test(easy), `easy label "${easy}" should be in days`);
 });
 
 test('nextIntervalLabel: does not mutate the input progress', () => {

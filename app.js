@@ -2627,7 +2627,7 @@ function renderYourPickHTML(q) {
 // note AFTER the explanation, not a prominent box above it, so it doesn't
 // compete with "what did I just tap in this session" (which the option-row
 // state colors already show). Returns '' when there's no pretest-miss data.
-// 4-button SM-2 rating row. NEUTRAL — no auto-highlighted button.
+// 4-button FSRS rating row. NEUTRAL — no auto-highlighted button.
 // Pre-PR-41 the app inferred a "recommended" rating from the user's MC
 // pick (right→good, wrong→again, no-pick→hard) and visually starred that
 // button as the default. Two pedagogy problems with that:

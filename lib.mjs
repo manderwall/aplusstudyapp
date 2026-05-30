@@ -5,53 +5,187 @@ export const MIN = 60 * 1000;
 export const DAY = 24 * 60 * 60 * 1000;
 export const MAX_INTERVAL_DAYS = 30;  // default cap when no exam date is set
 
-// schedule() now takes an optional cap (days). Caller passes the
-// exam-aware value: cap at days-until-exam so cards aren't scheduled
-// past the exam, but lets spacing expand when there's runway (a
-// well-known card with a 45-day exam runway shouldn't be force-shown
-// every 30 days for no retention benefit).
+// ─── FSRS-4 spaced-repetition scheduler ─────────────────────────────────
+// FSRS = Free Spaced Repetition Scheduler. Replaces the hand-tuned SM-2
+// math that was here previously. Why the swap:
+//   - SM-2's `ease` factor decays on Again/Hard and never recovers
+//     fully — a noisy week of mis-rates depresses a known card for the
+//     rest of its life ("ease hell").
+//   - SM-2 treats every Good the same regardless of how mature the card
+//     is. FSRS uses a two-dimensional (Difficulty, Stability) memory
+//     model where the next interval scales with the card's CURRENT
+//     stability + how confident the user was, giving longer steps for
+//     well-known cards and not punishing fresh-card slips.
+//   - FSRS is the algorithm Anki adopted as the default scheduler in
+//     2024 after benchmarking against millions of real reviews.
+//
+// We use FSRS-4 (17 default weights) — the most-tested public variant.
+// FSRS-5 adds 2 more weights for short-term scheduling; minor accuracy
+// gain not worth the extra complexity for an exam-prep horizon (<1-3 mo).
+//
+// Per-card state:
+//   p.D   - difficulty in [1, 10] (10 = hardest)
+//   p.S   - stability in days (memory half-life at retention=0.9)
+//   p.lastReviewedAt - epoch ms of the last review (for retrievability)
+//
+// Backward-compat fields kept on every progress row so existing UI
+// reading p.interval / p.due / p.ease still works:
+//   p.interval - next interval in days (derived from S + target retention)
+//   p.due      - epoch ms when card becomes due (derived)
+//   p.ease     - SM-2 ease, derived from D for code paths that still read it
+//
+// Existing rows missing FSRS state are migrated lazily by initFsrsFromLegacy.
+
+// FSRS-4 default weights (anki-bench tuned, public domain).
+export const FSRS_W = [
+  0.4, 0.6, 2.4, 5.8, 4.93, 0.94, 0.86, 0.01, 1.49, 0.14,
+  0.94, 2.18, 0.05, 0.34, 1.26, 0.29, 2.61,
+];
+// Target retention: probability of correct recall when card comes back.
+// 0.9 is the standard FSRS default (matches Anki's "desired retention").
+export const FSRS_TARGET_RETENTION = 0.9;
+// Decay constant in the forgetting curve R(t) = (1 + t/(9·S))^DECAY.
+const FSRS_DECAY = -0.5;
+
+// Helpers
+const clamp = (x, lo, hi) => Math.min(hi, Math.max(lo, x));
+const gradeToG = (rate) => ({ again: 1, hard: 2, good: 3, easy: 4 }[rate] || 3);
+
+// Forgetting curve: probability of recall after `days` since last review.
+export function fsrsRetrievability(days, stability) {
+  if (stability <= 0) return 0;
+  return Math.pow(1 + days / (9 * stability), FSRS_DECAY);
+}
+
+// Days until retention drops to FSRS_TARGET_RETENTION.
+// Derivation: R(t) = (1 + t/(9S))^DECAY → t = 9S · (R^(1/DECAY) - 1).
+// With DECAY = -0.5 and r = 0.9: t ≈ 9S · (0.9^-2 - 1) ≈ 2.11 · S.
+export function fsrsNextIntervalDays(stability, retention = FSRS_TARGET_RETENTION) {
+  if (stability <= 0) return 0;
+  const i = 9 * stability * (Math.pow(retention, 1 / FSRS_DECAY) - 1);
+  return Math.max(1, i);
+}
+
+function initDifficulty(G) {
+  // D₀(G) = w[4] - exp(w[5] · (G-1)) + 1
+  return clamp(FSRS_W[4] - Math.exp(FSRS_W[5] * (G - 1)) + 1, 1, 10);
+}
+function initStability(G) {
+  // S₀(G) = w[G-1]
+  return Math.max(0.1, FSRS_W[G - 1]);
+}
+function nextDifficulty(D, G) {
+  // ΔD = -w[6]·(G-3); blend toward D₀(4) (the "easy" anchor) by w[7]
+  const dPrime = D - FSRS_W[6] * (G - 3);
+  return clamp(FSRS_W[7] * initDifficulty(4) + (1 - FSRS_W[7]) * dPrime, 1, 10);
+}
+function nextStabilityOnSuccess(D, S, R, G) {
+  // S' = S · (e^w[8] · (11-D) · S^(-w[9]) · (e^(w[10]·(1-R)) - 1) · hardPenalty · easyBonus + 1)
+  const hardPenalty = G === 2 ? FSRS_W[15] : 1;
+  const easyBonus   = G === 4 ? FSRS_W[16] : 1;
+  const factor = Math.exp(FSRS_W[8]) *
+                 (11 - D) *
+                 Math.pow(S, -FSRS_W[9]) *
+                 (Math.exp(FSRS_W[10] * (1 - R)) - 1) *
+                 hardPenalty * easyBonus;
+  return Math.max(0.1, S * (factor + 1));
+}
+function nextStabilityOnLapse(D, S, R) {
+  // S' = w[11] · D^(-w[12]) · ((S+1)^w[13] - 1) · e^(w[14]·(1-R))
+  return Math.max(0.1, FSRS_W[11] *
+    Math.pow(D, -FSRS_W[12]) *
+    (Math.pow(S + 1, FSRS_W[13]) - 1) *
+    Math.exp(FSRS_W[14] * (1 - R)));
+}
+
+// One-shot migration from SM-2 (ease, interval) → FSRS (D, S). Called
+// lazily the first time a legacy row hits the scheduler so saved
+// progress isn't lost. The mapping is approximate by design: FSRS
+// re-learns the card's true difficulty over the next ~3 reviews.
+function initFsrsFromLegacy(p) {
+  if (p.S !== undefined && p.D !== undefined) return;     // already FSRS
+  const ease = p.ease ?? 2.5;
+  const interval = p.interval ?? 0;
+  if (interval > 0) {
+    // Card has been seen at least once. Use interval as a stability proxy
+    // (since SM-2 intervals ≈ FSRS S at r=0.9 reasonably well), and map
+    // ease into the [1,10] difficulty band.
+    p.S = Math.max(0.5, interval);
+    // ease 1.3 → D 10 (hardest); ease 3.0 → D 1 (easiest). Linear-ish.
+    p.D = clamp(10 - (ease - 1.3) * 9 / 1.7, 1, 10);
+  } else {
+    // Brand-new card: leave S/D unset so the first rating uses init values.
+    p.S = undefined;
+    p.D = undefined;
+  }
+}
 
 export function defaultProgress() {
-  return { status: 'new', seen: 0, correct: 0, lastSeen: 0, ease: 2.5, interval: 0, due: 0 };
+  return {
+    status: 'new', seen: 0, correct: 0, lastSeen: 0, due: 0,
+    // FSRS fields — undefined until first rating
+    S: undefined, D: undefined, lastReviewedAt: 0,
+    // Legacy SM-2 fields kept for backward-compat reads
+    ease: 2.5, interval: 0,
+  };
 }
 
 export function migrateProgress(p) {
   if (p.ease === undefined) p.ease = 2.5;
   if (p.interval === undefined) p.interval = 0;
   if (p.due === undefined) p.due = 0;
+  if (p.lastReviewedAt === undefined) p.lastReviewedAt = p.lastSeen || 0;
+  // Lazy FSRS init — runs once per row, idempotent for already-migrated rows.
+  initFsrsFromLegacy(p);
   return p;
 }
 
 export function schedule(p, rate, now = Date.now(), capDays = MAX_INTERVAL_DAYS) {
-  // Effective cap is the smaller of: the static default (30d), the caller-
-  // provided exam-runway cap, or 30 when caller passes 0/null. Floor at 1
-  // so cards always come back at least once even if exam is tomorrow.
+  // Effective interval cap. Floored at 1 so cards always come back at
+  // least once, even with an exam tomorrow.
   const cap = Math.max(1, capDays || MAX_INTERVAL_DAYS);
-  if (rate === 'again') {
-    p.ease = Math.max(1.3, p.ease - 0.2);
-    p.interval = 0;
+  const G = gradeToG(rate);
+
+  // First rating for this card: initialize FSRS state from G alone.
+  if (p.S === undefined || p.D === undefined) {
+    initFsrsFromLegacy(p);
+  }
+  if (p.S === undefined) {
+    p.S = initStability(G);
+    p.D = initDifficulty(G);
+  } else {
+    const elapsedDays = p.lastReviewedAt > 0 ? Math.max(0, (now - p.lastReviewedAt) / DAY) : 0;
+    const R = fsrsRetrievability(elapsedDays, p.S);
+    if (G === 1) {
+      // Lapse: stability collapses (but is preserved across the floor).
+      p.S = nextStabilityOnLapse(p.D, p.S, R);
+    } else {
+      p.S = nextStabilityOnSuccess(p.D, p.S, R, G);
+    }
+    p.D = nextDifficulty(p.D, G);
+  }
+
+  // Map the new stability into a due time.
+  if (G === 1) {
+    // Lapsed: 1-minute relearning step regardless of stability.
     p.due = now + MIN;
     p.status = 'learning';
-  } else if (rate === 'hard') {
-    p.ease = Math.max(1.3, p.ease - 0.15);
-    if (p.interval === 0) { p.due = now + 10 * MIN; }
-    else {
-      p.interval = Math.min(cap, p.interval * 1.2);
-      p.due = now + p.interval * DAY;
-    }
-    p.status = 'learning';
-  } else if (rate === 'good') {
-    if (p.interval === 0) p.interval = 1;
-    else p.interval = Math.min(cap, p.interval * p.ease);
-    p.due = now + p.interval * DAY;
-    p.status = p.status === 'new' ? 'learning' : 'good';
-  } else if (rate === 'easy') {
-    p.ease = p.ease + 0.15;
-    if (p.interval === 0) p.interval = 3;
-    else p.interval = Math.min(cap, p.interval * p.ease * 1.3);
-    p.due = now + p.interval * DAY;
-    p.status = 'good';
+    p.interval = 0;
+  } else if (p.S < 1) {
+    // Card is still being learned — schedule in minutes, not days.
+    const subDayDays = Math.max(MIN / DAY, p.S);
+    p.due = now + subDayDays * DAY;
+    p.interval = Math.round(subDayDays * 10) / 10;
+    p.status = p.status === 'new' ? 'learning' : p.status;
+  } else {
+    const intervalDays = Math.min(cap, fsrsNextIntervalDays(p.S));
+    p.due = now + intervalDays * DAY;
+    p.interval = Math.round(intervalDays * 10) / 10;
+    p.status = p.status === 'new' ? 'learning' : (G >= 3 ? 'good' : 'learning');
   }
+  p.lastReviewedAt = now;
+  // p.ease is the only legacy field updateLegacyFields still has to set.
+  p.ease = clamp(10 - p.D, 1.3, 3.0);
   return p;
 }
 
