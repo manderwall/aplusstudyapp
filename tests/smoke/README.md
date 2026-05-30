@@ -22,7 +22,25 @@ npm install            # one-time: pulls puppeteer (devDependency only —
 npm run smoke          # regression suite — pass/fail, gates CI
 npm run smoke:perf     # cold-boot timings (informational)
 npm run smoke:mobile   # 6-viewport responsive sweep + screenshots
+npm run smoke:cross-device  # 10-device matrix (iOS/Android/iPadOS/Mac/PC emulated UAs)
 ```
+
+## What cross-device CAN and CANNOT do
+
+`smoke:cross-device` drives the app through 10 emulated device profiles
+(iPhone SE/12/14 Pro, iPhone landscape, Pixel 7, Galaxy Tab S8, iPad
+Air/Mini, desktop Mac, desktop PC) with realistic viewport + DPR +
+touch + user-agent for each.
+
+It **catches**: layout breaks, h-scroll, sub-24×24 controls, broken
+flows (study → reveal, mock-exam button, outcome dialog), uncaught
+console errors. All ten profiles are currently clean.
+
+It **does not catch**: Safari engine quirks (`inert` partial support,
+pinch-zoom edge cases, ITP), Android virtual-keyboard reflow, real
+iOS PWA install + home-screen-icon behavior. For those you need a
+physical device. The script prints this caveat at the end of every
+run so it's never forgotten.
 
 Screenshots land in `tests/smoke/__shots__/` (gitignored).
 

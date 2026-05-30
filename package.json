@@ -19,7 +19,8 @@
     "serve": "python3 -m http.server 8000",
     "smoke": "node tests/smoke/regression.mjs",
     "smoke:perf": "node tests/smoke/perf.mjs",
-    "smoke:mobile": "node tests/smoke/mobile.mjs"
+    "smoke:mobile": "node tests/smoke/mobile.mjs",
+    "smoke:cross-device": "node tests/smoke/cross-device.mjs"
   },
   "devDependencies": {
     "puppeteer": "^25.1.0"
