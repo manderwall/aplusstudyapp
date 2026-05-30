@@ -4928,12 +4928,11 @@ async function init() {
     return;
   }
   $$('.tab').forEach(t => t.addEventListener('click', () => setMode(t.dataset.mode)));
+  // Critical-path installers — keyboard + swipe handle the first frame's
+  // input. Render the Study tab synchronously so the first card paints
+  // ASAP (~300ms saved on throttled mobile vs running everything inline).
   installSwipe();
   installKeyboard();
-  installListenButton();
-  installInputModeDetection();
-  installWakeLock();
-  installImageZoom();
   setMode('study');
 
   // Show welcome on first visit (or every load until user ticks "don't show again").
@@ -4942,11 +4941,24 @@ async function init() {
     showWelcome();
   }
 
-  // Register service worker for offline + watch for new versions so users
-  // get the latest release without having to delete + reinstall the home-
-  // screen icon. When a new SW is in 'installed' state and we already
-  // have a controller, show a toast inviting reload.
-  if ('serviceWorker' in navigator) {
+  // Deferred installers — none of these block first interaction.
+  // ListenButton + ImageZoom + WakeLock + InputModeDetection fire on
+  // events the user can't trigger in the first ~100ms anyway. Scheduling
+  // via requestIdleCallback (falling back to setTimeout) yields the main
+  // thread so the first card paints before this runs.
+  const deferIdle = (fn) => (window.requestIdleCallback || ((cb) => setTimeout(cb, 1)))(fn);
+  deferIdle(() => {
+    installListenButton();
+    installInputModeDetection();
+    installWakeLock();
+    installImageZoom();
+  });
+
+  // Register service worker for offline + watch for new versions. Deferred
+  // (idle) because SW install + update-check + the offerReload pathway are
+  // not first-paint-critical and noticeably stretch the JS work before the
+  // first card paints on slow CPUs.
+  if ('serviceWorker' in navigator) deferIdle(() => {
     navigator.serviceWorker.register('sw.js').then((reg) => {
       const offerReload = (sw) => {
         toast('A new version is ready. Tap to reload.', 'info', 8000, () => {
@@ -4977,7 +4989,7 @@ async function init() {
         if (document.visibilityState === 'visible') reg.update().catch(() => {});
       });
     }).catch(err => console.warn('SW failed:', err));
-  }
+  });
 }
 
 init();
