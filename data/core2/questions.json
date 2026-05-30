@@ -4165,7 +4165,7 @@
     "qtype": "Multiple Choice",
     "question": "When a technician installs a standard desktop application on a Windows workstation using an MSI setup installer, what level of system privileges is typically required?",
     "correct_short": "Administrator privileges",
-    "explanation": "OBJ 1.10 (Operating Systems): Desktop apps installed by running a traditional setup program or MSI installer require administrator privileges to make system-wide changes to the OS.",
+    "explanation": "OBJ 1.10 (Operating Systems): An MSI installer writes to protected locations like Program Files, HKEY_LOCAL_MACHINE, and the Windows Installer service, so UAC will prompt for administrator credentials before the install can proceed. Standard user accounts can launch and use installed apps but cannot complete a system-wide MSI install. Guest is an even more restricted account intended for temporary, unprivileged sessions, and 'anonymous' is not a Windows interactive-logon class at all (the term refers to unauthenticated network access like anonymous FTP).",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -4270,7 +4270,7 @@
     "qtype": "Multiple Choice",
     "question": "When using a cloud-based storage application like Microsoft OneDrive, what does a green checkmark icon next to a local file visually indicate?",
     "correct_short": "The file has successfully completed synchronization with the cloud storage.",
-    "explanation": "OBJ 1.11 (Operating Systems): In file management applications for cloud storage solutions like OneDrive, a green checkmark next to a file indicates that it has successfully completed synchronization with the cloud server.",
+    "explanation": "OBJ 1.11 (Operating Systems): In OneDrive's File Explorer overlay icons, a solid green checkmark means the file is fully synced — the local copy matches the version on the cloud server. An in-progress upload shows the circular blue sync arrows, not a checkmark. OneDrive does not display a checkmark for quarantined or encrypted files; quarantine is handled by antivirus, and encryption status is indicated by a padlock or by the Encrypting File System attribute, not by the sync overlay.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -4606,7 +4606,7 @@
     "qtype": "Multiple Choice",
     "question": "According to the CompTIA malware removal best practices, what should a technician do immediately after quarantining an infected Windows system?",
     "correct_short": "Disable System Restore in Windows",
-    "explanation": "OBJ 2.6 (Security): After isolating the system in quarantine, the next required step is to disable System Restore to prevent the malware from hiding inside a backup file.",
+    "explanation": "OBJ 2.6 (Security): The CompTIA seven-step malware removal order is investigate/verify, quarantine, disable System Restore, remediate, schedule scans/updates, re-enable System Restore, and educate the end user. Disabling System Restore comes right after quarantine because restore points can harbor a copy of the malware that would simply reinfect the system after cleanup. Updating anti-malware and remediating happen during step 4 (remediate), and educating the end user is the final step — none of those come second.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -4648,7 +4648,7 @@
     "qtype": "Multiple Choice",
     "question": "After a technician has fully remediated an infected system, updated the anti-malware software, and scheduled future scans, what step should they perform next?",
     "correct_short": "Enable System Restore and create a new restore point",
-    "explanation": "OBJ 2.6 (Security): Once the system is clean and anti-malware software is updated, the technician must re-enable System Restore and create a known-clean restore point.",
+    "explanation": "OBJ 2.6 (Security): In the CompTIA seven-step removal procedure, step 6 is to re-enable System Restore on Windows and capture a fresh restore point so that future rollbacks land on a known-clean baseline. Reconnecting to the network and educating the user happen after that final restore point is created. Reimaging the drive would be a fallback when remediation fails — not a routine next step after a successful cleanup — and disabling the local administrator account is a hardening task unrelated to the malware removal workflow.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -4690,7 +4690,7 @@
     "qtype": "Multiple Choice",
     "question": "Which end-user best practice helps protect against unauthorized physical access to a workstation when an employee steps away from their desk?",
     "correct_short": "Using screensaver locks",
-    "explanation": "OBJ 2.7 (Security): Using screensaver locks or logging off when not in use ensures that unauthorized persons cannot access a workstation when it is left unattended.",
+    "explanation": "OBJ 2.7 (Security): A password-protected screensaver (or Win+L) immediately locks the active session so a walk-up attacker cannot use the still-logged-in account — this is the specific control for an unattended workstation. Data-at-rest encryption like BitLocker protects the drive contents if the device is powered off and stolen, but does nothing while the user is signed in. A password manager secures the user's stored credentials, not the desktop session. Disabling the guest account is a good general hardening step but does not stop someone from using the logged-in user's own session.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -4711,7 +4711,7 @@
     "qtype": "Multiple Choice",
     "question": "To harden a workstation and restrict unauthorized administrative changes, which built-in account should be disabled according to best practices?",
     "correct_short": "Guest account",
-    "explanation": "OBJ 2.7 (Security): Disabling the default guest account is a standard hardening technique to restrict unauthorized users from gaining access to the system.",
+    "explanation": "OBJ 2.7 (Security): The built-in Guest account allows passwordless or low-friction access and is a well-known attacker target, so Windows hardening guides recommend disabling it (it is disabled by default on modern Windows, but verifying is a standard checklist item). The 'Power user' group still exists for legacy compatibility but is effectively equivalent to standard user on modern Windows and is not the hardening focus here. Standard user and Microsoft accounts are how normal users sign in day-to-day — disabling them would block legitimate work, not harden the system.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -4774,7 +4774,7 @@
     "qtype": "Multiple Choice",
     "question": "If a corporate-owned smartphone is irretrievably lost or stolen, which action should an administrator take to protect the stored data and credentials?",
     "correct_short": "Initiate a remote wipe",
-    "explanation": "OBJ 2.8 (Security): A remote wipe can protect data on a lost or stolen device by performing a factory reset that clears all data, apps, and settings.",
+    "explanation": "OBJ 2.8 (Security): A remote wipe pushed from the MDM console performs a factory reset on the device the next time it connects to the network, erasing user data, cached credentials, and stored tokens so the thief cannot extract them. USB selective suspend is a Windows laptop power-management setting and has nothing to do with mobile data protection. Disabling location services on the admin side does not actually change the device's settings and would hurt recovery efforts. Changing a default administrator password is a hardening step for network gear, not a response to a lost handset.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -4837,7 +4837,7 @@
     "qtype": "Multiple Choice",
     "question": "Which of the following methods is a physical destruction technique that involves breaking a hard drive into tiny pieces?",
     "correct_short": "Shredding",
-    "explanation": "OBJ 2.9 (Security): Shredding is a physical destruction method that grinds or breaks the hard drive into tiny, unrecoverable pieces.",
+    "explanation": "OBJ 2.9 (Security): Industrial shredders feed the entire drive through hardened cutters that reduce the platters and circuit board to small fragments, so no surviving piece holds a recoverable sector. Wiping is a software sanitization method (overwriting sectors) — the drive stays physically intact, which is why it does not satisfy the 'physical destruction' requirement. Degaussing destroys data using a strong magnetic field rather than mechanical breakage, and on SSDs it does nothing because flash memory is not magnetic. Low-level formatting rewrites sector structures and is again software-based, not physical destruction.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -4879,7 +4879,7 @@
     "qtype": "Multiple Choice",
     "question": "When configuring a wireless network for maximum security, what is the best encryption protocol to select for client devices that support it?",
     "correct_short": "WPA3",
-    "explanation": "OBJ 2.10 (Security): WPA3 is the highest wireless security standard and should be selected over older, more vulnerable protocols like WPA2 or WEP.",
+    "explanation": "OBJ 2.10 (Security): WPA3 replaces the WPA2 four-way handshake with SAE (Simultaneous Authentication of Equals), which resists offline dictionary attacks and provides forward secrecy — so it is the strongest option to choose on the router's wireless security page. WPA2 with TKIP is the weakest WPA2 mode because TKIP is deprecated and known to be breakable; pick AES, not TKIP, if WPA2 is the only option. WEP is the legacy RC4-based standard and is trivially crackable in minutes. MAC address filtering is an access-control feature, not an encryption protocol — it leaves traffic in cleartext over the air.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -4921,7 +4921,7 @@
     "qtype": "Multiple Choice",
     "question": "Which browser security feature prevents the browser from saving local history, cookies, or temporary files generated during a browsing session?",
     "correct_short": "Private-browsing mode",
-    "explanation": "OBJ 2.11 (Security): Private-browsing mode ensures that the browser does not locally save history, cookies, or temporary site data after the session is closed.",
+    "explanation": "OBJ 2.11 (Security): Private-browsing mode (Incognito in Chrome, InPrivate in Edge) routes the session through a sandboxed profile that is discarded on close, so history, cookies, form data, and cached files are not written to the user's regular profile. Proxy settings change where traffic is routed, not what local data is retained. Valid certificates indicate server identity and TLS trust — they say nothing about local browser storage. Secure DNS (DoH/DoT) encrypts DNS lookups in transit but still leaves normal browser history on disk.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -4963,7 +4963,7 @@
     "qtype": "Multiple Choice",
     "question": "A user wants to block intrusive advertisements while browsing the internet. Which browser feature management option should they install from a trusted source?",
     "correct_short": "An ad blocker extension",
-    "explanation": "OBJ 2.11 (Security): Ad blockers are browser extensions or plug-ins that can be installed to prevent unwanted advertisements from displaying on web pages.",
+    "explanation": "OBJ 2.11 (Security): An ad blocker is a browser plug-in or extension that uses filter lists to drop ad-network requests and hide ad containers in the page DOM before they render. A proxy server routes traffic through an intermediary host and may filter content at the network level, but it is infrastructure, not a browser feature the user installs from an extension store. A digital certificate verifies a server's TLS identity. A password manager stores and autofills credentials — neither one filters page content.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -5089,7 +5089,7 @@
     "qtype": "Multiple Choice",
     "question": "A user's mobile device screen fails to switch to landscape mode when turned sideways. Which setting should the technician verify?",
     "correct_short": "Check the notification bar or Control Center to ensure the rotation lock is not enabled.",
-    "explanation": "OBJ 3.2 (Software Troubleshooting): If a screen does not autorotate, the most common reason is that the user accidentally enabled the rotation lock feature in the quick settings menu.",
+    "explanation": "OBJ 3.2 (Software Troubleshooting): Rotation lock is a one-tap toggle in the iOS Control Center or Android quick-settings panel that overrides the accelerometer; users hit it accidentally all the time, so verifying it is off is the cheapest first step. Volume limits affect audio, not screen orientation. A dirty fingerprint scanner causes authentication failures, not autorotate problems. The Wi-Fi band the device is on is unrelated to onboard motion sensors.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -5194,7 +5194,7 @@
     "qtype": "Multiple Choice",
     "question": "A user tries to visit a secure banking website but receives a browser warning that the site certificate is invalid. What type of security threat might this represent?",
     "correct_short": "An on-path attack attempting to intercept traffic using a spoofed certificate.",
-    "explanation": "OBJ 3.4 (Software Troubleshooting): Certificate warnings often indicate that a threat actor is using a rogue proxy to present a spoofed digital certificate in an attempt to perform an on-path attack.",
+    "explanation": "OBJ 3.4 (Software Troubleshooting): An on-path (formerly man-in-the-middle) attack inserts a rogue proxy between the user and the bank; because the attacker cannot present the bank's real private key, the TLS certificate they substitute fails the browser's trust check and triggers the warning. Cross-site scripting (XSS) is a web-app vulnerability that runs malicious script in the user's browser session — it does not generate an invalid-certificate warning. A denial-of-service attack floods a target to make it unavailable; the symptom would be a connection failure, not a bad cert. A brute-force password attack works against login forms and has no effect on the site's TLS certificate.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -5215,7 +5215,7 @@
     "qtype": "Multiple Choice",
     "question": "When a user searches for a common term, their web browser continually forces them to an unfamiliar website filled with advertisements. What is this symptom called?",
     "correct_short": "Redirection.",
-    "explanation": "OBJ 3.4 (Software Troubleshooting): Redirection is a symptom where malware or adware modifies browser settings to forcibly send the user to an unintended, often malicious, website.",
+    "explanation": "OBJ 3.4 (Software Troubleshooting): Browser redirection is a malware/adware symptom in which the search-provider setting, homepage, or DNS resolver has been hijacked to send the user to a chosen destination instead of the requested one. Port flapping is a networking term for an interface that repeatedly goes up and down — it is not a browser symptom. Phishing is the social-engineering technique of luring users to fake sites via deceptive messages, not the automatic browser-level redirect described here. 'Domain synchronization' is not a recognized A+ term and is a distractor.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -5278,7 +5278,7 @@
     "qtype": "Multiple Choice",
     "question": "Which document establishes a formal contract regarding the expected response times, uptime, and performance metrics between an IT service provider and a customer?",
     "correct_short": "Service-level agreement (SLA)",
-    "explanation": "OBJ 4.1 (Operational Procedures): A service-level agreement (SLA) defines the internal or third-party performance expectations, such as guaranteed uptime and support response times.",
+    "explanation": "OBJ 4.1 (Operational Procedures): An SLA is the contractual document that quantifies measurable commitments — uptime percentages, ticket response/resolution windows, escalation paths — and the penalties that apply when the provider misses them. A standard operating procedure (SOP) is an internal step-by-step instruction for how to perform routine work, not a customer-facing performance contract. An EULA is the license between a software vendor and an end user governing how the software may be used. A CMDB is an inventory database tracking assets and their relationships — none of these set service performance expectations.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -5341,7 +5341,7 @@
     "qtype": "Multiple Choice",
     "question": "A critical vulnerability is actively being exploited on a company firewall, and the IT team must apply a patch immediately without waiting for the weekly maintenance window. What type of change is this?",
     "correct_short": "Emergency change",
-    "explanation": "OBJ 4.2 (Operational Procedures): An emergency change is implemented immediately to resolve a highly critical issue or active security threat, bypassing typical approval delays.",
+    "explanation": "OBJ 4.2 (Operational Procedures): An emergency change is reserved for situations like active exploitation or service outages — it uses an accelerated approval path (often a single on-call CAB member) and is fully documented after the fact rather than weeks in advance. A standard change is a pre-approved, low-risk routine task that follows a known SOP (such as setting up a new user account); it does not require new approval. A normal change is the default category that goes through full CAB review during planning, which is exactly what the scenario does not have time for. 'Routine change' is not a formal ITIL category and is essentially a synonym for standard change.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -5488,7 +5488,7 @@
     "qtype": "Multiple Choice",
     "question": "A technician spills a large amount of toner inside a laser printer. Where should they look to find the official manufacturer instructions regarding the health hazards and proper cleanup procedures for this specific chemical?",
     "correct_short": "The safety data sheet (SDS)",
-    "explanation": "OBJ 4.5 (Operational Procedures): A safety data sheet (SDS) — formerly called a material safety data sheet (MSDS) before the 2015 OSHA/GHS terminology update — provides crucial safety documentation for handling, storing, and disposing of hazardous materials like printer toner and batteries. Both terms still appear in field materials; the modern standard is SDS.",
+    "explanation": "OBJ 4.5 (Operational Procedures): A safety data sheet (SDS) — formerly called a material safety data sheet (MSDS) before the 2015 OSHA/GHS terminology update — is the manufacturer-supplied document that lists the chemical composition, health hazards, first-aid steps, PPE, and required cleanup/disposal method for the substance. An SLA is a service-performance contract between provider and customer and contains no chemical-safety information. An AUP defines how users may use IT systems. A CMDB inventories hardware/software assets and their relationships — none of those documents tell you how to safely clean up spilled toner.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -5509,7 +5509,7 @@
     "qtype": "Multiple Choice",
     "question": "Which local environment control device should be installed to protect critical servers from suddenly losing power during short blackouts and brownouts?",
     "correct_short": "An uninterruptible power supply (UPS)",
-    "explanation": "OBJ 4.5 (Operational Procedures): An uninterruptible power supply (UPS) contains a battery backup that provides emergency power during blackouts, brownouts, and under-voltage events.",
+    "explanation": "OBJ 4.5 (Operational Procedures): A UPS sits inline between utility power and the server; when the input voltage drops or fails, the inverter switches the load to its battery within milliseconds, giving the server time to keep running or shut down cleanly. A surge suppressor only clamps voltage spikes — it provides no battery and offers no protection against a brownout or full power loss. An ESD mat protects components from static during handling and has nothing to do with line power. HVAC controls room temperature and humidity, not the electrical supply.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -5593,7 +5593,7 @@
     "qtype": "Multiple Choice",
     "question": "Which type of regulated data strictly governs how healthcare facilities must protect patients' medical records and laboratory results?",
     "correct_short": "Protected Health Information (PHI) or Healthcare data",
-    "explanation": "OBJ 4.6 (Operational Procedures): Healthcare data, or Protected Health Information (PHI), is heavily regulated to ensure patient medical records remain private and secure.",
+    "explanation": "OBJ 4.6 (Operational Procedures): PHI is the HIPAA-defined category covering any individually identifiable health information — diagnoses, test results, treatment records, billing tied to care — and it carries strict access logging, encryption, and breach-notification requirements. PCI data is the payment-card information governed by PCI DSS (card numbers, CVVs); it is regulated, but by the card brands, not for medical records. PII is the broader umbrella for any personally identifying data (SSN, address, DOB) and overlaps with PHI but is not the specific healthcare regime. EULA 'data' is not a data classification at all — a EULA is a software license agreement.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -5677,7 +5677,7 @@
     "qtype": "Multiple Choice",
     "question": "An administrator wants to automate the process of mapping network drives for users when they log into a Windows domain. Which file extension is typically used for a PowerShell script?",
     "correct_short": ".ps1",
-    "explanation": "OBJ 4.8 (Operational Procedures): The .ps1 file extension identifies a script written for the Windows PowerShell environment.",
+    "explanation": "OBJ 4.8 (Operational Procedures): PowerShell script files use the .ps1 extension and run inside the PowerShell host (powershell.exe or pwsh.exe), which is the standard scripting environment for Windows administration tasks like login drive mapping. .sh is the Linux/Unix Bash shell script extension and will not execute natively on Windows. .js is a JavaScript file, typically run by a browser or Node.js. .py is a Python source file and requires the Python interpreter — none of these are the native PowerShell extension.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -5698,7 +5698,7 @@
     "qtype": "Multiple Choice",
     "question": "A technician is reviewing a script that was designed for a Linux terminal environment. Which of the following file extensions indicates a shell script?",
     "correct_short": ".sh",
-    "explanation": "OBJ 4.8 (Operational Procedures): The .sh file extension is commonly used to identify Bash shell scripts designed to run in Linux or Unix environments.",
+    "explanation": "OBJ 4.8 (Operational Procedures): The .sh extension identifies a shell script meant to be interpreted by /bin/sh, Bash, or another Unix shell — typically with a shebang line like #!/bin/bash on the first line. .vbs is a VBScript file run by the Windows Script Host. .ps1 is the PowerShell script extension on Windows. .bat is a legacy Windows batch file processed by cmd.exe. All three of those are Windows scripting formats and will not run in a Linux terminal as a shell script.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -5803,7 +5803,7 @@
     "qtype": "Multiple Choice",
     "question": "A student uses a public Artificial Intelligence tool to write their final essay and submits it as their own original work. Under which IT policy would this behavior typically be prohibited?",
     "correct_short": "Acceptable use policy (AUP) regarding plagiarism",
-    "explanation": "OBJ 4.10 (Operational Procedures): An organization's Acceptable Use Policy (AUP) should outline the appropriate use of AI tools and strictly prohibit activities like plagiarism.",
+    "explanation": "OBJ 4.10 (Operational Procedures): The AUP is the document that defines how an organization's users may use IT systems and services, and modern AUPs explicitly cover AI tools — including bans on academic plagiarism and on representing AI-generated content as original work. An NDA controls disclosure of confidential information to third parties, not classroom honesty. A EULA is the software license between vendor and end user. An SLA is a service-performance contract between provider and customer — none of those regulate the user's submission of AI-generated work as their own.",
     "sources": [
       {
         "source": "synthetic-220-1202",
