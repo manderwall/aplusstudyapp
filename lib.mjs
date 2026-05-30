@@ -102,15 +102,30 @@ function nextStabilityOnLapse(D, S, R) {
 // lazily the first time a legacy row hits the scheduler so saved
 // progress isn't lost. The mapping is approximate by design: FSRS
 // re-learns the card's true difficulty over the next ~3 reviews.
+//
+// Defensive: sanitizes pathological inputs (NaN, Infinity, negatives)
+// because real-user IDB-loaded rows can have weird values from old
+// app versions, partial Supabase syncs, or corrupted localStorage
+// imports. Clamps the derived S to a reasonable upper bound so a
+// massive legacy interval (e.g. interval = 365 from a card that was
+// last reviewed before the 30-day cap existed) doesn't produce a
+// 700-day next-review estimate.
+const MIGRATION_S_CAP = 90;  // days. Larger than MAX_INTERVAL_DAYS so
+// users with an explicit exam date set well into the future still get
+// meaningful spacing on imported mature cards.
 function initFsrsFromLegacy(p) {
-  if (p.S !== undefined && p.D !== undefined) return;     // already FSRS
-  const ease = p.ease ?? 2.5;
-  const interval = p.interval ?? 0;
+  if (Number.isFinite(p.S) && Number.isFinite(p.D)) return;  // already FSRS
+  // Sanitize legacy fields. Number() coerces strings (from JSON round-trips)
+  // and NaN-checks catch corrupted values. Falls back to defaults when invalid.
+  let ease = Number(p.ease);
+  if (!Number.isFinite(ease) || ease <= 0) ease = 2.5;
+  let interval = Number(p.interval);
+  if (!Number.isFinite(interval) || interval < 0) interval = 0;
   if (interval > 0) {
     // Card has been seen at least once. Use interval as a stability proxy
     // (since SM-2 intervals ≈ FSRS S at r=0.9 reasonably well), and map
     // ease into the [1,10] difficulty band.
-    p.S = Math.max(0.5, interval);
+    p.S = clamp(Math.max(0.5, interval), 0.5, MIGRATION_S_CAP);
     // ease 1.3 → D 10 (hardest); ease 3.0 → D 1 (easiest). Linear-ish.
     p.D = clamp(10 - (ease - 1.3) * 9 / 1.7, 1, 10);
   } else {
@@ -147,10 +162,10 @@ export function schedule(p, rate, now = Date.now(), capDays = MAX_INTERVAL_DAYS)
   const G = gradeToG(rate);
 
   // First rating for this card: initialize FSRS state from G alone.
-  if (p.S === undefined || p.D === undefined) {
+  if (!Number.isFinite(p.S) || !Number.isFinite(p.D)) {
     initFsrsFromLegacy(p);
   }
-  if (p.S === undefined) {
+  if (!Number.isFinite(p.S)) {
     p.S = initStability(G);
     p.D = initDifficulty(G);
   } else {
@@ -164,6 +179,14 @@ export function schedule(p, rate, now = Date.now(), capDays = MAX_INTERVAL_DAYS)
     }
     p.D = nextDifficulty(p.D, G);
   }
+  // Post-update sanity: cap S, clamp D. Belt-and-suspenders against any
+  // FSRS formula producing NaN/Infinity from pathological inputs (e.g.
+  // R=0 + extreme D), and against runaway stability when the user
+  // chains many Easies on a card the migration over-estimated.
+  if (!Number.isFinite(p.S) || p.S <= 0) p.S = initStability(G);
+  if (!Number.isFinite(p.D)) p.D = initDifficulty(G);
+  p.S = Math.min(p.S, MIGRATION_S_CAP * 4);  // 360-day stability ceiling
+  p.D = clamp(p.D, 1, 10);
 
   // Map the new stability into a due time.
   if (G === 1) {

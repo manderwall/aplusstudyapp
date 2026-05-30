@@ -368,3 +368,112 @@ test('formatQuestion: empty input → empty output', () => {
   assert.equal(formatQuestion(''), '');
   assert.equal(formatQuestion(null), '');
 });
+
+// ─── FSRS migration hardening tests (PR after #45) ──────────────────────
+// Real-shape SM-2 progress rows from accumulated app use + pathological
+// inputs that can land in IDB from old app versions, partial Supabase
+// syncs, or corrupted exports.
+
+test("migrateProgress + schedule on a fresh-card SM-2 row", () => {
+  // Shape exactly matches the pre-FSRS defaultProgress()
+  const fresh = { status: "new", seen: 0, correct: 0, lastSeen: 0, ease: 2.5, interval: 0, due: 0 };
+  migrateProgress(fresh);
+  assert.equal(fresh.S, undefined, "fresh card stays uninitialized");
+  schedule(fresh, "good", NOW);
+  assert.ok(Number.isFinite(fresh.S) && fresh.S > 0, "first rate inits S");
+  assert.ok(fresh.due > NOW, "due in future");
+});
+
+test("migrateProgress + schedule on a learning-card SM-2 row", () => {
+  const learning = { status: "learning", seen: 3, correct: 2, lastSeen: NOW - 2 * DAY, ease: 2.35, interval: 1, due: NOW - DAY };
+  migrateProgress(learning);
+  assert.ok(learning.S >= 1 && learning.S <= 5, `learning S sensible (got ${learning.S})`);
+  schedule(learning, "good", NOW);
+  const interval = (learning.due - NOW) / DAY;
+  assert.ok(interval > 1 && interval < 30, `next interval sensible (${interval.toFixed(1)} days)`);
+});
+
+test("migrateProgress + schedule on a well-learned SM-2 row", () => {
+  // Card the user has rated Good many times — interval matured to 30 (the
+  // old SM-2 cap), ease climbed to ~2.7
+  const mature = { status: "good", seen: 12, correct: 12, lastSeen: NOW - 30 * DAY, ease: 2.7, interval: 30, due: NOW };
+  migrateProgress(mature);
+  assert.ok(mature.S >= 30 && mature.S <= 90, `mature S preserved + capped (got ${mature.S})`);
+  assert.ok(mature.D < 5, `mature D low (got ${mature.D})`);
+  schedule(mature, "good", NOW);
+  assert.ok(mature.S > 30, "stability still grows from mature state");
+});
+
+test("migrateProgress + schedule on a lapsed SM-2 row", () => {
+  // Card user has lapsed on several times — ease floored at 1.3, status learning
+  const lapsed = { status: "learning", seen: 8, correct: 3, lastSeen: NOW - 6 * MIN, ease: 1.3, interval: 0, due: NOW + MIN };
+  migrateProgress(lapsed);
+  // interval==0 means brand-new init path, NOT the legacy mapping.
+  // The first Hard rating should produce sensible relearning behavior.
+  schedule(lapsed, "hard", NOW);
+  assert.ok(lapsed.due > NOW, "lapsed-then-hard schedules in future");
+  assert.equal(lapsed.status, "learning");
+  assert.ok(Number.isFinite(lapsed.S) && lapsed.S > 0);
+});
+
+test("migration sanitizes pathological inputs", () => {
+  const cases = [
+    { ease: NaN, interval: 5, label: "NaN ease" },
+    { ease: -1, interval: 5, label: "negative ease" },
+    { ease: Infinity, interval: 5, label: "Infinity ease" },
+    { ease: 2.5, interval: NaN, label: "NaN interval" },
+    { ease: 2.5, interval: -10, label: "negative interval" },
+    { ease: "2.5", interval: "5", label: "string-typed (JSON roundtrip)" },
+    { ease: 2.5, interval: 9999, label: "absurd interval" },
+  ];
+  for (const c of cases) {
+    const p = { status: "good", seen: 1, correct: 1, lastSeen: NOW, ease: c.ease, interval: c.interval, due: NOW };
+    migrateProgress(p);
+    // After migration, S/D must be finite numbers in valid ranges OR undefined
+    if (p.S !== undefined) {
+      assert.ok(Number.isFinite(p.S) && p.S > 0, `${c.label}: S finite > 0 (got ${p.S})`);
+      assert.ok(p.S <= 90, `${c.label}: S capped at MIGRATION_S_CAP (got ${p.S})`);
+    }
+    if (p.D !== undefined) {
+      assert.ok(Number.isFinite(p.D) && p.D >= 1 && p.D <= 10, `${c.label}: D in [1,10] (got ${p.D})`);
+    }
+    // Schedule must succeed without throwing or producing NaN
+    schedule(p, "good", NOW);
+    assert.ok(Number.isFinite(p.S), `${c.label}: post-schedule S finite`);
+    assert.ok(Number.isFinite(p.D), `${c.label}: post-schedule D finite`);
+    assert.ok(Number.isFinite(p.due) && p.due > 0, `${c.label}: post-schedule due valid`);
+  }
+});
+
+test("schedule stays bounded across a 30-rating stress walk", () => {
+  // Simulate a realistic 30-rating sequence: mostly Goods, a few Hards
+  // and Agains, occasional Easy. Verify S never goes infinite or weird.
+  const p = { status: "new", seen: 0, correct: 0, lastSeen: 0, ease: 2.5, interval: 0, due: 0 };
+  migrateProgress(p);
+  const ratings = ["good", "good", "good", "hard", "good", "good", "easy",
+                   "good", "again", "hard", "good", "good", "good", "easy",
+                   "good", "good", "again", "good", "good", "hard", "good",
+                   "easy", "good", "good", "good", "good", "good", "good",
+                   "easy", "good"];
+  let t = NOW;
+  for (const rate of ratings) {
+    schedule(p, rate, t);
+    assert.ok(Number.isFinite(p.S) && p.S > 0 && p.S <= 360, `S out of bounds after "${rate}": ${p.S}`);
+    assert.ok(Number.isFinite(p.D) && p.D >= 1 && p.D <= 10, `D out of bounds after "${rate}": ${p.D}`);
+    assert.ok(Number.isFinite(p.due) && p.due > t, `due not in future after "${rate}"`);
+    // Advance simulated time to the new due date (perfect spaced repetition)
+    t = p.due;
+  }
+});
+
+test("interval cap shrinks correctly as exam-day approaches", () => {
+  // User has a mature card at S ~ 30; exam day is 7 → cap should hit
+  const p = { status: "good", seen: 10, correct: 10, lastSeen: NOW, ease: 2.7, interval: 30, due: NOW };
+  migrateProgress(p);
+  schedule(p, "good", NOW, 7);
+  assert.ok(p.interval <= 7, `interval should respect 7-day cap (got ${p.interval})`);
+  // Exam tomorrow → cap = 1
+  schedule(p, "good", NOW, 1);
+  assert.ok(p.interval <= 1, `interval should respect 1-day cap (got ${p.interval})`);
+});
+
