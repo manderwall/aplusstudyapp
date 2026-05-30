@@ -1767,9 +1767,16 @@ function renderReading() {
       setMode('study');
     });
   });
-  // If the URL already has a hash, jump there after layout settles
-  if (location.hash && location.hash.startsWith('#obj-')) {
-    setTimeout(() => $(location.hash)?.scrollIntoView({ behavior: 'instant', block: 'start' }), 50);
+  // If the URL already has a hash, jump there after layout settles.
+  // Validate the hash format strictly — querySelector throws on malformed
+  // selectors, so a hash like `#obj-"];alert(1);[` would silently break
+  // the scroll. Only allow alnum / hyphen / dot after the `#obj-` prefix
+  // (matches the sectionId pattern used by Reading sheets).
+  if (location.hash && /^#obj-[a-z0-9.-]+$/i.test(location.hash)) {
+    setTimeout(() => {
+      try { $(location.hash)?.scrollIntoView({ behavior: 'instant', block: 'start' }); }
+      catch {}
+    }, 50);
   }
 }
 
@@ -2062,9 +2069,9 @@ function renderStats() {
           const tier = pct >= 80 ? 'high' : pct >= 50 ? 'mid' : pct > 0 ? 'low' : 'none';
           const accLabel = s.seen > 0 ? `${s.accuracy}%` : '—';
           return `
-          <button class="obj-bar" data-obj-drill="${s.obj}" aria-label="Drill OBJ ${s.obj} in Study mode" data-tier="${tier}">
-            <div class="obj-label">OBJ ${s.obj}</div>
-            <div class="bar-track" role="progressbar" aria-valuenow="${Math.round(pct)}" aria-valuemin="0" aria-valuemax="100" aria-label="OBJ ${s.obj} mastery">
+          <button class="obj-bar" data-obj-drill="${escapeHtml(s.obj)}" aria-label="Drill OBJ ${escapeHtml(s.obj)} in Study mode" data-tier="${tier}">
+            <div class="obj-label">OBJ ${escapeHtml(s.obj)}</div>
+            <div class="bar-track" role="progressbar" aria-valuenow="${Math.round(pct)}" aria-valuemin="0" aria-valuemax="100" aria-label="OBJ ${escapeHtml(s.obj)} mastery">
               <div class="bar-fill" style="width: ${pct}%"></div>
             </div>
             <div class="obj-count">${s.mastered}/${s.total}</div>
@@ -2362,9 +2369,9 @@ function filterBarHTML() {
         <button class="${state.filter.obj === null ? 'active' : ''}" data-filter="all"
                 aria-pressed="${state.filter.obj === null ? 'true' : 'false'}">All (${state.questions.length})</button>
         ${objs.map(o => `
-          <button class="${state.filter.obj === o ? 'active' : ''}" data-filter="${o}"
+          <button class="${state.filter.obj === o ? 'active' : ''}" data-filter="${escapeHtml(o)}"
                   aria-pressed="${state.filter.obj === o ? 'true' : 'false'}">
-            OBJ ${o} (${counts[o]})
+            OBJ ${escapeHtml(o)} (${counts[o]})
           </button>
         `).join('')}
       </div>
@@ -2704,7 +2711,13 @@ function normalizeLearnMore(m) {
 // Async sidekick to renderLearnMoreHTML — populates the "Suggest p. N"
 // affordance after the card renders, so we don't block on IDB / PDF.js.
 async function hydrateLearnMoreSuggest(q) {
-  const slot = document.querySelector(`.learn-more-suggest[data-qid="${q.id}"]`);
+  // CSS.escape() handles any q.id that contains chars meaningful in CSS
+  // selectors (`"`, `]`, etc.). Data convention restricts IDs to
+  // alnum/_/- but defense in depth — and querySelector throws on
+  // malformed selectors, silently breaking the suggestion.
+  const sel = `.learn-more-suggest[data-qid="${typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(q.id) : q.id}"]`;
+  let slot;
+  try { slot = document.querySelector(sel); } catch { return; }
   if (!slot) return;
   const rec = await getReferenceBook();
   if (!rec || !rec.pageText) return;  // no book or not yet indexed
