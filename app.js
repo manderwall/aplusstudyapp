@@ -1320,6 +1320,23 @@ function renderQuizStart() {
     const note = total < n && total >= 5 ? ` (only ${total} available)` : '';
     return `<button class="action quiz-size-btn" data-size="${count}" ${disabled}>${label}${note}</button>`;
   }).join('');
+  // Mock-exam mode — separate CTA so it can't be picked accidentally
+  // while looking for a practice quiz. Deep-research Q3 specifically
+  // called out timed mocks under exam conditions as the highest-leverage
+  // study activity the app was missing. Available only when there are
+  // enough Qs for a full 90-card simulation.
+  const mockEnabled = total >= 90;
+  const mockBtn = `
+    <div class="mock-start-row">
+      <button class="action mock-start-btn" data-mock ${mockEnabled ? '' : 'disabled'}>
+        ⏱️ Mock exam — 90 questions, 90 min, exam conditions
+      </button>
+      <p class="mock-start-desc">
+        ${mockEnabled
+          ? `No per-question feedback until the end. Hard pass mark: 700/900 (77.8%) — matches CompTIA A+ Core 2 scoring.`
+          : `Clear the filter so all ${state.questions.length} questions are available, then come back.`}
+      </p>
+    </div>`;
   $('#main').innerHTML = `
     ${filterBarHTML()}
     <div class="card quiz-start">
@@ -1329,6 +1346,7 @@ function renderQuizStart() {
       <p class="quiz-avail">${total} question${total !== 1 ? 's' : ''} available${state.filter.obj ? ` in OBJ ${state.filter.obj}` : ''}</p>
       <div class="quiz-size-btns">${btns}</div>
       ${total < 5 ? '<p class="quiz-start-warn">Clear the filter to get more questions.</p>' : ''}
+      ${mockBtn}
     </div>
   `;
   renderFilterBar();
@@ -1336,6 +1354,7 @@ function renderQuizStart() {
     const n = Math.min(parseInt(btn.dataset.size, 10), total);
     if (n >= 1) startQuiz(n, available);
   }));
+  $('[data-mock]')?.addEventListener('click', () => startMockExam());
 }
 
 function startQuiz(n, available) {
@@ -1351,6 +1370,77 @@ function startQuiz(n, available) {
   state.selectedOptions = [];
   state.committed = false;
   renderQuizCard();
+}
+
+// Mock-exam mode: 90 random questions, 90-minute countdown, NO per-
+// question feedback (matches real CompTIA A+ Core 2 conditions). The
+// deep-research recommended 2-3 of these under exam conditions before
+// the real test. Stored in quizHistory with mock:true so the readiness
+// banner can weight mock results more heavily than open-book practice
+// in a future PR.
+const MOCK_EXAM_DURATION_MIN = 90;
+const MOCK_EXAM_QUESTION_COUNT = 90;
+const MOCK_EXAM_PASS_PCT = 77.8;  // 700/900, CompTIA's scaled cutoff
+function startMockExam() {
+  // Draw a fresh random sample from the FULL question bank — not
+  // filteredQuestions(). A mock under exam conditions has to mirror the
+  // real exam's domain coverage; respecting a chip filter would
+  // accidentally narrow the draw.
+  const all = state.questions.slice();
+  for (let i = all.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [all[i], all[j]] = [all[j], all[i]];
+  }
+  const qs = all.slice(0, Math.min(MOCK_EXAM_QUESTION_COUNT, all.length));
+  state.quizSession = {
+    questions: qs,
+    answers: {},
+    current: 0,
+    startedAt: Date.now(),
+    endsAt: Date.now() + MOCK_EXAM_DURATION_MIN * 60 * 1000,
+    mock: true,
+    done: false,
+  };
+  state.selectedOption = null;
+  state.selectedOptions = [];
+  state.committed = false;
+  installMockExamTicker();
+  renderQuizCard();
+}
+
+// Drives the visible countdown in the header and force-finishes the
+// session when time runs out.
+function installMockExamTicker() {
+  if (state._quizTick) clearInterval(state._quizTick);
+  state._quizTick = setInterval(() => {
+    const s = state.quizSession;
+    if (!s || !s.mock || s.done) {
+      clearInterval(state._quizTick);
+      state._quizTick = null;
+      return;
+    }
+    const remainMs = s.endsAt - Date.now();
+    if (remainMs <= 0) {
+      // Time's up: silently mark all unanswered as skipped and finish.
+      for (const q of s.questions) {
+        if (!s.answers[q.id]) recordQuizAnswer(getQuestion(q), []);
+      }
+      s.done = true;
+      clearInterval(state._quizTick);
+      state._quizTick = null;
+      if (state.mode === 'quiz') renderQuizResults();
+      return;
+    }
+    // Update the visible countdown in the mode-title HUD without a full
+    // re-render — the question card shouldn't flicker every second.
+    const el = $('#mock-countdown');
+    if (el) el.textContent = formatMockCountdown(remainMs);
+  }, 1000);
+}
+function formatMockCountdown(ms) {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const m = Math.floor(total / 60), s = total % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
 }
 
 function renderQuizCard() {
@@ -1384,8 +1474,14 @@ function renderQuizCard() {
       : new Set(state.selectedOption ? [state.selectedOption] : []);
   }
 
+  // Mock-exam mode suppresses per-question feedback to match real
+  // CompTIA conditions. After recordQuizAnswer fires, the option is
+  // still styled as just-picked, not as correct/wrong, and the
+  // explanation block is hidden — all feedback comes at the results
+  // screen at the end.
+  const mock = session.mock === true;
   const optCls = (opt) => {
-    if (answered) {
+    if (answered && !mock) {
       if (isCorrect(opt)) return 'q-option correct';
       if (pickedSet.has(opt)) return 'q-option wrong';
       return 'q-option revealed-other';
@@ -1406,7 +1502,7 @@ function renderQuizCard() {
         const checked = pickedSet.has(opt);
         const tab = (pickedSet.size ? checked : i === 0) ? 0 : -1;
         const letter = LETTERS[i] || String(i + 1);
-        const describe = answered
+        const describe = (answered && !mock)
           ? (isCorrect(opt) ? ' (correct answer)' : checked ? ' (your pick, incorrect)' : '')
           : '';
         return `<li class="${optCls(opt)}" role="${ma ? 'checkbox' : 'radio'}"
@@ -1435,7 +1531,14 @@ function renderQuizCard() {
         <button class="action" id="quiz-skip-btn">Skip</button>
        </div>`;
 
-  $('#mode-title').textContent = `Quiz ${current + 1}/${total}`;
+  if (mock) {
+    const remain = Math.max(0, (session.endsAt || Date.now()) - Date.now());
+    // Visible countdown lives inline so the setInterval in
+    // installMockExamTicker can update just this node, not re-render the card.
+    $('#mode-title').innerHTML = `Mock ${current + 1}/${total} · <span id="mock-countdown" class="mock-countdown">${formatMockCountdown(remain)}</span>`;
+  } else {
+    $('#mode-title').textContent = `Quiz ${current + 1}/${total}`;
+  }
   // Lock the card for 800ms after answering so a ghost-click can't tap "Next"
   // before the user has read the correct/wrong feedback.
   const sinceAns = Date.now() - (state._revealedAt || 0);
@@ -1462,6 +1565,7 @@ function renderQuizCard() {
   $('.quiz-abandon-btn')?.addEventListener('click', () => {
     if (Object.keys(session.answers).length === 0 || confirm('End this quiz? Your progress will be lost.')) {
       state.quizSession = null;
+      if (state._quizTick) { clearInterval(state._quizTick); state._quizTick = null; }
       renderQuizStart();
     }
   });
@@ -1601,7 +1705,30 @@ function renderQuizResults() {
   const score = Math.round((correct / total) * 100);
   const elapsed = Math.round((Date.now() - session.startedAt) / 1000);
   const elapsedStr = elapsed < 60 ? `${elapsed}s` : `${Math.floor(elapsed / 60)}m ${elapsed % 60}s`;
-  const passed = score >= 75;
+  const mock = session.mock === true;
+  // Real CompTIA A+ Core 2 cutoff is 700/900 (~77.8%) on a scaled
+  // score — that's the line for mock results. Practice quizzes still
+  // use the looser 75% heuristic.
+  const passed = mock ? (score >= MOCK_EXAM_PASS_PCT) : (score >= 75);
+  // Stop the countdown the moment the user sees the score (auto-finish
+  // already stops it; this catches normal end-of-deck completion).
+  if (mock && state._quizTick) { clearInterval(state._quizTick); state._quizTick = null; }
+
+  // Per-objective breakdown for mock results (CompTIA's score report
+  // ships a similar by-domain rollup). Computed once here, reused in
+  // the render block below.
+  const objBreakdown = mock ? (() => {
+    const buckets = new Map();  // obj → { total, correct }
+    for (const bq of session.questions) {
+      const obj = bq.obj || '?';
+      const a = session.answers[bq.id];
+      const b = buckets.get(obj) || { total: 0, correct: 0 };
+      b.total++;
+      if (a && a.isRight) b.correct++;
+      buckets.set(obj, b);
+    }
+    return [...buckets.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  })() : [];
 
   // Persist this quiz to history (idempotent — keyed on startedAt so re-renders
   // of the results screen don't double-record). Capped at 50 to keep
@@ -1615,6 +1742,7 @@ function renderQuizResults() {
     score,
     elapsedSec: elapsed,
     exam: state.exam,
+    mock,   // distinguishes mock (closed-book, timed) from practice quiz history
   });
 
   const wrong = session.questions.filter(bq => {
@@ -1638,20 +1766,48 @@ function renderQuizResults() {
       </ul>
     </div>`;
 
-  $('#mode-title').textContent = 'Quiz';
+  // Per-OBJ breakdown block, mock-only — matches CompTIA's score
+  // report style so the user knows which domain to focus next pass.
+  const objHTML = !mock || objBreakdown.length === 0 ? '' : `
+    <div class="mock-obj-breakdown">
+      <h3 class="mock-obj-title">By objective</h3>
+      <ul class="mock-obj-list">
+        ${objBreakdown.map(([obj, b]) => {
+          const pct = Math.round((b.correct / b.total) * 100);
+          const tier = pct >= 80 ? 'high' : pct >= 60 ? 'mid' : 'low';
+          return `<li class="mock-obj-row" data-tier="${tier}">
+            <span class="mock-obj-name">OBJ ${escapeHtml(obj)}</span>
+            <span class="mock-obj-bar"><span class="mock-obj-fill" style="width:${pct}%"></span></span>
+            <span class="mock-obj-count">${b.correct}/${b.total}</span>
+          </li>`;
+        }).join('')}
+      </ul>
+    </div>`;
+
+  $('#mode-title').textContent = mock ? 'Mock results' : 'Quiz';
   $('#main').innerHTML = `
     ${filterBarHTML()}
-    <div class="card quiz-results">
+    <div class="card quiz-results${mock ? ' mock-results' : ''}">
+      ${mock ? '<div class="mock-badge">⏱️ Timed mock exam</div>' : ''}
       <div class="quiz-score-circle ${passed ? 'pass' : 'fail'}">
         <span class="quiz-score-pct">${score}%</span>
         <span class="quiz-score-label">${passed ? 'Pass ✓' : 'Keep going'}</span>
       </div>
       <p class="quiz-result-detail">${correct} / ${total} correct · ${elapsedStr}${skipped > 0 ? ` · ${skipped} skipped` : ''}</p>
-      <p class="quiz-pass-note">${passed ? '🎉 CompTIA A+ pass threshold is ~75%. Great work!' : 'Target 75%+ before the real exam. Keep studying!'}</p>
+      <p class="quiz-pass-note">${
+        mock
+          ? (passed
+              ? `🎉 Above the ${MOCK_EXAM_PASS_PCT}% mock-exam pass mark (CompTIA's 700/900 scaled cutoff).`
+              : `Below the ${MOCK_EXAM_PASS_PCT}% mock-exam pass mark (CompTIA's 700/900 cutoff). Focus on the weakest objectives below.`)
+          : (passed
+              ? '🎉 CompTIA A+ pass threshold is ~75%. Great work!'
+              : 'Target 75%+ before the real exam. Keep studying!')
+      }</p>
       <div class="btn-row">
-        <button class="action primary" id="quiz-new-btn">New quiz</button>
+        <button class="action primary" id="quiz-new-btn">${mock ? 'Run another mock' : 'New quiz'}</button>
         ${wrong.length > 0 ? `<button class="action" id="quiz-review-btn">Study missed (${wrong.length})</button>` : ''}
       </div>
+      ${objHTML}
       ${wrongHTML}
     </div>
   `;
@@ -3035,6 +3191,10 @@ function setMode(mode) {
   // button doesn't keep speaking a card you've navigated away from.
   document.documentElement.removeAttribute('data-revealed');
   if (typeof stopSpeaking === 'function') stopSpeaking();
+  // Stop the mock-exam ticker if the user nav'd away mid-mock — the
+  // tick handler bails when state.mode !== 'quiz' anyway, but clearing
+  // is cleaner than leaking the interval.
+  if (state.mode !== 'quiz' && state._quizTick) { clearInterval(state._quizTick); state._quizTick = null; }
   $$('.tab').forEach(t => {
     const active = t.dataset.mode === mode;
     t.classList.toggle('active', active);
