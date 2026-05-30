@@ -4317,7 +4317,11 @@ create policy "anon update" on progress for update using (true);</pre>
               <li><strong>Page won't load:</strong> check connection, then clear the cache (section above).</li>
               <li><strong>Cards seem to skip:</strong> reinstall the home-screen icon — you may be on an old service-worker cache.</li>
               <li><strong>Lost your progress after wipe:</strong> if you set up Supabase, tap <strong>Stats → Cloud sync → ⬇ Pull</strong> on this device.</li>
-              <li><strong>Bug to report:</strong> open an issue at <a href="https://github.com/manderwall/aplusstudyapp/issues" target="_blank" rel="noopener">github.com/manderwall/aplusstudyapp/issues</a> — include the screen you were on and what you tapped.</li>
+              <li>
+                <strong>Send feedback or report a bug:</strong>
+                <button type="button" class="action primary feedback-cta" id="help-feedback-btn">📨 Email a report</button>
+                <span class="help-aux">(pre-fills the screen you're on + device info so you don't have to type it out)</span>
+              </li>
             </ul>
           </div>
         </details>
@@ -4351,10 +4355,150 @@ create policy "anon update" on progress for update using (true);</pre>
     close();
     showWelcome();
   });
+  $('#help-feedback-btn').addEventListener('click', () => {
+    close();
+    showFeedback();
+  });
   document.addEventListener('keydown', onKeydown);
   setTimeout(() => {
     overlay.querySelector('summary')?.focus();
   }, 0);
+}
+
+//─── FEEDBACK / BUG-REPORT DIALOG ─────────────────────────────
+// Opens an in-app form that pre-fills the screen the user is on + device
+// info, so a classmate doesn't have to type "I was on Quiz card #7,
+// iPhone 15 Pro, Safari, app version v73" by hand. On submit, opens a
+// mailto: link to amanda; falls back to a copy-to-clipboard if the
+// device has no mail client configured. No backend required.
+const FEEDBACK_EMAIL = 'hello@amandavanderwall.com';
+async function getCacheVersion() {
+  // The SW writes a constant `aplus-study-v<N>`; reading it out of the
+  // active SW lets us tag reports with the version the user is actually
+  // running, not what main pushed two minutes ago.
+  try {
+    const reg = await navigator.serviceWorker?.getRegistration?.();
+    if (!reg) return 'unknown';
+    const keys = await caches.keys();
+    return keys.find(k => k.startsWith('aplus-study-')) || 'unknown';
+  } catch { return 'unknown'; }
+}
+async function buildDiagnostics() {
+  const ua = navigator.userAgent;
+  const cache = await getCacheVersion();
+  const seenCards = state.questions.filter(q => state.progress[q.id]?.seen > 0).length;
+  const totalCards = state.questions.length;
+  const cardId = state._currentQ?.id || '(no current card)';
+  return [
+    `Mode: ${state.mode}`,
+    `Card: ${cardId}`,
+    `Progress: ${seenCards} / ${totalCards} cards rated`,
+    `Active filter: ${JSON.stringify(state.filter)}`,
+    `Theme: ${pref('theme') || 'auto'}`,
+    `App cache: ${cache}`,
+    `Viewport: ${window.innerWidth} × ${window.innerHeight}`,
+    `Device: ${ua}`,
+    `When: ${new Date().toISOString()}`,
+  ].join('\n');
+}
+async function showFeedback() {
+  const diagnostics = await buildDiagnostics();
+  const html = `
+    <div id="feedback-overlay" role="dialog" aria-modal="true" aria-labelledby="fbk-title">
+      <div class="welcome-card pind-card feedback-card">
+        <button class="welcome-close" id="fbk-close" aria-label="Cancel">✕</button>
+        <h2 id="fbk-title" class="pind-title">📨 Report a bug or send feedback</h2>
+        <p class="pind-intro">Tell me what happened. The form pre-fills the screen you're on and your device info so you don't have to type it out.</p>
+        <label class="fbk-field">
+          <span class="pind-label">What were you doing? What went wrong?</span>
+          <textarea id="fbk-msg" rows="5" placeholder="Example: I tapped Quiz, picked B, and the next question loaded with no options visible."></textarea>
+        </label>
+        <label class="fbk-include">
+          <input type="checkbox" id="fbk-include-diag" checked>
+          <span>Include diagnostics — current screen, app version, browser. Helps me debug.</span>
+        </label>
+        <details class="fbk-diag-preview">
+          <summary>Show what's included</summary>
+          <pre id="fbk-diag-preview-pre"></pre>
+        </details>
+        <div id="fbk-error" class="pind-error" role="alert" hidden></div>
+        <div class="pind-actions">
+          <button type="button" class="action" id="fbk-copy">Copy report</button>
+          <button type="button" class="action primary" id="fbk-send">Send via email →</button>
+        </div>
+      </div>
+    </div>`;
+  $('#feedback-overlay')?.remove();
+  document.body.insertAdjacentHTML('beforeend', html);
+  const overlay = $('#feedback-overlay');
+  $('#fbk-diag-preview-pre').textContent = diagnostics;
+  const previouslyFocused = document.activeElement;
+  const close = () => {
+    document.removeEventListener('keydown', onKeydown);
+    overlay.remove();
+    if (previouslyFocused && typeof previouslyFocused.focus === 'function') previouslyFocused.focus();
+  };
+  const onKeydown = (e) => {
+    if ($('#feedback-overlay') !== overlay) return;
+    if (e.key === 'Escape') { close(); }
+  };
+  document.addEventListener('keydown', onKeydown);
+  $('#fbk-close').addEventListener('click', close);
+
+  const buildReport = () => {
+    const msg = ($('#fbk-msg').value || '').trim();
+    const includeDiag = $('#fbk-include-diag').checked;
+    const parts = [];
+    if (msg) parts.push(msg);
+    else parts.push('(no description provided)');
+    if (includeDiag) {
+      parts.push('');
+      parts.push('---');
+      parts.push('Diagnostics:');
+      parts.push(diagnostics);
+    }
+    return parts.join('\n');
+  };
+
+  $('#fbk-send').addEventListener('click', () => {
+    const body = buildReport();
+    const subject = 'A+ Study — bug report / feedback';
+    // mailto: max URL length is ~2000 chars; if we overflow, fall back to
+    // copying and tell the user.
+    const url = `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    if (url.length > 1900) {
+      navigator.clipboard?.writeText(body);
+      toast('Report too long for email — copied to clipboard. Paste it into a new email to ' + FEEDBACK_EMAIL, 'info', 6000);
+      close();
+      return;
+    }
+    // Open the mail client. On iOS this may navigate the current tab;
+    // restore by opening in a new window where possible.
+    try {
+      const w = window.open(url, '_blank');
+      if (!w) location.href = url;  // popup blocked → in-tab navigation
+    } catch { location.href = url; }
+    setTimeout(close, 200);
+  });
+
+  $('#fbk-copy').addEventListener('click', async () => {
+    const body = buildReport();
+    try {
+      await navigator.clipboard.writeText(`To: ${FEEDBACK_EMAIL}\nSubject: A+ Study — bug report / feedback\n\n${body}`);
+      const btn = $('#fbk-copy');
+      const orig = btn.textContent;
+      btn.textContent = 'Copied ✓';
+      btn.classList.add('share-copied');
+      setTimeout(() => { btn.textContent = orig; btn.classList.remove('share-copied'); }, 1800);
+    } catch {
+      // Clipboard blocked — show the text so user can long-press select it
+      const errEl = $('#fbk-error');
+      errEl.hidden = false;
+      errEl.textContent = `Couldn't copy automatically. Email ${FEEDBACK_EMAIL} with: ${body.slice(0, 200)}…`;
+    }
+  });
+
+  setTimeout(() => $('#fbk-msg')?.focus(), 50);
 }
 
 // One-shot defaults for exam dates so users don't have to open Stats just to
