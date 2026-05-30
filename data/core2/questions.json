@@ -84,7 +84,7 @@
     "obj": "4.4",
     "qtype": "Multiple Choice",
     "question": "What information does a Safety Data Sheet (SDS, formerly MSDS) provide?",
-    "explanation": "OBJ 4.4: A Safety Data Sheet (SDS) — called a Material Safety Data Sheet (MSDS) before the OSHA/GHS terminology update in 2015 — documents the hazardous chemicals contained in a product and how to handle spills, exposure, fires, and disposal. Both terms still appear in field materials; the modern standard is SDS.",
+    "explanation": "OBJ 4.4: A Safety Data Sheet (SDS) — called a Material Safety Data Sheet (MSDS) before OSHA aligned with the GHS standard in 2012 (full employer-compliance deadline June 2015) — documents the hazardous chemicals in a product and how to handle spills, exposure, fires, and disposal. Both terms still appear in field materials; the modern standard is SDS.",
     "options": [
       "UPS and battery system setup",
       "Hazard response procedure",
@@ -3556,7 +3556,7 @@
     "qtype": "Multiple Choice",
     "question": "An IT technician accidentally breaks an old uninterruptible power supply (UPS) and a chemical substance leaks out. Where should the technician look to find first aid information and safe cleanup procedures?",
     "correct_short": "The Safety Data Sheet (SDS)",
-    "explanation": "OBJ 4.5: A Safety Data Sheet (SDS) — called a Material Safety Data Sheet (MSDS) before the 2015 OSHA/GHS update — contains the hazardous-ingredient list, health hazards, first-aid steps, and safe cleanup procedures for spills. Field materials still use both terms; the modern standard is SDS.",
+    "explanation": "OBJ 4.5: A Safety Data Sheet (SDS) — called a Material Safety Data Sheet (MSDS) before OSHA aligned with GHS in 2012 (full employer-compliance deadline June 2015) — contains the hazardous-ingredient list, health hazards, first-aid steps, and safe cleanup procedures for spills. Field materials still use both terms; the modern standard is SDS.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -5488,7 +5488,7 @@
     "qtype": "Multiple Choice",
     "question": "A technician spills a large amount of toner inside a laser printer. Where should they look to find the official manufacturer instructions regarding the health hazards and proper cleanup procedures for this specific chemical?",
     "correct_short": "The safety data sheet (SDS)",
-    "explanation": "OBJ 4.5 (Operational Procedures): A safety data sheet (SDS) — formerly called a material safety data sheet (MSDS) before the 2015 OSHA/GHS terminology update — is the manufacturer-supplied document that lists the chemical composition, health hazards, first-aid steps, PPE, and required cleanup/disposal method for the substance. An SLA is a service-performance contract between provider and customer and contains no chemical-safety information. An AUP defines how users may use IT systems. A CMDB inventories hardware/software assets and their relationships — none of those documents tell you how to safely clean up spilled toner.",
+    "explanation": "OBJ 4.5 (Operational Procedures): A safety data sheet (SDS) — formerly called a material safety data sheet (MSDS) before OSHA aligned with the GHS standard in 2012 (full employer-compliance deadline June 2015) — is the manufacturer-supplied document that lists the chemical composition, health hazards, first-aid steps, PPE, and required cleanup/disposal method for the substance. An SLA is a service-performance contract between provider and customer and contains no chemical-safety information. An AUP defines how users may use IT systems. A CMDB inventories hardware/software assets and their relationships — none of those documents tell you how to safely clean up spilled toner.",
     "sources": [
       {
         "source": "synthetic-220-1202",
