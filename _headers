@@ -1,0 +1,18 @@
+# Cloudflare Pages reads this file and applies the rules to static
+# responses. Tightening here gives the same effect as a server-rendered
+# CSP meta would, but works for the static-asset paths too.
+
+/*
+  # Strict CSP — backstops the one intentional raw-HTML render path
+  # (concept-fixes content) so a malicious content PR can't execute
+  # script. Allows the pdf.js CDN we explicitly import, and the user's
+  # Supabase host for optional sync.
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; script-src-elem 'self' https://cdn.jsdelivr.net; worker-src 'self' blob:; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://cdn.jsdelivr.net https://*.supabase.co; frame-ancestors 'none'; base-uri 'none'; object-src 'none'; form-action 'none'; upgrade-insecure-requests
+  # Stop MIME-sniff overrides on JSON/JS payloads.
+  X-Content-Type-Options: nosniff
+  # Don't leak the URL path to outbound requests.
+  Referrer-Policy: no-referrer
+  # Permission allowlist — none of these are used.
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+  # Belt-and-suspenders against framing (frame-ancestors covers modern browsers).
+  X-Frame-Options: DENY

@@ -3200,6 +3200,15 @@ function installKeyboard() {
     // Let the user type in inputs/textareas
     if (e.target.matches('input, textarea')) return;
     if (e.metaKey || e.ctrlKey || e.altKey) return;
+    // Bail when ANY modal overlay is open. Without this, `f` / space /
+    // 1-4 / arrows etc. fire underneath the dialog and silently mutate
+    // study state (toggle Focus mode, rate the next card, advance, etc.).
+    // Each dialog already handles its own Escape; the per-dialog Escape
+    // listener runs first because it's installed later in DOM order.
+    if (document.querySelector(
+      '#welcome-overlay, #help-overlay, #feedback-overlay, ' +
+      '#pin-overlay, #lock-overlay, #img-zoom-overlay, #pdf-viewer-overlay'
+    )) return;
 
     const key = e.key.toLowerCase();
 

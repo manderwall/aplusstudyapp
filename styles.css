@@ -59,6 +59,16 @@
     --border: #d0d0d0;
     --text: #1a1a1a;
     --text-dim: #606060;
+    /* WCAG-AA accent colors for use as text-on-white and as button
+       backgrounds. The dark-mode versions (--accent #5aa6ff, --good
+       #4ade80, --warn #fbbf24, --bad #f87171) all read at 1.7-2.8:1
+       against white and fail AA when used as text on the light surface.
+       Darken them for light mode; all four pass 5:1+ as text on white,
+       and 5:1+ for white-on-button. */
+    --accent: #1565c0;
+    --good:   #15803d;
+    --warn:   #92400e;
+    --bad:    #b91c1c;
   }
 }
 
@@ -707,10 +717,14 @@ button.action {
   padding: 0 16px;
 }
 button.action:active { transform: scale(0.97); }
-button.action.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+/* Black text on every colored button for WCAG-AA contrast across both
+   themes. Previous #fff on --accent (#5aa6ff) was 2.52:1 and #fff on
+   --bad (#f87171) was 2.77:1 — both well below the 4.5:1 floor. Black
+   on these passes 5:1+ in dark, 7:1+ in light. */
+button.action.primary { background: var(--accent); color: #000; border-color: var(--accent); }
 button.action.good { background: var(--good); color: #000; border-color: var(--good); }
 button.action.warn { background: var(--warn); color: #000; border-color: var(--warn); }
-button.action.bad { background: var(--bad); color: #fff; border-color: var(--bad); }
+button.action.bad { background: var(--bad); color: #000; border-color: var(--bad); }
 
 /* One-time SRS explainer above the rating row on the first reveal */
 .rate-hint {
