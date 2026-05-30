@@ -156,6 +156,14 @@ export function migrateProgress(p) {
 }
 
 export function schedule(p, rate, now = Date.now(), capDays = MAX_INTERVAL_DAYS) {
+  // Coerce + sanitize `now`. A non-finite or string-typed `now` (which
+  // can happen if the caller pulled a timestamp from a corrupted sync
+  // payload or a future refactor passes state.now through) would otherwise
+  // propagate into p.due as NaN/Infinity/string-concatenation — breaking
+  // every downstream due/sort check. Default to wall-clock.
+  let _now = Number(now);
+  if (!Number.isFinite(_now) || _now <= 0) _now = Date.now();
+  now = _now;
   // Effective interval cap. Floored at 1 so cards always come back at
   // least once, even with an exam tomorrow.
   const cap = Math.max(1, capDays || MAX_INTERVAL_DAYS);
@@ -213,12 +221,18 @@ export function schedule(p, rate, now = Date.now(), capDays = MAX_INTERVAL_DAYS)
 }
 
 export function escapeHtml(s) {
-  if (!s) return '';
+  if (s == null || s === '' || s === false) return '';
+  // Coerce non-string inputs (numbers, booleans, BigInt, accidental objects)
+  // before .replace. Without this, e.g. a content PR shipping
+  // `options: ["a", 42, "b"]` would crash the renderer with "s.replace is
+  // not a function" instead of just stringifying 42 to "42". Data validator
+  // should catch malformed files; this is defense in depth.
+  const str = typeof s === 'string' ? s : String(s);
   // Escape quotes too — otherwise an option like 9.6" x 9.6" injected into
   // data-option="..." terminates the attribute early and the click handler
   // reads back a truncated value, breaking option matching.
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 export function normalizeOption(s) {
