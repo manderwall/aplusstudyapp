@@ -2159,6 +2159,20 @@ button.share-copy.share-copied { background: var(--good); color: #000; border-co
   button.action { flex-basis: 100%; }
 }
 
+/* Landscape phone (≤500px tall): the header + filter row + card meta
+   was eating the full visible viewport, leaving the question stem
+   below the fold. Compact everything vertically so at least one option
+   peeks above the fold and the user knows there's more. */
+@media (orientation: landscape) and (max-height: 500px) {
+  header { padding: 6px 14px; }
+  header h1 { font-size: 14px; }
+  .header-right button { padding: 4px 8px; }
+  #main { padding: 10px 16px; }
+  .card { padding: 14px 18px; border-radius: 12px; }
+  .card-meta { margin-bottom: 8px; }
+  .card-question { font-size: 15px !important; line-height: 1.4 !important; }
+}
+
 /* ─── Lock screen (PIN unlock) ─── */
 #lock-overlay {
   position: fixed;
@@ -2519,7 +2533,14 @@ html[data-motion="reduced"] .quiz-progress-fill { transition: none; }
    space and bump up some chrome densities. */
 @media (min-width: 900px) {
   #main { padding: 28px 32px; max-width: 1100px; margin: 0 auto; }
-  .card { max-width: 100%; padding: 32px; }
+  /* Keep the 760px line-length cap from the mobile rule even on tablet/
+     desktop. Previously max-width:100% inside the 1100px #main made the
+     card spread to ~1000px wide on iPad landscape, blowing past the
+     comfortable 45-75 character reading range and leaving huge empty
+     space inside long, thin option buttons. 760px holds line length
+     near the upper end of comfortable and lets the surrounding negative
+     space breathe. */
+  .card { max-width: 760px; padding: 32px; }
   .card-question { font-size: 18px; line-height: 1.55; }
   .q-options { gap: 12px; }
   .q-option { padding: 16px 20px; min-height: 56px; }
