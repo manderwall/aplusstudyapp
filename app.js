@@ -1710,9 +1710,19 @@ function renderStats() {
   const qs = state.questions;
   const seen = qs.filter(q => state.progress[q.id].seen > 0);
   const mastered = qs.filter(q => state.progress[q.id].status === 'good');
-  const totalCorrect = qs.reduce((s, q) => s + state.progress[q.id].correct, 0);
-  const totalSeen = qs.reduce((s, q) => s + state.progress[q.id].seen, 0);
-  const acc = totalSeen > 0 ? Math.round((totalCorrect / totalSeen) * 100) : 0;
+  // Quiz-based accuracy mirrors the readiness banner (PR #40). Self-
+  // rated study accuracy was misleading: easy to inflate to ~100% with
+  // a handful of Good ratings on the cards you breezed through. The
+  // user-visible "Accuracy" number should be the trustworthy one. If
+  // the user hasn't taken enough quiz to be calibrated yet, show "—"
+  // and let the readiness banner direct them to start one.
+  const ACC_MIN_QS = 20;
+  const ACC_RECENT_SESSIONS = 5;
+  const accHistory = loadQuizHistory(state.exam).slice(-ACC_RECENT_SESSIONS);
+  const accTotal = accHistory.reduce((n, e) => n + (e.total || 0), 0);
+  const accCorrect = accHistory.reduce((n, e) => n + (e.correct || 0), 0);
+  const accReady = accTotal >= ACC_MIN_QS;
+  const acc = accReady ? Math.round((accCorrect / accTotal) * 100) : null;
 
   // Per-OBJ breakdown
   const objs = uniqueObjs();
@@ -1860,9 +1870,9 @@ function renderStats() {
             <div class="number">${qs.length}</div>
             <div class="label">Total</div>
           </div>
-          <div class="stat-card">
-            <div class="number">${acc}%</div>
-            <div class="label">Accuracy</div>
+          <div class="stat-card" title="${accReady ? `Average correct across your last ${accHistory.length} quiz${accHistory.length===1?'':'zes'} (${accTotal} questions).` : `Take a quiz to see your cold-test accuracy. ${accTotal}/${ACC_MIN_QS} questions answered.`}">
+            <div class="number">${accReady ? `${acc}%` : '—'}</div>
+            <div class="label">Quiz accuracy</div>
           </div>
         </div>
         <div class="stats-row">
