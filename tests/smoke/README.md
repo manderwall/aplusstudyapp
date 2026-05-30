@@ -38,6 +38,17 @@ Screenshots land in `tests/smoke/__shots__/` (gitignored).
 - `mobile.mjs` — responsive sweep; flags h-scroll, sub-24×24 targets,
   truncated tab labels.
 
+## CI status
+
+These run **locally**, not in CI yet. Two attempts to wire a `smoke`
+job into GitHub Actions failed fast at puppeteer's Chromium launch
+(likely a missing system lib on the `ubuntu-24.04` runner, or the
+browser postinstall being skipped) — and the working environment
+couldn't read Actions logs to confirm which. Rather than leave a
+perpetually-red advisory check (which trains people to ignore red),
+CI integration is a documented TODO in `.github/workflows/ci.yml`.
+The local run is the source of truth until then.
+
 ## Adding a guard
 
 When you fix a browser-observable bug, add an assertion to

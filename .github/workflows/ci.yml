@@ -26,26 +26,16 @@ jobs:
       - name: Unit tests
         run: node --test tests/*.test.mjs
 
-  # Browser smoke suite runs in a SEPARATE job so the fast `check` gate
-  # above (syntax + validators + unit tests, ~10s) keeps giving instant
-  # feedback. continue-on-error makes this job advisory: a flaky Chromium
-  # download or runner-env quirk shows up as a warning but NEVER blocks a
-  # merge. The local `npm run smoke` (10/10, verified) is the source of
-  # truth; this is the automated bonus.
-  smoke:
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
-        with:
-          node-version: '24'
-      - name: Install dev dependencies (puppeteer)
-        run: npm install --no-audit --no-fund
-      # Puppeteer v23+ no longer guarantees the browser is fetched by the
-      # install postinstall in every CI env. Install it explicitly so the
-      # launch doesn't fail with "Could not find Chrome".
-      - name: Ensure Chromium is installed
-        run: npx puppeteer browsers install chrome
-      - name: Browser regression smoke
-        run: npm run smoke
+  # NOTE: a browser-smoke CI job was attempted here and removed. The
+  # suite itself (tests/smoke/) is committed and verified locally
+  # (`npm run smoke` → 10/10), but getting puppeteer's Chromium to
+  # launch on the GitHub runner failed twice (fast fail at npm install
+  # / browser launch — likely a missing system lib on ubuntu-24.04 like
+  # libnss3/libgbm, or the postinstall browser fetch being skipped).
+  # I couldn't read the Actions logs from the environment I was working
+  # in, so rather than ship a perpetually-red advisory check (which
+  # trains everyone to ignore red), CI integration is left as a TODO.
+  # To finish it: add a `smoke` job that runs
+  #   npm install && npx puppeteer browsers install --with-deps chrome && npm run smoke
+  # OR use the browser-actions/setup-chrome action, then read the first
+  # failing log to confirm the missing-lib vs missing-binary cause.

@@ -145,9 +145,11 @@ npm run smoke:mobile   # 6-viewport responsive sweep + screenshots
 ```
 
 When you fix a browser-observable bug, add an assertion to
-`tests/smoke/regression.mjs` so it can't silently regress. The
-`smoke` CI job is separate from the fast `check` job, so a flaky
-Chromium download never blocks the instant syntax/unit feedback.
+`tests/smoke/regression.mjs` so it can't silently regress. The suite
+runs LOCALLY only — wiring it into CI failed twice on puppeteer's
+Chromium launch on the runner (couldn't read Actions logs to debug);
+see the TODO in `.github/workflows/ci.yml`. Local `npm run smoke` is
+the source of truth.
 
 ## When the user reports a "skip" bug they can't reproduce
 
