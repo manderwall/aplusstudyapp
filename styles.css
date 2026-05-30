@@ -2462,6 +2462,32 @@ html[data-motion="reduced"] .quiz-progress-fill { transition: none; }
 .tag.quiz-counter { font-weight: 600; color: var(--accent); }
 .quiz-abandon-btn { margin-left: auto; color: var(--text-dim); }
 
+/* Mock-exam start CTA — separate row beneath the practice-quiz buttons,
+   bigger + bordered so it doesn't get tapped accidentally. */
+.mock-start-row { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--border); text-align: center; }
+.mock-start-btn { width: 100%; padding: 16px !important; font-size: 15px !important; border: 2px solid var(--accent) !important; background: var(--surface) !important; color: var(--accent) !important; }
+.mock-start-btn:not([disabled]):hover { background: var(--accent) !important; color: #fff !important; }
+.mock-start-btn[disabled] { opacity: 0.5; cursor: not-allowed; border-color: var(--border) !important; color: var(--text-dim) !important; }
+.mock-start-desc { margin-top: 8px; font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+
+/* Live countdown in the header during a mock. Monospace so single-digit
+   minute transitions don't shift the surrounding layout. */
+.mock-countdown { font-family: ui-monospace, SFMono-Regular, monospace; color: var(--accent); font-weight: 600; }
+
+/* Mock results page additions */
+.mock-results .quiz-pass-note { font-weight: 500; }
+.mock-badge { display: inline-block; padding: 4px 10px; border-radius: 999px; background: var(--surface-2); color: var(--text-dim); font-size: 12px; margin-bottom: 12px; }
+.mock-obj-breakdown { margin-top: 20px; text-align: left; }
+.mock-obj-title { font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); margin-bottom: 10px; }
+.mock-obj-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.mock-obj-row { display: grid; grid-template-columns: 80px 1fr 56px; align-items: center; gap: 10px; padding: 6px 10px; background: var(--surface-2); border-radius: 8px; }
+.mock-obj-name { font-weight: 600; font-size: 13px; }
+.mock-obj-bar { position: relative; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.mock-obj-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--good); }
+.mock-obj-row[data-tier="low"] .mock-obj-fill { background: var(--bad); }
+.mock-obj-row[data-tier="mid"] .mock-obj-fill { background: var(--warn); }
+.mock-obj-count { font-variant-numeric: tabular-nums; font-size: 12px; color: var(--text-dim); text-align: right; }
+
 /* Results screen */
 .quiz-results { text-align: center; padding-bottom: 24px; }
 .quiz-score-circle {
