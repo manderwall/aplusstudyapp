@@ -127,7 +127,7 @@ function ensureFontLoaded(font) {
 }
 
 function isDue(q) {
-  return (state.progress[q.id].due || 0) <= Date.now();
+  return (state.progress[q.id]?.due || 0) <= Date.now();
 }
 
 function haptic(pattern = 10) {
@@ -1763,8 +1763,12 @@ function renderStats() {
   $('#mode-title').textContent = 'Stats';
   $('#progress-hud').textContent = '';
   const qs = state.questions;
-  const seen = qs.filter(q => state.progress[q.id].seen > 0);
-  const mastered = qs.filter(q => state.progress[q.id].status === 'good');
+  // Defensive against the tight race window during exam-switch + sync
+  // where state.questions has been swapped but state.progress hasn't
+  // been re-seeded yet. Without `?.`, the filter throws Cannot-read-seen
+  // and Stats blanks out.
+  const seen = qs.filter(q => (state.progress[q.id]?.seen || 0) > 0);
+  const mastered = qs.filter(q => state.progress[q.id]?.status === 'good');
   // Quiz-based accuracy mirrors the readiness banner (PR #40). Self-
   // rated study accuracy was misleading: easy to inflate to ~100% with
   // a handful of Good ratings on the cards you breezed through. The
@@ -1783,10 +1787,10 @@ function renderStats() {
   const objs = uniqueObjs();
   const objStats = objs.map(obj => {
     const objQs = qs.filter(q => q.obj === obj);
-    const objSeen = objQs.reduce((s, q) => s + state.progress[q.id].seen, 0);
-    const objCorrect = objQs.reduce((s, q) => s + state.progress[q.id].correct, 0);
+    const objSeen = objQs.reduce((s, q) => s + (state.progress[q.id]?.seen || 0), 0);
+    const objCorrect = objQs.reduce((s, q) => s + (state.progress[q.id]?.correct || 0), 0);
     const objAcc = objSeen > 0 ? Math.round((objCorrect / objSeen) * 100) : 0;
-    const objMastered = objQs.filter(q => state.progress[q.id].status === 'good').length;
+    const objMastered = objQs.filter(q => state.progress[q.id]?.status === 'good').length;
     return { obj, total: objQs.length, seen: objSeen, accuracy: objAcc, mastered: objMastered };
   });
 
@@ -2417,9 +2421,12 @@ function renderFilterBar() {
 function renderScratchpadHTML(q) {
   // PBQ with an image → overlay mode: canvas layered over the image so the
   // user can annotate / label components directly.
-  const hasImage = q && (q.image || (q.images && q.images.length));
+  // Filter to safe image sources before rendering. Rejected URLs are
+  // dropped silently so the scratchpad still renders without an image.
+  const safeImages = q && (q.images || [q.image]).filter(Boolean).filter(isSafeImageSrc);
+  const hasImage = safeImages && safeImages.length > 0;
   if (hasImage) {
-    const src = q.image || q.images[0];
+    const src = safeImages[0];
     return `
       <div class="scratchpad-wrap overlay">
         <div class="scratchpad-controls">
@@ -2577,8 +2584,10 @@ function attachScratchpadEvents(q) {
 
 //─── QUESTION IMAGE + OPTIONS ────────────────────────────────
 function renderImageHTML(q) {
-  // Support both `image` (single path) and `images` (array)
-  const imgs = q.images || (q.image ? [q.image] : []);
+  // Support both `image` (single path) and `images` (array). Filter to
+  // safe sources only — defense in depth against a content-PR that
+  // smuggles a http://evil/track.gif IP-leak pixel.
+  const imgs = (q.images || (q.image ? [q.image] : [])).filter(isSafeImageSrc);
   if (imgs.length > 0) {
     // Wrapped in a button so the image is keyboard-focusable and
     // screen-readers announce "tap to enlarge". The click handler is
@@ -2651,6 +2660,24 @@ function isSafeLearnMoreUrl(u) {
   if (typeof u !== 'string' || !u.trim()) return false;
   try { return /^https?:$/i.test(new URL(u).protocol); }
   catch { return false; }
+}
+// Image src allowlist — restricts to https:// or data:image/* so a future
+// content-PR can't smuggle a tracking pixel via http:// (IP leak + no
+// transport encryption) or a data:text/html-disguised-as-image. CSP
+// img-src is permissive (`self data: blob: https:`) so this is the
+// stricter app-level gate. Used to filter q.image / q.images before
+// they hit innerHTML.
+function isSafeImageSrc(u) {
+  if (typeof u !== 'string' || !u.trim()) return false;
+  const s = u.trim();
+  // Local relative paths (no protocol) are fine — they resolve under self.
+  if (!/^[a-z][a-z0-9+.-]*:/i.test(s)) return true;
+  try {
+    const p = new URL(s).protocol.toLowerCase();
+    if (p === 'https:') return true;
+    if (p === 'data:') return /^data:image\/(png|jpe?g|gif|svg\+xml|webp);/i.test(s);
+    return false;
+  } catch { return false; }
 }
 function normalizeLearnMore(m) {
   if (!m) return [];

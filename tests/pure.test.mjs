@@ -477,3 +477,31 @@ test("interval cap shrinks correctly as exam-day approaches", () => {
   assert.ok(p.interval <= 1, `interval should respect 1-day cap (got ${p.interval})`);
 });
 
+
+// ─── adversarial now sanitization (PR after #59) ─────────────────────
+test('schedule sanitizes pathological now: Infinity/NaN/string/0/negative', () => {
+  const cases = [Infinity, -Infinity, NaN, 0, -1, '1700000000000'];
+  for (const bad of cases) {
+    const p = defaultProgress();
+    schedule(p, 'good', bad);
+    assert.ok(Number.isFinite(p.S), `S finite for now=${bad}: got ${p.S}`);
+    assert.ok(Number.isFinite(p.D), `D finite for now=${bad}: got ${p.D}`);
+    assert.ok(Number.isFinite(p.due) && p.due > 0, `due finite + positive for now=${bad}: got ${p.due}`);
+    assert.ok(typeof p.due === 'number', `due is number for now=${bad}: got ${typeof p.due}`);
+  }
+});
+
+test('escapeHtml coerces non-string inputs defensively', () => {
+  // A content PR shipping options: ["a", 42, "b"] would crash the renderer
+  // with "s.replace is not a function" without this defense.
+  assert.equal(escapeHtml(42), '42');
+  assert.equal(escapeHtml(true), 'true');
+  assert.equal(escapeHtml(BigInt(42)), '42');
+  assert.equal(escapeHtml([1, 2]), '1,2');
+  assert.equal(escapeHtml({ a: 1 }), '[object Object]');
+  // Still safe on null/undefined/empty/false (returns empty string)
+  assert.equal(escapeHtml(null), '');
+  assert.equal(escapeHtml(undefined), '');
+  assert.equal(escapeHtml(''), '');
+  assert.equal(escapeHtml(false), '');
+});
