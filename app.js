@@ -681,14 +681,20 @@ async function saveOverrides(examId = state.exam) {
 }
 
 //─── DATA LOAD ───────────────────────────────────────────────
+// Critical-path: questions.json blocks first paint (the Study tab is
+// the default landing). concept-fixes.json is deferred — only Reading
+// uses it, and renderReading awaits state._conceptFixesPromise if the
+// data hasn't landed yet. Saves ~275ms off cold mobile boot.
 async function loadData() {
   const def = examDef(state.exam);
-  const [questionsRes, fixesRes] = await Promise.all([
-    fetch(def.questions),
-    fetch(def.fixes),
-  ]);
+  // Kick off the concept-fixes fetch in parallel but don't await it.
+  // Cached on state for renderReading + the renderReading-side wait.
+  state._conceptFixesPromise = fetch(def.fixes)
+    .then(r => r.ok ? r.json() : {})
+    .then(j => { state.conceptFixes = j; return j; })
+    .catch(() => { state.conceptFixes = {}; return {}; });
+  const questionsRes = await fetch(def.questions);
   state.questions = questionsRes.ok ? await questionsRes.json() : [];
-  state.conceptFixes = fixesRes.ok ? await fixesRes.json() : {};
   state.progress = await loadProgress();
   state.overrides = await loadOverrides();
   // Initialize progress for any new question; migrate older saves
@@ -1584,6 +1590,13 @@ function renderQuizResults() {
 function renderReading() {
   $('#mode-title').textContent = 'Reading';
   $('#progress-hud').textContent = '';
+  // concept-fixes is deferred at boot. If the user hits Reading before
+  // it's landed, show a loading state + re-render when the fetch resolves.
+  if (Object.keys(state.conceptFixes).length === 0 && state._conceptFixesPromise) {
+    $('#main').innerHTML = '<div class="empty-state"><div class="icon">📖</div><h3>Loading reading sheets…</h3></div>';
+    state._conceptFixesPromise.then(() => { if (state.mode === 'reading') renderReading(); });
+    return;
+  }
   const objs = Object.keys(state.conceptFixes).sort((a, b) => {
     // Pin priority sections (mnemonics, troubleshooting) to the top in a fixed
     // order. Numeric OBJ X.Y keys sort numerically below them.
