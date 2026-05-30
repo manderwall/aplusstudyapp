@@ -5,7 +5,7 @@ import {
   MIN, DAY, MAX_INTERVAL_DAYS,
   defaultProgress, migrateProgress, schedule,
   escapeHtml, normalizeOption, formatExplanation, formatQuestion,
-  orderDeck, nextIntervalLabel, recommendedRating,
+  orderDeck, nextIntervalLabel, /* recommendedRating no longer used in UI; kept in lib.mjs + tests */
   shuffleOptionsForCard,
 } from './lib.mjs';
 import {
@@ -2581,31 +2581,36 @@ function renderYourPickHTML(q) {
 // note AFTER the explanation, not a prominent box above it, so it doesn't
 // compete with "what did I just tap in this session" (which the option-row
 // state colors already show). Returns '' when there's no pretest-miss data.
-// 4-button SM-2 rating row with resulting-interval labels and a recommended
-// default. The recommended button is picked from the user's MC performance
-// (right → good, wrong → again, no pick → hard) so the learner can just
-// accept the default instead of decoding the four labels each time.
+// 4-button SM-2 rating row. NEUTRAL — no auto-highlighted button.
+// Pre-PR-41 the app inferred a "recommended" rating from the user's MC
+// pick (right→good, wrong→again, no-pick→hard) and visually starred that
+// button as the default. Two pedagogy problems with that:
+//   1) it short-circuited metacognition — accepting the default trained
+//      learners to skip the self-judgment that self-rating IS;
+//   2) a single MC click is a noisy 25%-base-rate proxy for memory
+//      strength, so a lucky guess inflated the interval (good) and a
+//      careless slip on a known card reset it (again). The scheduler
+//      was eating guess-luck instead of recall difficulty.
+// Now: the verdict line still shows correctness (so the user knows
+// whether they picked right), but no button is pre-selected — they
+// have to make the metacognitive call themselves.
 function renderRatingButtonsHTML(q) {
   const p = state.progress[q.id] || {};
   const now = Date.now();
-  // One-time SRS explainer for first-time users — explains what the four
-  // rating buttons actually do (otherwise a beginner sees "Again / Hard /
-  // Good / Easy" + arbitrary intervals with no clue what their choice
-  // controls). Dismissed permanently the moment they tap a rating button
-  // OR the explicit Got-it ✕ inside the hint.
+  // One-time SRS explainer (first reveal). Dismissed implicitly the
+  // moment they tap any rate button.
   const srsHintSeen = localStorage.getItem('srsHintSeen') === '1';
   const srsHintHtml = srsHintSeen ? '' : `
     <div class="rate-hint" id="rate-hint" role="note">
       <strong>How rating works:</strong> these four buttons schedule when
       this card comes back. <em>Again</em> = a minute (you forgot).
-      <em>Easy</em> = days (it was trivial). Pick what felt true — the app
-      handles the rest.
+      <em>Easy</em> = days (it was trivial). Pick what felt true —
+      <strong>your self-judgment is the signal</strong>, not whether the
+      MC click was right.
       <button type="button" class="rate-hint-dismiss" id="rate-hint-dismiss" aria-label="Dismiss hint">Got it ✕</button>
     </div>`;
-  // For Multiple Answer Qs, "right" means the user's picks exactly match the
-  // correct set; anything else is a miss. For single-answer, delegate to the
-  // pure helper so this logic stays one place.
-  let rec, recLabel;
+  // Informational verdict only — does NOT pre-select a button.
+  let verdict;
   if (isMultipleAnswer(q)) {
     const picks = state.selectedOptions || [];
     const correctArr = Array.isArray(q.correct_picks) ? q.correct_picks : [];
@@ -2614,14 +2619,17 @@ function renderRatingButtonsHTML(q) {
     const correctSetN = new Set(correctArr.map(norm));
     const sameSize = pickedSet.size === correctSetN.size;
     const allMatch = sameSize && [...pickedSet].every(x => correctSetN.has(x));
-    if (picks.length === 0) { rec = 'hard'; recLabel = 'Tip: pick your answers next time for a smarter default'; }
-    else if (allMatch)       { rec = 'good'; recLabel = '✓ You picked all the right answers'; }
-    else                     { rec = 'again'; recLabel = '✗ You missed one or more answers'; }
+    verdict = picks.length === 0 ? 'You didn\'t pick — judge how well you knew it cold.'
+            : allMatch           ? '✓ Your picks matched. Rate your actual recall, not the click.'
+            :                      '✗ Picks didn\'t match. Rate honestly — confidence matters.';
   } else {
-    rec = recommendedRating({ picked: state.selectedOption, correct: q.correct_short });
-    recLabel = state.selectedOption
-      ? (rec === 'good' ? '✓ You picked the right answer' : '✗ You missed this one')
-      : 'Tip: pick an answer next time for a smarter default';
+    const picked = state.selectedOption;
+    const correct = q.correct_short;
+    const norm = (s) => (s || '').toLowerCase().trim().replace(/\s+/g, ' ');
+    const wasRight = picked && correct && norm(picked) === norm(correct);
+    verdict = !picked            ? 'You didn\'t pick — judge how well you knew it cold.'
+            : wasRight           ? '✓ You picked correctly. Was it confident or a lucky guess?'
+            :                      '✗ You picked wrong. Was it close, or completely missed?';
   }
   const rates = [
     { key: 'again', cls: 'bad',    label: 'Again', kbd: '1' },
@@ -2633,12 +2641,12 @@ function renderRatingButtonsHTML(q) {
     ${srsHintHtml}
     <div class="rate-header rate-row-arming">
       <div class="rate-title">How well did you know this?</div>
-      <div class="rate-sub">${recLabel} — <em>${rec}</em> is highlighted</div>
+      <div class="rate-sub">${verdict}</div>
       <button type="button" class="rate-back-btn" id="rate-back-btn" aria-label="Go back to the previous card" title="Back to previous card">← Back</button>
     </div>
     <div class="btn-row rate-row rate-row-arming">
       ${rates.map(r => `
-        <button class="action rate-btn ${r.cls}${r.key === rec ? ' recommended' : ''}"
+        <button class="action rate-btn ${r.cls}"
                 data-rate="${r.key}"
                 aria-label="${r.label} (key ${r.kbd}), next review in ${nextIntervalLabel(p, r.key, now)}">
           <span class="rate-label">${r.label}<span class="kbd-hint" aria-hidden="true">${r.kbd}</span></span>
