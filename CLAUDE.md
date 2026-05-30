@@ -9,26 +9,65 @@ Spaced-repetition flashcards + practice quizzes + reading sheets + stats.
   Read this first if you're being asked to build a new study/learning PWA.
 - **`docs/DATA-FORMAT.md`** — schema + workflow for adding question packs.
   Read this before touching `data/**/*.json`.
-- **`app.js`** — all UI + state + handlers. ~3500 lines, no framework.
-- **`lib.mjs`** — pure helpers (SRS scheduling, formatting, shuffling).
+- **`app.js`** — all UI + state + handlers. ~5000 lines, no framework.
+- **`lib.mjs`** — pure helpers (FSRS-4 scheduling, formatting, shuffling).
   Side-effect-free; tested by `tests/pure.test.mjs`.
 - **`scripts/validate-questions.mjs`** — content data validator. Exports
   `validate(items)` for tests + runs as CLI.
+- **`scripts/validate-concept-fixes.mjs`** — defense-in-depth XSS gate
+  for `data/<exam>/concept-fixes.json` (Reading-sheet HTML is rendered
+  raw via innerHTML). Blocks `<script>`, `on*=` handlers,
+  `javascript:` URLs, `srcdoc`, etc. CI runs it on every PR.
+- **`_headers`** — Cloudflare Pages security headers. Includes a strict
+  CSP that allowlists self + `cdn.jsdelivr.net` (pdf.js) +
+  `*.supabase.co` (optional sync). Plus `X-Content-Type-Options`,
+  `Referrer-Policy`, `Permissions-Policy`, `X-Frame-Options: DENY`.
 
 ## Conventions baked into this repo
 
 ### Touch / click safety stack
 Every reveal-style state change uses 5 layers. Don't remove any of them:
 1. CSS `pointer-events: none` for **800ms** via `.card-just-revealed`
-2. JS timestamp guard (`state._revealedAt`) inside `nextQuestion`,
-   `prevQuestion`, rate handlers, keyboard space/enter, and the rate-row
-   click handler
+2. JS timestamp guard (`state._revealedAt`). **As of PR #39 the guard
+   is scoped to pointer events only**: it lives on the rate-btn click
+   handler and the quiz Next button click handler. `nextQuestion`,
+   `prevQuestion`, `advanceQuiz`, and keyboard handlers no longer
+   carry the guard so keyboard rates fire immediately (the audit found
+   the broad guard was silently swallowing Space-reveal → 3 = Good).
 3. Swipe handler bails on **pointerup target** if it's a button (not just
    pointerdown)
 4. Sticky positioning is scoped to `.btn-row.rate-row` ONLY. Do not
    broaden — generic `.btn-row` sticky causes options-overlap bugs.
 5. "← Back" button + right-swipe for prev. History stack stores card
    IDs, not array indices.
+
+### Reveal-gate (commit before reveal)
+As of PR #42 the Reveal button is **disabled** until the user has
+either picked an option or tapped the "🤷 I don't know — show me"
+affordance. State: `state.committed` flag, reset on every nav site
+that already resets `selectedOption`/`selectedOptions` (7 sites). The
+gate is upstream of the touch-safety stack — don't move it. Keyboard
+Space/Enter/R on a gated card toasts "Pick an answer or tap I don't
+know first" and focuses the IDK button (no silent no-op).
+
+### FSRS scheduler
+`lib.mjs` ships FSRS-4 (Free Spaced Repetition Scheduler) — Anki
+adopted it as default in 2024. Per-card state: `p.S` (stability,
+days), `p.D` (difficulty, [1, 10]), `p.lastReviewedAt`. Legacy SM-2
+fields (`p.ease`, `p.interval`) are still written as derived values
+for backward-compat UI reads. `migrateProgress()` lazily inits S/D
+from any legacy ease+interval. Rate buttons show FSRS-computed
+intervals (typical first-Good ≈ 5 days, first-Easy ≈ 12 days).
+`schedule(p, rate, now, capDays)` honors the exam-aware `capDays`
+from `recordRating` so spacing contracts as the exam approaches.
+
+### Dialog a11y pattern (PR #39)
+Every modal (Welcome, Help, PIN, Feedback, Lock screen, Image zoom,
+PDF viewer) uses the same pattern: `setAppInert(true)` on open +
+`trapFocus(overlay)` for Tab cycling + focus restoration to the
+trigger on close. Helpers in app.js. Don't open a new dialog without
+both. `aria-live` announcer (`announce(msg, assertive)`) speaks
+reveal/grade outcomes for SR users.
 
 ### Data conventions
 - Pretest-derived question IDs follow `p<pretest>q<num>` (e.g. `p1q36`).
@@ -61,9 +100,16 @@ Every reveal-style state change uses 5 layers. Don't remove any of them:
   Reference book) which puts it in IDB on the user's device only.
 
 ### Service worker
-- Bump `CACHE` in `sw.js` on every release. Currently at `aplus-study-vNN`.
+- Bump `CACHE` in `sw.js` on every release. Currently at `aplus-study-vNN`
+  (v86 at time of writing; check `sw.js` for current).
 - iOS PWAs are sticky; users may need to delete + reinstall the
   home-screen icon for major updates to take effect.
+- As of PR #38 the SW caches **same-origin basic responses only**.
+  Cross-origin opaque (pdf.js CDN) passes through to the browser
+  cache without app-level persistence.
+- As of PR #38 the app listens for an installed waiting SW and shows
+  a tap-to-reload toast (`A new version is ready. Tap to reload.`).
+  Pairs with the SW's `SKIP_WAITING` message handler.
 
 ### Branching
 - Feature work: `claude/<short-name>-<random>` branches
@@ -73,17 +119,29 @@ Every reveal-style state change uses 5 layers. Don't remove any of them:
 ## Test commands
 
 ```bash
-# Unit + data tests (fast, no browser)
+# Unit + data tests (fast, no browser). 62 tests as of PR #45.
+# Includes pure scheduler tests (FSRS invariants + SM-2 migration),
+# escapeHtml, formatExplanation, orderDeck, content-fixes validator.
 node --test tests/*.test.mjs
+npm test                                # alias
 
-# Validate just the data
-node scripts/validate-questions.mjs --all
+# Syntax check (catches ES module parse errors)
+npm run check
 
-# Smoke tests (Puppeteer; requires `python3 -m http.server 8770`)
-cd /tmp/smoke && node smoke.mjs        # full app walk
-cd /tmp/smoke && node ghost3.mjs       # ghost-click protection
-cd /tmp/smoke && node prev-id.mjs      # Prev navigation correctness
-cd /tmp/smoke && node features.mjs     # readiness banner, drill, your-pick, desktop layout
+# Validate question data
+node scripts/validate-questions.mjs data/core2/questions.json
+# Or all exams: node scripts/validate-questions.mjs --all
+
+# Concept-fixes XSS gate (runs in CI on every PR)
+node scripts/validate-concept-fixes.mjs
+
+# Smoke tests live in /tmp/smoke (NOT committed to the repo).
+# Each test spins up its own http.server on a unique port so they can
+# run in parallel without conflicts. Most useful ones:
+cd /tmp/smoke && node beginner-walk.mjs    # full happy-path walk
+cd /tmp/smoke && node stress-sweep.mjs     # theme/filter/quiz/reading flows + console
+cd /tmp/smoke && node perf-probe.mjs       # mobile cold-boot timings
+cd /tmp/smoke && node mobile-sweep.mjs     # 6-viewport responsive sweep
 ```
 
 ## When the user reports a "skip" bug they can't reproduce
@@ -97,10 +155,31 @@ still seeing it:
    guarded — maybe a button you added without the timestamp check, or a
    layout change that re-introduced the sticky-overlap.
 
-## Two more things worth knowing
+## More things worth knowing
 
 - The `_revealedAt` timestamp is reused for both Study reveal and Quiz
   answer-recorded events. Don't introduce a separate timestamp.
 - The deck-order cache in `filteredQuestions()` keys on filter state +
-  question IDs. If you add a new filter, add it to the cache key string
-  too, or you'll get stale ordering.
+  a rolling **hash of the full id list**. PR #38 fixed a collision
+  bug where the old "first 40 chars of joined IDs" key returned stale
+  order when filter membership changed but length + leading IDs stayed
+  identical. If you add a new filter, add it to the cache key string
+  too.
+- `concept-fixes.json` is **deferred from the cold path** (PR #46).
+  `loadData()` awaits only `questions.json`; concept-fixes fetches in
+  parallel via `state._conceptFixesPromise`. `renderReading()` awaits
+  the promise if the user opens Reading before it's landed (shows a
+  loading state + re-renders on resolve).
+- The init() boot path defers non-critical installers
+  (`installListenButton`, `installImageZoom`, `installWakeLock`,
+  `installInputModeDetection`) **and** the SW registration via
+  `requestIdleCallback` (PR #50). Critical path: tab clicks +
+  `installSwipe` + `installKeyboard` + `setMode('study')` + (optional)
+  `showWelcome`. Anything you add to init should default to the
+  deferred path unless the user can plausibly invoke it in the first
+  ~100 ms.
+- `data/<exam>/concept-fixes.json` content is rendered raw via
+  `innerHTML` (the markup IS the formatting). The CI gate
+  (`scripts/validate-concept-fixes.mjs`) blocks `<script>` / `on*=` /
+  `javascript:` / etc. before merge. The CSP in `_headers` is a
+  second layer. Don't disable either.
