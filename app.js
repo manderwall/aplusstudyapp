@@ -35,7 +35,7 @@ function getExamDate(examId) {
 }
 function setExamDate(examId, iso) {
   if (!iso) localStorage.removeItem(`exam.${examId}.date`);
-  else localStorage.setItem(`exam.${examId}.date`, iso);
+  else lsSet(`exam.${examId}.date`, iso);
 }
 function daysUntilExam(examId = state?.exam) {
   const iso = getExamDate(examId);
@@ -97,7 +97,7 @@ function pref(key) {
 
 function setPref(key, value) {
   if (value === PREF_DEFAULTS[key]) localStorage.removeItem(`pref.${key}`);
-  else localStorage.setItem(`pref.${key}`, value);
+  else lsSet(`pref.${key}`, value);
   applyPrefs();
 }
 
@@ -180,7 +180,7 @@ function bumpActivity() {
     const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 180);
     const cutoffKey = `${cutoff.getFullYear()}-${String(cutoff.getMonth()+1).padStart(2,'0')}-${String(cutoff.getDate()).padStart(2,'0')}`;
     for (const key of Object.keys(a)) if (key < cutoffKey) delete a[key];
-    localStorage.setItem('activity', JSON.stringify(a));
+    lsSet('activity', JSON.stringify(a));
   } catch {}
 }
 function getActivity() {
@@ -199,7 +199,7 @@ function markCelebrated(key) {
   try {
     const c = JSON.parse(localStorage.getItem('celebrated') || '{}');
     c[key] = true;
-    localStorage.setItem('celebrated', JSON.stringify(c));
+    lsSet('celebrated', JSON.stringify(c));
   } catch {}
 }
 
@@ -498,6 +498,37 @@ function onCardRated(qid) {
 }
 
 //─── DAILY STREAK ────────────────────────────────────────────
+// Defensive wrapper around localStorage.setItem. iOS Safari private mode
+// can have 0 quota; quota-exceeded errors would otherwise bubble up and
+// crash bumpStreak / savePinSetup / activity tracking / preferences saves
+// — leaving the user with a silently-broken streak or PIN that won't
+// save. Logs once per session per key on failure; surfaces a single
+// toast the first time it fails so the user knows something's off.
+const _lsFailed = new Set();
+let _lsToastedThisSession = false;
+function lsSet(key, value) {
+  try {
+    // Bracket access so the global replace_all below this function
+    // doesn't recursively rewrite this line.
+    localStorage['setItem'](key, value);
+    return true;
+  } catch (e) {
+    if (!_lsFailed.has(key)) {
+      _lsFailed.add(key);
+      console.warn(`localStorage set failed for "${key}": ${e?.message || e}`);
+    }
+    if (!_lsToastedThisSession) {
+      _lsToastedThisSession = true;
+      // Defer so we don't recursively toast during a render cycle that
+      // itself triggered the failed write. Also schedule once only.
+      setTimeout(() => {
+        try { toast('Browser storage is full or blocked — preferences and streak may not save.', 'error', 6000); } catch {}
+      }, 0);
+    }
+    return false;
+  }
+}
+
 function todayKey() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -516,10 +547,10 @@ function bumpStreak() {
   let cardsToday = Number(localStorage.getItem('streak.todayCards') || '0');
   if (cardsDay !== today) {
     cardsToday = 0;
-    localStorage.setItem('streak.cardsDay', today);
+    lsSet('streak.cardsDay', today);
   }
   cardsToday += 1;
-  localStorage.setItem('streak.todayCards', String(cardsToday));
+  lsSet('streak.todayCards', String(cardsToday));
   if (cardsToday < STREAK_MIN_CARDS) return;     // threshold not met
   if (lastEarned === today) return;              // already earned today
 
@@ -535,8 +566,8 @@ function bumpStreak() {
   } else {
     count = 1;
   }
-  localStorage.setItem('streak.lastDay', today);
-  localStorage.setItem('streak.count', String(count));
+  lsSet('streak.lastDay', today);
+  lsSet('streak.count', String(count));
   // Subtle celebration the first time the threshold is crossed today.
   toast(`🔥 ${count}-day streak — today's earned.`, 'success', 2500);
   maybeFireStreakCelebration(count);
@@ -637,7 +668,7 @@ function getPinSetup() {
     return raw ? JSON.parse(raw) : null;
   } catch { return null; }
 }
-function savePinSetup(setup) { localStorage.setItem(PIN_SETUP_KEY, JSON.stringify(setup)); }
+function savePinSetup(setup) { lsSet(PIN_SETUP_KEY, JSON.stringify(setup)); }
 function clearPinSetup()     { localStorage.removeItem(PIN_SETUP_KEY); }
 function isPinSet() { return !!getPinSetup(); }
 
@@ -658,9 +689,19 @@ async function loadProgress(examId = state.exam) {
     return (await maybeDecrypt(raw, {})) || {};
   } catch (e) { if (e.message === 'locked') throw e; return {}; }
 }
+// One-time-per-session warning so the user knows their FSRS progress
+// stopped persisting (IDB blocked, quota exhausted, etc.) instead of
+// silently studying with ratings that won't survive a tab close.
+let _idbFailToasted = false;
 async function saveProgress(examId = state.exam) {
   try { await idbPut(STORE, examId, await maybeEncrypt(state.progress)); }
-  catch (e) { console.warn('Save progress failed', e); }
+  catch (e) {
+    console.warn('Save progress failed', e);
+    if (!_idbFailToasted) {
+      _idbFailToasted = true;
+      try { toast('Couldn\'t save progress to device storage. Ratings may not persist after closing.', 'error', 6000); } catch {}
+    }
+  }
 }
 async function clearProgress(examId = state.exam) {
   try {
@@ -984,13 +1025,22 @@ function renderStudy() {
         // when the user genuinely doesn't have a guess.
         const hasOptions = Array.isArray(q.options) && q.options.length > 0;
         const ma = isMultipleAnswer(q);
-        const picked = ma ? (state.selectedOptions || []).length > 0
-                          : !!state.selectedOption;
+        // For multi-answer questions, the audit's retrieval principle says:
+        // pick the FULL answer set, not just one. Match Quiz mode's needCount
+        // logic: default to q.correct_picks.length, fall back to 2 if
+        // correct_picks isn't an array. Single-answer keeps needCount=1.
+        const needCount = ma
+          ? (Array.isArray(q.correct_picks) ? q.correct_picks.length : 2)
+          : 1;
+        const pickedCount = ma
+          ? (state.selectedOptions || []).length
+          : (state.selectedOption ? 1 : 0);
+        const picked = pickedCount >= needCount;
         // No-options qtype (free-text, image-only PBQ stems): Reveal is
         // always enabled; the question itself IS the retrieval prompt.
         const armed = !hasOptions || picked || state.committed;
         const revealLabel = armed ? 'Reveal answer'
-                                  : (ma ? 'Pick your answers, then reveal'
+                                  : (ma ? `Pick ${needCount} answers, then reveal (${pickedCount}/${needCount})`
                                         : 'Pick an answer, then reveal');
         return `
         <div class="btn-row btn-row-nav">
@@ -1087,13 +1137,13 @@ function attachStudyEvents(q) {
   $('#rate-back-btn')?.addEventListener('click', () => prevQuestion());
   // First-reveal SRS hint: dismiss explicitly via "Got it ✕"…
   $('#rate-hint-dismiss')?.addEventListener('click', () => {
-    localStorage.setItem('srsHintSeen', '1');
+    lsSet('srsHintSeen', '1');
     $('#rate-hint')?.remove();
   });
   $$('[data-rate]').forEach(btn => btn.addEventListener('click', () => {
     if (Date.now() - (state._revealedAt || 0) < 800) return;
     // …or implicitly by the act of rating a card. Either way it's gone.
-    if (localStorage.getItem('srsHintSeen') !== '1') localStorage.setItem('srsHintSeen', '1');
+    if (localStorage.getItem('srsHintSeen') !== '1') lsSet('srsHintSeen', '1');
     const rate = btn.dataset.rate;
     recordRating(q.id, rate);
     nextQuestion();
@@ -1507,7 +1557,7 @@ function recordQuizHistory(entry) {
   if (list.some(e => e.startedAt === entry.startedAt)) return;
   list.push(entry);
   if (list.length > QUIZ_HISTORY_LIMIT) list.splice(0, list.length - QUIZ_HISTORY_LIMIT);
-  try { localStorage.setItem(QUIZ_HISTORY_KEY(exam), JSON.stringify(list)); } catch {}
+  lsSet(QUIZ_HISTORY_KEY(exam), JSON.stringify(list));  // lsSet swallows quota errors itself
 }
 
 function renderQuizResults() {
@@ -2120,7 +2170,7 @@ function renderStats() {
   $('#import-overrides-btn')?.addEventListener('click', importOverrides);
   $$('#order-control button').forEach(btn => btn.addEventListener('click', () => {
     state.order = btn.dataset.val;
-    localStorage.setItem('order', state.order);
+    lsSet('order', state.order);
     state._orderCache = null;
     state._orderSeed = (Date.now() & 0x7fffffff) || 1;
     state.currentIndex = 0;
@@ -2869,7 +2919,7 @@ async function switchExam(newExam) {
   await saveProgress();
   await saveOverrides();
   state.exam = newExam;
-  localStorage.setItem('exam', newExam);
+  lsSet('exam', newExam);
   // Reset nav + filter state so we don't point at a card index that doesn't
   // exist in the new dataset.
   state.filter = { obj: null, due: false, weakest: false, hard: false, search: '' };
@@ -3200,7 +3250,7 @@ function setTheme(theme) {
     localStorage.removeItem('theme');
   } else {
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
+    lsSet('theme', theme);
   }
   const btn = $('#theme-btn');
   if (btn) btn.textContent = theme === 'light' ? '☀️' : theme === 'dark' ? '🌙' : '🌓';
@@ -3300,9 +3350,9 @@ function getCloudCfg() {
 }
 
 function saveCloudCfg(url, key, syncKey) {
-  localStorage.setItem('supabase.url', url);
-  localStorage.setItem('supabase.key', key);
-  localStorage.setItem('supabase.syncKey', syncKey);
+  lsSet('supabase.url', url);
+  lsSet('supabase.key', key);
+  lsSet('supabase.syncKey', syncKey);
 }
 
 function cloudHeaders(key, extra = {}) {
@@ -3348,7 +3398,7 @@ async function cloudPush() {
     body,
   });
   if (!res.ok) throw new Error(`Push ${res.status}: ${(await res.text()).slice(0, 200)}`);
-  localStorage.setItem('supabase.lastSync', new Date().toISOString());
+  lsSet('supabase.lastSync', new Date().toISOString());
 }
 
 function normalizeCloudData(data) {
@@ -3420,7 +3470,7 @@ async function cloudPull({ merge = true } = {}) {
       state.overrides = savedOverrides;
     }
   }
-  localStorage.setItem('supabase.lastSync', new Date().toISOString());
+  lsSet('supabase.lastSync', new Date().toISOString());
 }
 
 //─── KEYBOARD SHORTCUTS ──────────────────────────────────────
@@ -3460,13 +3510,22 @@ function installKeyboard() {
           const cur = qs0[state.currentIndex];
           const hasOptions = cur && Array.isArray(cur.options) && cur.options.length > 0;
           const ma = cur && isMultipleAnswer(cur);
-          const picked = ma ? (state.selectedOptions || []).length > 0
-                            : !!state.selectedOption;
+          // Match the renderStudy gate: multi-answer requires N picks.
+          const needCount = ma
+            ? (Array.isArray(cur?.correct_picks) ? cur.correct_picks.length : 2)
+            : 1;
+          const pickedCount = ma
+            ? (state.selectedOptions || []).length
+            : (state.selectedOption ? 1 : 0);
+          const picked = pickedCount >= needCount;
           if (hasOptions && !picked && !state.committed) {
             // Re-render to focus the IDK button so the user sees the gate.
             // Quick toast as feedback for keyboard users who can't see why
             // Space appeared to do nothing.
-            toast('Pick an answer or tap "I don\'t know" first.', 'info', 2200);
+            const msg = ma
+              ? `Pick ${needCount} answers (${pickedCount}/${needCount}) or tap "I don't know" first.`
+              : 'Pick an answer or tap "I don\'t know" first.';
+            toast(msg, 'info', 2200);
             $('#idk-btn')?.focus();
             return;
           }
@@ -4487,7 +4546,7 @@ function showWelcome() {
   };
   const close = (action) => {
     const dismissPerm = $('#welcome-dismiss-permanent')?.checked;
-    if (dismissPerm) localStorage.setItem('welcomeDismissed', '1');
+    if (dismissPerm) lsSet('welcomeDismissed', '1');
     releaseTrap();
     setAppInert(false);
     document.removeEventListener('keydown', onKeydown);
@@ -4870,7 +4929,7 @@ function applyDefaultExamDates() {
     defaulted.add(id);
   }
   if (changed || defaulted.size) {
-    localStorage.setItem('exam.defaulted', JSON.stringify([...defaulted]));
+    lsSet('exam.defaulted', JSON.stringify([...defaulted]));
   }
 }
 
@@ -4893,7 +4952,7 @@ async function purgeCore1Leftovers() {
         try { tx.objectStore(s).delete('core1'); } catch {}
       }
     });
-    localStorage.setItem('core1.purged', '1');
+    lsSet('core1.purged', '1');
   } catch { /* best-effort; never block init */ }
 }
 
@@ -4913,7 +4972,7 @@ async function init() {
   } else if (localStorage.getItem('shuffle') === 'true') {
     // Migrate prior Boolean shuffle flag → Random order
     state.order = 'random';
-    localStorage.setItem('order', 'random');
+    lsSet('order', 'random');
     localStorage.removeItem('shuffle');
   }
   if (pref('sound') !== 'off') setSound(pref('sound'));  // ambient noise restores (needs gesture on some browsers)
