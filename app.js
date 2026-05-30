@@ -337,8 +337,8 @@ function renderHeatmapHTML() {
 // Queues messages, shows each for a few seconds. Tap to dismiss early.
 const _toastQueue = [];
 let _toastShowing = false;
-function toast(msg, kind = 'info', ms = 3500) {
-  _toastQueue.push({ msg, kind, ms });
+function toast(msg, kind = 'info', ms = 3500, onTap = null) {
+  _toastQueue.push({ msg, kind, ms, onTap });
   if (!_toastShowing) _drainToasts();
 }
 function _drainToasts() {
@@ -352,7 +352,7 @@ function _drainToasts() {
     document.body.appendChild(host);
   }
   const el = document.createElement('div');
-  el.className = `toast toast-${next.kind}`;
+  el.className = `toast toast-${next.kind}` + (next.onTap ? ' toast-actionable' : '');
   el.setAttribute('role', next.kind === 'error' ? 'alert' : 'status');
   el.textContent = next.msg;
   host.appendChild(el);
@@ -361,7 +361,10 @@ function _drainToasts() {
     el.classList.remove('show');
     setTimeout(() => { el.remove(); _drainToasts(); }, 200);
   };
-  el.addEventListener('click', dismiss);
+  el.addEventListener('click', () => {
+    if (next.onTap) { try { next.onTap(); } catch {} }
+    dismiss();
+  });
   setTimeout(dismiss, next.ms);
 }
 
@@ -420,9 +423,13 @@ function onCramRated(qid, rate) {
     q.push(qid);
   }
   if (q.length === 0) {
+    // Capture count before the timer fires — state.cram may be null'd by
+    // an end-now tap or a switchExam in the 200 ms window, which would
+    // throw on `state.cram.originalCount`.
+    const total = state.cram.originalCount;
     celebrate({ intensity: 80, duration: 2200 });
     setTimeout(() => {
-      toast(`🎉 Cram complete — all ${state.cram.originalCount} cards cleared!`, 'success', 5000);
+      toast(`🎉 Cram complete — all ${total} cards cleared!`, 'success', 5000);
       endCram(false);
     }, 200);
   }
@@ -779,7 +786,14 @@ function filteredQuestions() {
   // Order the deck via orderDeck() unless explicitly sequential. Cached per
   // (filter × order × deck-identity) so Prev/Next don't reshuffle mid-session.
   if (state._orderSeed === null) state._orderSeed = (Date.now() & 0x7fffffff) || 1;
-  const key = `${state.order}|${state.filter.obj}|${state.filter.due}|${state.filter.weakest}|${state.filter.hard}|${state.filter.search}|${qs.length}|${qs.map(x=>x.id).join(',').slice(0,40)}`;
+  // Cheap rolling-hash of the full id list. Previously we sliced to 40 chars
+  // which collided when filter membership changed but length + the first ~5
+  // IDs stayed identical (e.g. rating a mid-deck Hard card Good while another
+  // entered the Hard set) — returning stale order with cards no longer in
+  // the filter. Hashing the full list catches every membership change.
+  let _idHash = 0;
+  for (const x of qs) for (let i = 0; i < x.id.length; i++) _idHash = ((_idHash * 31 + x.id.charCodeAt(i)) | 0);
+  const key = `${state.order}|${state.filter.obj}|${state.filter.due}|${state.filter.weakest}|${state.filter.hard}|${state.filter.search}|${qs.length}|${_idHash}`;
   if (!state._orderCache || state._orderCache.key !== key) {
     const list = orderDeck(qs, state.progress, { mode: state.order, seed: state._orderSeed });
     state._orderCache = { key, list };
@@ -1053,6 +1067,10 @@ function attachOptionEvents(rerender) {
 
 function recordRating(qid, rate) {
   const p = state.progress[qid];
+  // Defensive: loadData seeds a row for every loaded question, so this is
+  // only reachable if a quiz session is mid-flight when switchExam/reset
+  // wipes state.progress out from under it. Bail rather than crash.
+  if (!p) return;
   p.seen++;
   p.lastSeen = Date.now();
   p.updated_at = p.lastSeen;
@@ -1165,10 +1183,7 @@ function startQuiz(n, available) {
   renderQuizCard();
 }
 
-let _quizAutoAdvance = null;
-
 function renderQuizCard() {
-  clearTimeout(_quizAutoAdvance);
   const session = state.quizSession;
   if (!session) { renderQuizStart(); return; }
   const { questions, answers, current } = session;
@@ -1358,7 +1373,6 @@ function advanceQuiz() {
   // as a ghost click. The legitimate setTimeout-driven auto-advance fires
   // at 1.8 s, well past this threshold.
   if (Date.now() - (state._revealedAt || 0) < 800) return;
-  clearTimeout(_quizAutoAdvance);
   const session = state.quizSession;
   if (!session) return;
   session.current++;
@@ -1393,7 +1407,6 @@ function recordQuizHistory(entry) {
 }
 
 function renderQuizResults() {
-  clearTimeout(_quizAutoAdvance);
   const session = state.quizSession;
   const total = session.questions.length;
   const correct = Object.values(session.answers).filter(a => a.isRight).length;
@@ -2392,11 +2405,22 @@ function renderLearnMoreHTML(q) {
 
 // Accepts: undefined | string | { url, label } | array of any of those.
 // Returns: array of { url, label } objects (possibly empty).
+// Only http/https URLs are safe to render as clickable anchors. escapeHtml
+// stops attribute breakouts but does NOT block `javascript:` (which would
+// execute on click). Drop anything that doesn't parse as a valid absolute
+// http(s) URL, plus protocol-relative `//...` (treated as http per URL spec
+// but ambiguous in offline context). Data-files only; this guards future
+// content-PR poisoning of the questions bank.
+function isSafeLearnMoreUrl(u) {
+  if (typeof u !== 'string' || !u.trim()) return false;
+  try { return /^https?:$/i.test(new URL(u).protocol); }
+  catch { return false; }
+}
 function normalizeLearnMore(m) {
   if (!m) return [];
   const arr = Array.isArray(m) ? m : [m];
   return arr.map(x => typeof x === 'string' ? { url: x, label: 'Reference' } : { url: x?.url, label: x?.label || 'Reference' })
-            .filter(x => x.url);
+            .filter(x => isSafeLearnMoreUrl(x.url));
 }
 
 // Async sidekick to renderLearnMoreHTML — populates the "Suggest p. N"
@@ -2659,7 +2683,7 @@ async function switchExam(newExam) {
   localStorage.setItem('exam', newExam);
   // Reset nav + filter state so we don't point at a card index that doesn't
   // exist in the new dataset.
-  state.filter = { obj: null, due: false, weakest: false, search: '' };
+  state.filter = { obj: null, due: false, weakest: false, hard: false, search: '' };
   state.currentIndex = 0;
   state.revealed = false;
   state.editing = false;
@@ -2684,6 +2708,13 @@ function setMode(mode) {
   state.selectedOptions = [];
   state.history = [];
   state._orderCache = null;
+  state._currentQ = null;  // was leaking across modes — diagnostics showed last study/quiz card as "current" even from Stats
+  // Clear cross-mode UI flags that other branches key off. data-revealed was
+  // set in renderStudy and never cleared on tab-switch, leaking a post-reveal
+  // styling cue into Reading/Stats. Stop any in-flight TTS so the read-aloud
+  // button doesn't keep speaking a card you've navigated away from.
+  document.documentElement.removeAttribute('data-revealed');
+  if (typeof stopSpeaking === 'function') stopSpeaking();
   $$('.tab').forEach(t => {
     const active = t.dataset.mode === mode;
     t.classList.toggle('active', active);
@@ -3568,9 +3599,13 @@ function openImageZoom(src, alt) {
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
   overlay.setAttribute('aria-label', 'Enlarged figure — tap or press Escape to close');
+  // src comes from a live img.src DOM property (already normalized to an
+  // absolute URL by the browser), so an attribute breakout can't survive
+  // today. Escape it anyway for defense in depth — a future refactor
+  // passing a raw string shouldn't regress this.
   overlay.innerHTML = `
     <button type="button" class="img-zoom-close" aria-label="Close enlarged figure">✕</button>
-    <img src="${src}" alt="${escapeHtml(alt || '')}">
+    <img src="${escapeHtml(src)}" alt="${escapeHtml(alt || '')}">
   `;
   const close = () => {
     document.removeEventListener('keydown', onKey);
@@ -4608,9 +4643,41 @@ async function init() {
     showWelcome();
   }
 
-  // Register service worker for offline
+  // Register service worker for offline + watch for new versions so users
+  // get the latest release without having to delete + reinstall the home-
+  // screen icon. When a new SW is in 'installed' state and we already
+  // have a controller, show a toast inviting reload.
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW failed:', err));
+    navigator.serviceWorker.register('sw.js').then((reg) => {
+      const offerReload = (sw) => {
+        toast('A new version is ready. Tap to reload.', 'info', 8000, () => {
+          sw.postMessage('SKIP_WAITING');
+        });
+      };
+      if (reg.waiting && navigator.serviceWorker.controller) offerReload(reg.waiting);
+      reg.addEventListener('updatefound', () => {
+        const incoming = reg.installing;
+        if (!incoming) return;
+        incoming.addEventListener('statechange', () => {
+          if (incoming.state === 'installed' && navigator.serviceWorker.controller) {
+            offerReload(incoming);
+          }
+        });
+      });
+      let _refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (_refreshing) return;
+        _refreshing = true;
+        location.reload();
+      });
+      // Probe for updates immediately and again whenever the tab returns
+      // to the foreground — catches updates the user wouldn't otherwise
+      // see until a full restart.
+      reg.update().catch(() => {});
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') reg.update().catch(() => {});
+      });
+    }).catch(err => console.warn('SW failed:', err));
   }
 }
 
