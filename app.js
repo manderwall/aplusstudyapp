@@ -3317,6 +3317,11 @@ function importProgress() {
     const file = input.files && input.files[0];
     if (!file) return;
     try {
+      // Realistic progress export for 313 cards is ~100 KB. Anything
+      // over 10 MB is either malicious or a different file type — skip
+      // the JSON.parse hang and report up front.
+      const MAX_IMPORT_BYTES = 10 * 1024 * 1024;
+      if (file.size > MAX_IMPORT_BYTES) throw new Error(`File too large (${(file.size/1024/1024).toFixed(1)} MB) — expected progress export under 10 MB`);
       const data = JSON.parse(await file.text());
       if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('Expected an object of { questionId: progress }');
       const cardCount = Object.keys(data).length;
@@ -3356,6 +3361,10 @@ function importOverrides() {
     const file = input.files && input.files[0];
     if (!file) return;
     try {
+      // Same 10 MB cap as importProgress — defense against accidental
+      // wrong-file imports and against pathological / DoS payloads.
+      const MAX_IMPORT_BYTES = 10 * 1024 * 1024;
+      if (file.size > MAX_IMPORT_BYTES) throw new Error(`File too large (${(file.size/1024/1024).toFixed(1)} MB) — expected overrides export under 10 MB`);
       const data = JSON.parse(await file.text());
       if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('Expected an object of { questionId: { options?, image? } }');
       const choice = confirm(`Merge ${Object.keys(data).length} edits into existing overrides?\n\nClick OK to merge (existing edits kept), Cancel to replace.`);
