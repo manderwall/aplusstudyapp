@@ -4956,7 +4956,13 @@ async function init() {
   // events the user can't trigger in the first ~100ms anyway. Scheduling
   // via requestIdleCallback (falling back to setTimeout) yields the main
   // thread so the first card paints before this runs.
-  const deferIdle = (fn) => (window.requestIdleCallback || ((cb) => setTimeout(cb, 1)))(fn);
+  // Defer past first paint without waiting for arbitrary "idle". The
+  // previous requestIdleCallback path could defer 100s of ms on slow
+  // devices — opening a race where the user taps Listen/an image
+  // before the handler is wired. setTimeout(0) yields one frame
+  // (paint cycle completes) but the deferred installers run before
+  // any plausible user input can land.
+  const deferIdle = (fn) => setTimeout(fn, 0);
   deferIdle(() => {
     installListenButton();
     installInputModeDetection();
