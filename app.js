@@ -963,6 +963,11 @@ function renderStudy() {
   updateHUD();
   attachStudyEvents(q);
   $('#edit-btn')?.addEventListener('click', () => { state.editing = true; renderStudy(); });
+  // Keyboard / SR users would otherwise lose focus to <body> on every
+  // innerHTML swap. Restore focus to the primary action (Reveal pre-
+  // reveal, first rate button after). Skipped if focus is already on
+  // something else (the user moved it themselves).
+  restoreFocusAfterRender();
 }
 
 function attachStudyEvents(q) {
@@ -971,6 +976,21 @@ function attachStudyEvents(q) {
     state.revealed = true;
     state._revealedAt = Date.now();  // timestamp so rating buttons ignore ghost clicks
     stopSpeaking();
+    // Announce verdict to screen readers — visual cue (red X / green check)
+    // alone isn't enough for SR users. Build a short string from the user's
+    // pick vs. the correct answer, then re-render.
+    const correctPicks = Array.isArray(q.correct_picks) ? q.correct_picks : (q.correct_short ? [q.correct_short] : []);
+    const picks = Array.isArray(q.correct_picks)
+      ? (state.selectedOptions || [])
+      : (state.selectedOption ? [state.selectedOption] : []);
+    const norm = (s) => (s || '').toLowerCase().trim().replace(/\s+/g, ' ');
+    const got = picks.length && picks.length === correctPicks.length &&
+                [...picks].every(p => correctPicks.some(c => norm(p) === norm(c)));
+    const msg = picks.length === 0
+      ? `Answer revealed. Correct: ${correctPicks.join(', ')}.`
+      : (got ? `Correct — you picked ${picks.join(', ')}.`
+             : `Incorrect — you picked ${picks.join(', ')}. The correct answer is ${correctPicks.join(', ')}.`);
+    announce(msg, true);
     renderStudy();
   });
   const skip = $('#skip-btn');
@@ -1084,10 +1104,11 @@ function recordRating(qid, rate) {
 }
 
 function nextQuestion() {
-  // Last-resort guard: ignore any navigation that fires within 500ms of a
-  // reveal. If a ghost-click somehow leaks past the rate-row arming and the
-  // pointerup target check, this still keeps the card from advancing.
-  if (Date.now() - (state._revealedAt || 0) < 800) return;
+  // Note: the 800ms ghost-click guard used to sit here too, blocking the
+  // function for any caller. That silently swallowed keyboard rates (1-4
+  // press immediately after Space-reveal). The rate-btn CLICK handler
+  // keeps its own 800ms guard (that's the actual ghost-click vector);
+  // keyboard / Next-button / swipe paths now advance immediately.
   const qs = filteredQuestions();
   state.revealed = false;
   stopSpeaking();
@@ -1103,9 +1124,8 @@ function nextQuestion() {
 }
 
 function prevQuestion() {
-  // Same last-resort guard as nextQuestion — a ghost click on the Back button
-  // shortly after Reveal must not actually navigate back.
-  if (Date.now() - (state._revealedAt || 0) < 800) return;
+  // Guard removed — see nextQuestion. Keyboard / arrow / swipe paths
+  // shouldn't be blocked.
   const qs = filteredQuestions();
   state.revealed = false;
   stopSpeaking();
@@ -1302,7 +1322,14 @@ function renderQuizCard() {
     const justRevealedQuiz = $('.card-just-revealed');
     if (justRevealedQuiz) setTimeout(() => justRevealedQuiz.classList.remove('card-just-revealed'), 800);
     const nextBtn = $('#quiz-next-btn');
-    if (nextBtn) nextBtn.addEventListener('click', advanceQuiz);
+    if (nextBtn) nextBtn.addEventListener('click', (e) => {
+      // Ghost-click guard scoped to pointer events: a tap that fires within
+      // 800ms of the original pick is almost certainly the pick-tap leaking
+      // through layout shift. Keyboard / swipe / touch-with-pointer-event
+      // paths advance immediately (none has a ghost-click risk).
+      if (e.pointerType !== 'keyboard' && Date.now() - (state._revealedAt || 0) < 800) return;
+      advanceQuiz();
+    });
     // No auto-advance: classmates reported the previous 1.8 s timeout rushed
     // them past the explanation. The Next → button (and Space/Enter, and
     // swipe-left) all advance manually; the user paces themselves.
@@ -1332,6 +1359,8 @@ function renderQuizCard() {
       recordQuizAnswer(q, []);
     });
   }
+  // Restore focus after the innerHTML swap (same rationale as renderStudy).
+  restoreFocusAfterRender();
 }
 
 function recordQuizAnswer(q, picked) {
@@ -1363,16 +1392,21 @@ function recordQuizAnswer(q, picked) {
   state._revealedAt = Date.now();
   state.selectedOption = null;
   state.selectedOptions = [];
+  // Announce verdict to screen readers — visual marking alone isn't
+  // accessible. Built from session.answers so it stays consistent with
+  // what the card now displays.
+  const correctShort = session.answers[q.id].correctShort;
+  announce(picked.length === 0
+    ? `Skipped. Correct: ${correctShort}.`
+    : (isRight ? `Correct — you picked ${picked.join(', ')}.`
+               : `Incorrect — you picked ${picked.join(', ')}. The correct answer is ${correctShort}.`), true);
   haptic(10);
   renderQuizCard();
 }
 
 function advanceQuiz() {
-  // 800ms guard: a click on "Next" that fires within 800ms of recording
-  // the answer is almost certainly the original pick-tap leaking through
-  // as a ghost click. The legitimate setTimeout-driven auto-advance fires
-  // at 1.8 s, well past this threshold.
-  if (Date.now() - (state._revealedAt || 0) < 800) return;
+  // Guard moved to the Next button's click handler (the only ghost-click
+  // path) — keyboard / swipe advance immediately.
   const session = state.quizSession;
   if (!session) return;
   session.current++;
@@ -2718,7 +2752,14 @@ function setMode(mode) {
   $$('.tab').forEach(t => {
     const active = t.dataset.mode === mode;
     t.classList.toggle('active', active);
-    t.setAttribute('aria-selected', active ? 'true' : 'false');
+    // aria-current matches plain-nav semantics (not role=tablist); SR
+    // announces "study, current page" rather than "tab 1 of 4 selected".
+    if (active) t.setAttribute('aria-current', 'page');
+    else t.removeAttribute('aria-current');
+    // Strip the leftover tablist attrs in case an old SW cache still serves
+    // the old index.html — defensive belt-and-suspenders.
+    t.removeAttribute('aria-selected');
+    t.removeAttribute('role');
   });
   // Hold the screen on while the user is actively studying or quizzing.
   if (mode === 'study' || mode === 'quiz') acquireWakeLock();
@@ -3259,9 +3300,9 @@ function installKeyboard() {
           state._revealedAt = Date.now();
           renderStudy();
         } else {
-          // Same 500ms guard as the click handler — defeats key autorepeat or a
-          // fast double-press of space accidentally advancing past the reveal.
-          if (Date.now() - (state._revealedAt || 0) < 800) return;
+          // No 800ms guard for keyboard — keyboard has no ghost-click problem,
+          // and the previous check silently swallowed deliberate "Space to
+          // reveal, then Space to rate Good" patterns.
           const qs = filteredQuestions();
           if (qs.length > 0) { recordRating(qs[state.currentIndex].id, 'good'); nextQuestion(); }
         }
@@ -3269,7 +3310,6 @@ function installKeyboard() {
       }
       if (state.revealed && ['1', '2', '3', '4'].includes(key)) {
         e.preventDefault();
-        if (Date.now() - (state._revealedAt || 0) < 800) return;
         const rate = ['again', 'hard', 'good', 'easy'][Number(key) - 1];
         const qs = filteredQuestions();
         if (qs.length > 0) { recordRating(qs[state.currentIndex].id, rate); nextQuestion(); }
@@ -3710,6 +3750,65 @@ function installSwipe() {
   main.addEventListener('pointercancel', () => { tracking = false; });
 }
 
+// After innerHTML swaps the DOM under our feet, the previously-focused
+// element is gone and focus silently resets to <body>. For keyboard / SR
+// users that means every reveal/rate/advance dumps them back to the top
+// of the document. This restores focus to the most sensible new target:
+// the primary action button if visible, otherwise the main landmark.
+function restoreFocusAfterRender(prefer = '#reveal-btn, #quiz-next-btn, .rate-btn, .quiz-size-btn[data-size]:not([disabled])') {
+  if (document.activeElement && document.activeElement !== document.body) return;
+  const target = document.querySelector(prefer) || document.getElementById('main');
+  target?.focus?.({ preventScroll: true });
+}
+
+//─── DIALOG A11Y HELPERS ─────────────────────────────────────
+// trapFocus: cycles Tab/Shift+Tab inside `overlay`, returns a cleanup
+// function that detaches the listener. Used by every modal so keyboard
+// users can't tab into the (visually dimmed) background content.
+function trapFocus(overlay) {
+  const focusablesFor = () => [...overlay.querySelectorAll(
+    'button, [href], input, textarea, select, summary, [tabindex]:not([tabindex="-1"])'
+  )].filter(el => !el.disabled && (el.offsetParent !== null || getComputedStyle(el).position === 'fixed'));
+  const onKey = (e) => {
+    if (e.key !== 'Tab') return;
+    if (!overlay.isConnected) return;
+    const f = focusablesFor();
+    if (f.length === 0) return;
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  };
+  document.addEventListener('keydown', onKey);
+  return () => document.removeEventListener('keydown', onKey);
+}
+// setAppInert: marks the main app shell as inert + aria-hidden while a
+// modal is open, so screen readers don't read background content and Tab
+// can't walk into it. Mirrors what `<dialog>` would do natively.
+function setAppInert(inert) {
+  const app = document.getElementById('app');
+  if (!app) return;
+  if (inert) { app.setAttribute('inert', ''); app.setAttribute('aria-hidden', 'true'); }
+  else       { app.removeAttribute('inert');   app.removeAttribute('aria-hidden'); }
+}
+// Single global aria-live region for assertive announcements (reveal /
+// grade outcomes, ratings). Created lazily so we don't touch the DOM
+// until something needs to be spoken.
+function announce(msg, assertive = false) {
+  let host = document.getElementById('aria-live-host');
+  if (!host) {
+    host = document.createElement('div');
+    host.id = 'aria-live-host';
+    // Visually hidden but readable by assistive tech.
+    host.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);';
+    host.setAttribute('aria-atomic', 'true');
+    document.body.appendChild(host);
+  }
+  host.setAttribute('aria-live', assertive ? 'assertive' : 'polite');
+  // Clearing first ensures repeated identical strings still re-announce.
+  host.textContent = '';
+  setTimeout(() => { host.textContent = msg; }, 30);
+}
+
 //─── LOCK SCREEN (PIN unlock) ────────────────────────────────
 // Shown on boot when pin.setup is present. Resolves with an AES-GCM key on
 // success, or null if the user used "Forgot PIN" to wipe local data.
@@ -3737,6 +3836,8 @@ function showLockScreen() {
     const input = $('#lock-pin');
     const submit = $('#lock-submit');
     const errEl = $('#lock-error');
+    setAppInert(true);
+    const releaseTrap = trapFocus(overlay);
     setTimeout(() => input.focus(), 50);
 
     const setError = (msg) => {
@@ -3744,12 +3845,20 @@ function showLockScreen() {
       errEl.hidden = !msg;
     };
 
+    // Cleanup wrapper used by every resolve path so the app shell is
+    // un-inerted and the focus-trap listener is removed.
+    const finish = (value) => {
+      releaseTrap();
+      setAppInert(false);
+      overlay.remove();
+      resolve(value);
+    };
     $('#lock-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const pin = input.value;
       if (!pin) { setError('Enter your PIN.'); return; }
       const setup = getPinSetup();
-      if (!setup) { overlay.remove(); resolve(null); return; }
+      if (!setup) { finish(null); return; }
       submit.disabled = true;
       submit.textContent = 'Unlocking…';
       try {
@@ -3763,8 +3872,7 @@ function showLockScreen() {
           submit.textContent = 'Unlock';
           return;
         }
-        overlay.remove();
-        resolve(key);
+        finish(key);
       } catch (err) {
         setError(`Couldn't unlock: ${err.message}`);
         submit.disabled = false;
@@ -3780,8 +3888,7 @@ function showLockScreen() {
       )) return;
       await wipeEncryptedStores();
       clearPinSetup();
-      overlay.remove();
-      resolve(null);
+      finish(null);
     });
   });
 }
@@ -3864,6 +3971,9 @@ function pinDialog({ title, intro, fields, submit: submitLabel = 'Set', destruct
     document.body.insertAdjacentHTML('beforeend', html);
     const overlay = $('#pin-overlay');
     const firstInput = overlay.querySelector('input');
+    const previouslyFocused = document.activeElement;
+    setAppInert(true);
+    const releaseTrap = trapFocus(overlay);
     setTimeout(() => firstInput?.focus(), 50);
 
     const setError = (msg) => {
@@ -3871,21 +3981,28 @@ function pinDialog({ title, intro, fields, submit: submitLabel = 'Set', destruct
       e.textContent = msg || '';
       e.hidden = !msg;
     };
-    const cancel = () => { overlay.remove(); resolve(null); };
+    const finish = (value) => {
+      releaseTrap();
+      setAppInert(false);
+      document.removeEventListener('keydown', onKey);
+      overlay.remove();
+      // Return focus to the trigger so keyboard/SR users land back where they were.
+      if (previouslyFocused && typeof previouslyFocused.focus === 'function') previouslyFocused.focus();
+      resolve(value);
+    };
+    const cancel = () => finish(null);
     const onKey = (e) => {
       if ($('#pin-overlay') !== overlay) return;
-      if (e.key === 'Escape') { cancel(); document.removeEventListener('keydown', onKey); }
+      if (e.key === 'Escape') cancel();
     };
     document.addEventListener('keydown', onKey);
-    $('#pind-close').addEventListener('click', () => { document.removeEventListener('keydown', onKey); cancel(); });
-    $('#pind-cancel').addEventListener('click', () => { document.removeEventListener('keydown', onKey); cancel(); });
+    $('#pind-close').addEventListener('click', cancel);
+    $('#pind-cancel').addEventListener('click', cancel);
     $('#pind-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const values = {};
       for (const f of fields) values[f.key] = ($(`#${id(f.key)}`).value || '');
-      document.removeEventListener('keydown', onKey);
-      overlay.remove();
-      resolve(values);
+      finish(values);
     });
     // Inline next-field navigation: pressing Enter on a non-last input
     // jumps to the next, rather than submitting.
@@ -4172,23 +4289,17 @@ function showWelcome() {
 
   const overlay = $('#welcome-overlay');
   const previouslyFocused = document.activeElement;
-  const focusablesFor = () => [...overlay.querySelectorAll(
-    'button, [href], input, [tabindex]:not([tabindex="-1"])'
-  )].filter(el => !el.disabled && el.offsetParent !== null);
+  setAppInert(true);
+  const releaseTrap = trapFocus(overlay);
   const onKeydown = (e) => {
     if ($('#welcome-overlay') !== overlay) return;
     if (e.key === 'Escape') { close(null); return; }
-    if (e.key !== 'Tab') return;
-    // Simple focus trap — cycle Tab / Shift+Tab within the dialog
-    const f = focusablesFor();
-    if (f.length === 0) return;
-    const first = f[0], last = f[f.length - 1];
-    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   };
   const close = (action) => {
     const dismissPerm = $('#welcome-dismiss-permanent')?.checked;
     if (dismissPerm) localStorage.setItem('welcomeDismissed', '1');
+    releaseTrap();
+    setAppInert(false);
     document.removeEventListener('keydown', onKeydown);
     overlay.remove();
     // Restore focus to the trigger so keyboard users aren't dumped at <body>
@@ -4383,7 +4494,11 @@ create policy "anon update" on progress for update using (true);</pre>
   document.body.insertAdjacentHTML('beforeend', html);
   const overlay = $('#help-overlay');
   const previouslyFocused = document.activeElement;
+  setAppInert(true);
+  const releaseTrap = trapFocus(overlay);
   const close = () => {
+    releaseTrap();
+    setAppInert(false);
     document.removeEventListener('keydown', onKeydown);
     overlay.remove();
     if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
@@ -4477,7 +4592,11 @@ async function showFeedback() {
   const overlay = $('#feedback-overlay');
   $('#fbk-diag-preview-pre').textContent = diagnostics;
   const previouslyFocused = document.activeElement;
+  setAppInert(true);
+  const releaseTrap = trapFocus(overlay);
   const close = () => {
+    releaseTrap();
+    setAppInert(false);
     document.removeEventListener('keydown', onKeydown);
     overlay.remove();
     if (previouslyFocused && typeof previouslyFocused.focus === 'function') previouslyFocused.focus();
