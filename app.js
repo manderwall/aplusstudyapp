@@ -350,6 +350,11 @@ function _drainToasts() {
   if (!host) {
     host = document.createElement('div');
     host.id = 'toast-host';
+    // Make the host itself a live region so AT announces every toast
+    // that lands inside, regardless of which kind got role=alert vs
+    // role=status. Individual toasts keep their per-kind role too.
+    host.setAttribute('aria-live', 'polite');
+    host.setAttribute('aria-atomic', 'false');
     document.body.appendChild(host);
   }
   const el = document.createElement('div');
@@ -3609,9 +3614,17 @@ async function openReferenceViewer(initialPage = 1) {
     await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
   };
 
+  // Match the dialog a11y pattern from PR #39: inert background +
+  // focus trap + focus restoration on close.
+  const previouslyFocused = document.activeElement;
+  setAppInert(true);
+  const releaseTrap = trapFocus(overlay);
   const close = () => {
+    releaseTrap();
+    setAppInert(false);
     document.removeEventListener('keydown', onKey);
     overlay.remove();
+    if (previouslyFocused && typeof previouslyFocused.focus === 'function') previouslyFocused.focus();
   };
   const onKey = (e) => {
     if (e.key === 'Escape') close();
@@ -3793,14 +3806,22 @@ function openImageZoom(src, alt) {
     <button type="button" class="img-zoom-close" aria-label="Close enlarged figure">✕</button>
     <img src="${escapeHtml(src)}" alt="${escapeHtml(alt || '')}">
   `;
+  document.body.appendChild(overlay);
+  // Match the dialog a11y pattern from PR #39: inert background +
+  // focus trap + focus restoration on close.
+  const previouslyFocused = document.activeElement;
+  setAppInert(true);
+  const releaseTrap = trapFocus(overlay);
   const close = () => {
+    releaseTrap();
+    setAppInert(false);
     document.removeEventListener('keydown', onKey);
     overlay.remove();
+    if (previouslyFocused && typeof previouslyFocused.focus === 'function') previouslyFocused.focus();
   };
   const onKey = (e) => { if (e.key === 'Escape') close(); };
   overlay.addEventListener('click', close);
   document.addEventListener('keydown', onKey);
-  document.body.appendChild(overlay);
   overlay.querySelector('.img-zoom-close')?.focus();
 }
 

@@ -84,9 +84,16 @@ html[data-size="medium"] body { zoom: 1; }
 html[data-size="large"]  body { zoom: 1.15; }
 html[data-size="xlarge"] body { zoom: 1.35; }
 
-/* Dyslexia-friendly fonts (loaded as @font-face below). Form controls
-   don't inherit font-family by default — force them to so the chosen
-   font applies to buttons, inputs, textareas, selects too. */
+/* Dyslexia-friendly font setting. These names are NOT bundled — they
+   render only if the user has Atkinson Hyperlegible / OpenDyslexic
+   installed at the OS level (iOS exposes both via Settings → General →
+   Fonts; macOS Font Book; Android via Font Substitution). The CSS-only
+   approach avoids repo bloat (~80kB per weight) + a CSP/CDN dependency,
+   trading off "works for anyone who turned it on" instead of "works
+   universally". If we ever want universal availability, add @font-face
+   pointing at self-hosted woff2 files in fonts/ and extend the CSP
+   font-src to include 'self'. Form controls don't inherit font-family
+   by default — force them to so the chosen font applies everywhere. */
 html[data-font="atkinson"] body { font-family: 'Atkinson Hyperlegible', -apple-system, system-ui, sans-serif; }
 html[data-font="opendyslexic"] body { font-family: 'OpenDyslexic', -apple-system, system-ui, sans-serif; letter-spacing: 0.02em; }
 html[data-font="atkinson"] button,
@@ -186,6 +193,46 @@ html[data-contrast="high"] {
   --border:    #777;
   --text:      #ffffff;
   --text-dim:  #dddddd;
+}
+
+/* OS-level contrast preferences:
+   - prefers-contrast: more  → user wants thicker borders + bolder text
+     (set in macOS Display → Increase contrast, Windows Make text bigger,
+     iOS Increase Contrast).
+   - forced-colors: active   → Windows High Contrast mode / Edge forced
+     colors. The OS overrides our colors entirely with a system palette;
+     we still need to keep borders + outlines visible (else card edges
+     disappear into the background). */
+@media (prefers-contrast: more) {
+  :root {
+    --border: #666;
+    --text-dim: #c0c0c0;
+  }
+  :root.light, @media (prefers-color-scheme: light) {
+    :root { --border: #555; --text-dim: #404040; }
+  }
+  button, .card, .option, .rate-btn { border-width: 2px !important; }
+}
+@media (forced-colors: active) {
+  /* Make sure cards, options, dialogs, and buttons retain visible edges
+     when the OS forces a high-contrast palette. forced-color-adjust:auto
+     is the default; we explicitly keep borders + outlines on interactive
+     surfaces so they don't render edgeless against the system bg. */
+  .card, .option, .obj-section, .rate-btn, .action,
+  #welcome-overlay, #help-overlay, #feedback-overlay,
+  #pin-overlay, #lock-overlay, #img-zoom-overlay, #pdf-viewer-overlay,
+  .toast {
+    border: 1px solid CanvasText !important;
+  }
+  /* The active/selected option needs a thicker outline since the OS
+     palette doesn't honor our --accent. */
+  .q-option.selected, .q-option[aria-selected="true"] {
+    outline: 3px solid Highlight !important;
+    outline-offset: 1px;
+  }
+  /* Disabled controls: half-tone via system disabled color so users
+     can distinguish them from active ones. */
+  button[disabled], .action[disabled] { color: GrayText !important; }
 }
 
 html, body {
@@ -364,8 +411,11 @@ button.welcome-countdown-cta:hover { background: var(--surface); border-color: v
   position: absolute;
   top: 12px;
   right: 12px;
-  width: 32px;
-  height: 32px;
+  /* WCAG 2.5.5 (AAA): 44×44 minimum touch target. Was 32×32. The visual
+     glyph stays roughly 16px via font-size so the bigger hit area
+     doesn't dominate the dialog header visually. */
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: none;
   background: var(--surface-2);
@@ -2649,8 +2699,9 @@ html.is-touch .kbd-hint { display: none; }
 .pdf-nav:hover { background: var(--border); }
 .pdf-viewer-close {
   margin-left: auto;
-  width: 36px;
-  height: 36px;
+  /* WCAG 2.5.5 (AAA): 44×44 minimum touch target. Was 36×36. */
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: transparent;
   border: 1px solid var(--border);
@@ -2703,8 +2754,9 @@ html.is-touch .kbd-hint { display: none; }
   background: var(--surface);
   color: var(--text);
   border: 1px solid var(--border);
-  width: 40px;
-  height: 40px;
+  /* WCAG 2.5.5 (AAA): 44×44 minimum touch target. Was 40×40. */
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   font-size: 16px;
   cursor: pointer;
