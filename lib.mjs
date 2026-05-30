@@ -3,7 +3,13 @@
 
 export const MIN = 60 * 1000;
 export const DAY = 24 * 60 * 60 * 1000;
-export const MAX_INTERVAL_DAYS = 30;  // cap so exam-prep doesn't schedule cards past the exam
+export const MAX_INTERVAL_DAYS = 30;  // default cap when no exam date is set
+
+// schedule() now takes an optional cap (days). Caller passes the
+// exam-aware value: cap at days-until-exam so cards aren't scheduled
+// past the exam, but lets spacing expand when there's runway (a
+// well-known card with a 45-day exam runway shouldn't be force-shown
+// every 30 days for no retention benefit).
 
 export function defaultProgress() {
   return { status: 'new', seen: 0, correct: 0, lastSeen: 0, ease: 2.5, interval: 0, due: 0 };
@@ -16,7 +22,11 @@ export function migrateProgress(p) {
   return p;
 }
 
-export function schedule(p, rate, now = Date.now()) {
+export function schedule(p, rate, now = Date.now(), capDays = MAX_INTERVAL_DAYS) {
+  // Effective cap is the smaller of: the static default (30d), the caller-
+  // provided exam-runway cap, or 30 when caller passes 0/null. Floor at 1
+  // so cards always come back at least once even if exam is tomorrow.
+  const cap = Math.max(1, capDays || MAX_INTERVAL_DAYS);
   if (rate === 'again') {
     p.ease = Math.max(1.3, p.ease - 0.2);
     p.interval = 0;
@@ -26,19 +36,19 @@ export function schedule(p, rate, now = Date.now()) {
     p.ease = Math.max(1.3, p.ease - 0.15);
     if (p.interval === 0) { p.due = now + 10 * MIN; }
     else {
-      p.interval = Math.min(MAX_INTERVAL_DAYS, p.interval * 1.2);
+      p.interval = Math.min(cap, p.interval * 1.2);
       p.due = now + p.interval * DAY;
     }
     p.status = 'learning';
   } else if (rate === 'good') {
     if (p.interval === 0) p.interval = 1;
-    else p.interval = Math.min(MAX_INTERVAL_DAYS, p.interval * p.ease);
+    else p.interval = Math.min(cap, p.interval * p.ease);
     p.due = now + p.interval * DAY;
     p.status = p.status === 'new' ? 'learning' : 'good';
   } else if (rate === 'easy') {
     p.ease = p.ease + 0.15;
     if (p.interval === 0) p.interval = 3;
-    else p.interval = Math.min(MAX_INTERVAL_DAYS, p.interval * p.ease * 1.3);
+    else p.interval = Math.min(cap, p.interval * p.ease * 1.3);
     p.due = now + p.interval * DAY;
     p.status = 'good';
   }
