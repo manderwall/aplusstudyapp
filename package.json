@@ -16,6 +16,12 @@
     "test": "node --test tests/*.test.mjs",
     "validate": "node scripts/validate-questions.mjs data/core2/questions.json",
     "check": "node --check app.js && node --check lib.mjs && node --check crypto.mjs && node --check sw.js",
-    "serve": "python3 -m http.server 8000"
+    "serve": "python3 -m http.server 8000",
+    "smoke": "node tests/smoke/regression.mjs",
+    "smoke:perf": "node tests/smoke/perf.mjs",
+    "smoke:mobile": "node tests/smoke/mobile.mjs"
+  },
+  "devDependencies": {
+    "puppeteer": "^25.1.0"
   }
 }

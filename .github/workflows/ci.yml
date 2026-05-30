@@ -25,3 +25,20 @@ jobs:
         run: node scripts/validate-concept-fixes.mjs
       - name: Unit tests
         run: node --test tests/*.test.mjs
+
+  # Browser smoke suite runs in a SEPARATE job so the fast `check` gate
+  # above (syntax + validators + unit tests, ~10s) keeps giving instant
+  # feedback. This job installs puppeteer + Chromium (~1-2 min) and drives
+  # the real app headless. If Chromium download flakes, only this job goes
+  # red — the fast gate is unaffected.
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+      - name: Install dev dependencies (puppeteer)
+        run: npm install --no-audit --no-fund
+      - name: Browser regression smoke
+        run: npm run smoke
