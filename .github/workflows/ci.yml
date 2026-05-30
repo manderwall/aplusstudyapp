@@ -25,3 +25,17 @@ jobs:
         run: node scripts/validate-concept-fixes.mjs
       - name: Unit tests
         run: node --test tests/*.test.mjs
+
+  # NOTE: a browser-smoke CI job was attempted here and removed. The
+  # suite itself (tests/smoke/) is committed and verified locally
+  # (`npm run smoke` → 10/10), but getting puppeteer's Chromium to
+  # launch on the GitHub runner failed twice (fast fail at npm install
+  # / browser launch — likely a missing system lib on ubuntu-24.04 like
+  # libnss3/libgbm, or the postinstall browser fetch being skipped).
+  # I couldn't read the Actions logs from the environment I was working
+  # in, so rather than ship a perpetually-red advisory check (which
+  # trains everyone to ignore red), CI integration is left as a TODO.
+  # To finish it: add a `smoke` job that runs
+  #   npm install && npx puppeteer browsers install --with-deps chrome && npm run smoke
+  # OR use the browser-actions/setup-chrome action, then read the first
+  # failing log to confirm the missing-lib vs missing-binary cause.

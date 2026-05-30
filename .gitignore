@@ -35,3 +35,6 @@ node_modules/
 dist/
 build/
 *.log
+
+# Smoke-test screenshots (regenerated on each run)
+tests/smoke/__shots__/

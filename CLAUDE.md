@@ -135,14 +135,21 @@ node scripts/validate-questions.mjs data/core2/questions.json
 # Concept-fixes XSS gate (runs in CI on every PR)
 node scripts/validate-concept-fixes.mjs
 
-# Smoke tests live in /tmp/smoke (NOT committed to the repo).
-# Each test spins up its own http.server on a unique port so they can
-# run in parallel without conflicts. Most useful ones:
-cd /tmp/smoke && node beginner-walk.mjs    # full happy-path walk
-cd /tmp/smoke && node stress-sweep.mjs     # theme/filter/quiz/reading flows + console
-cd /tmp/smoke && node perf-probe.mjs       # mobile cold-boot timings
-cd /tmp/smoke && node mobile-sweep.mjs     # 6-viewport responsive sweep
+# Browser smoke suite — committed under tests/smoke/ (was /tmp scratch
+# until 2026-05-30). Drives the real app headless. puppeteer is a
+# devDependency only; shipped app stays zero-runtime-deps.
+npm install            # one-time: pulls puppeteer
+npm run smoke          # regression assertions — pass/fail, gates CI
+npm run smoke:perf     # cold-boot timings (informational)
+npm run smoke:mobile   # 6-viewport responsive sweep + screenshots
 ```
+
+When you fix a browser-observable bug, add an assertion to
+`tests/smoke/regression.mjs` so it can't silently regress. The suite
+runs LOCALLY only — wiring it into CI failed twice on puppeteer's
+Chromium launch on the runner (couldn't read Actions logs to debug);
+see the TODO in `.github/workflows/ci.yml`. Local `npm run smoke` is
+the source of truth.
 
 ## When the user reports a "skip" bug they can't reproduce
 

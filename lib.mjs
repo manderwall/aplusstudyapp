@@ -41,10 +41,32 @@ export const FSRS_W = [
   0.4, 0.6, 2.4, 5.8, 4.93, 0.94, 0.86, 0.01, 1.49, 0.14,
   0.94, 2.18, 0.05, 0.34, 1.26, 0.29, 2.61,
 ];
-// Target retention: probability of correct recall when card comes back.
-// 0.9 is the standard FSRS default (matches Anki's "desired retention").
+// Target retention used when solving for the next interval.
 export const FSRS_TARGET_RETENTION = 0.9;
 // Decay constant in the forgetting curve R(t) = (1 + t/(9·S))^DECAY.
+//
+// ⚠️ CURVE NOTE (accurate as of the 2026-05-30 audit re-read):
+// This is a HYBRID, not a canonical FSRS curve. It pairs the `9·S`
+// denominator from FSRS v3/v4 with the `-0.5` exponent from FSRS v4.5+.
+// Canonical versions never mix these:
+//   • FSRS-4:    R = (1 + t/(9S))^-1        → interval at r=0.9 is exactly S
+//   • FSRS-4.5+: R = (1 + (19/81)·t/S)^-0.5 → interval at r=0.9 is exactly S
+//   • THIS code: R = (1 + t/(9S))^-0.5      → interval at r=0.9 is ~2.11·S
+// Effect: every card is scheduled ~2.11× further out than a canonical
+// FSRS at the same stability. If real memory follows the standard curve,
+// the user is actually being tested at ~81% retention, not the 0.9 the
+// FSRS_TARGET_RETENTION constant implies. The scheduler is internally
+// SELF-CONSISTENT (the same curve drives both retrievability and the
+// interval solve), so nothing breaks — intervals are just longer / the
+// effective retention is lower than the constant suggests.
+//
+// Two ways to make it canonical IF a deliberate ~81% target isn't wanted
+// (both change live scheduling — would shorten everyone's intervals and
+// spike due-counts, so they're a product decision, not a silent fix):
+//   (a) FSRS-4:    set FSRS_DECAY = -1
+//   (b) FSRS-4.5:  R = (1 + (19/81)·t/S)^-0.5 and interval solve to match
+// Until then, treat FSRS_TARGET_RETENTION as a tuning knob, not a
+// literal retention guarantee.
 const FSRS_DECAY = -0.5;
 
 // Helpers
