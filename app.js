@@ -429,12 +429,17 @@ function onCramRated(qid, rate) {
     q.push(qid);
   }
   if (q.length === 0) {
-    // Capture count before the timer fires — state.cram may be null'd by
-    // an end-now tap or a switchExam in the 200 ms window, which would
-    // throw on `state.cram.originalCount`.
+    // Capture count + cram-instance reference before the timer fires.
+    // state.cram may be null'd by an end-now tap or a switchExam in the
+    // 200 ms window (which would throw on .originalCount), OR replaced
+    // with a NEW cram if the user restarts immediately — which would
+    // have us endCram() the wrong instance. Compare identity at fire
+    // time and bail if it doesn't match.
     const total = state.cram.originalCount;
+    const cramRef = state.cram;
     celebrate({ intensity: 80, duration: 2200 });
     setTimeout(() => {
+      if (state.cram !== cramRef) return;  // user already moved on
       toast(`🎉 Cram complete — all ${total} cards cleared!`, 'success', 5000);
       endCram(false);
     }, 200);
@@ -3957,6 +3962,31 @@ function installInputModeDetection() {
   window.addEventListener('touchstart', onTouch, { passive: true, once: true });
 }
 
+// Multi-tab warning. Each tab carries its own in-memory state.progress;
+// the last write to IDB wins. A user with two tabs open rating cards in
+// both will silently lose ratings from whichever tab persisted earlier.
+// Detect siblings via BroadcastChannel + warn once. Doesn't fix the
+// conflict (would need a CRDT or version vector), but at least the user
+// knows to close the other tab before studying.
+function installMultiTabGuard() {
+  if (typeof BroadcastChannel !== 'function') return;
+  let ch;
+  try { ch = new BroadcastChannel('aplus-study'); } catch { return; }
+  let warned = false;
+  ch.onmessage = (e) => {
+    if (e.data === 'hello' && !warned) {
+      warned = true;
+      ch.postMessage('here');
+      toast('App is open in another tab. Progress saved here may overwrite — close other tabs before studying.', 'warn', 7000);
+    } else if (e.data === 'here' && !warned) {
+      warned = true;
+      toast('App is open in another tab. Progress saved here may overwrite — close other tabs before studying.', 'warn', 7000);
+    }
+  };
+  // Announce our presence. Existing tabs will respond with 'here'.
+  ch.postMessage('hello');
+}
+
 //─── SWIPE (swipe left to advance in Study/Quiz) ─────────────
 function installSwipe() {
   const main = $('#main');
@@ -5027,6 +5057,7 @@ async function init() {
     installInputModeDetection();
     installWakeLock();
     installImageZoom();
+    installMultiTabGuard();
   });
 
   // Register service worker for offline + watch for new versions. Deferred
