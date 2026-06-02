@@ -3925,14 +3925,19 @@ async function cloudPush() {
   const { url, key, syncKey } = getCloudCfg();
   if (!url || !key || !syncKey) throw new Error('Set Supabase URL, anon key, and sync key first');
   const bundle = await gatherAllExamsForCloud();
+  // Push through the progress_push RPC (SECURITY DEFINER) rather than
+  // writing the table directly. The anon key is public, so direct
+  // table writes let anyone overwrite any row; routing through the
+  // function means a caller must supply the sync key to touch a row,
+  // and the table itself is closed to the anon role. The function
+  // stamps updated_at server-side.
   const body = JSON.stringify({
-    sync_key: syncKey,
-    data: { version: 2, progress: bundle.progress, overrides: bundle.overrides },
-    updated_at: new Date().toISOString(),
+    p_sync_key: syncKey,
+    p_data: { version: 2, progress: bundle.progress, overrides: bundle.overrides },
   });
-  const res = await fetch(`${url}/rest/v1/progress`, {
+  const res = await fetch(`${url}/rest/v1/rpc/progress_push`, {
     method: 'POST',
-    headers: cloudHeaders(key, { 'Prefer': 'resolution=merge-duplicates,return=minimal' }),
+    headers: cloudHeaders(key),
     body,
   });
   if (!res.ok) throw new Error(`Push ${res.status}: ${(await res.text()).slice(0, 200)}`);
@@ -3947,8 +3952,13 @@ function normalizeCloudData(data) {
 async function cloudPull({ merge = true } = {}) {
   const { url, key, syncKey } = getCloudCfg();
   if (!url || !key || !syncKey) throw new Error('Set Supabase URL, anon key, and sync key first');
-  const res = await fetch(`${url}/rest/v1/progress?sync_key=eq.${encodeURIComponent(syncKey)}&select=data,updated_at`, {
+  // Pull through the progress_pull RPC (SECURITY DEFINER). It returns
+  // only the row whose sync_key matches, so the anon key can't be used
+  // to read the whole table / harvest other people's keys.
+  const res = await fetch(`${url}/rest/v1/rpc/progress_pull`, {
+    method: 'POST',
     headers: cloudHeaders(key),
+    body: JSON.stringify({ p_sync_key: syncKey }),
   });
   if (!res.ok) throw new Error(`Pull ${res.status}: ${(await res.text()).slice(0, 200)}`);
   const rows = await res.json();
