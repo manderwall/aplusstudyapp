@@ -161,10 +161,10 @@
   },
   {
     "id": "yt009",
-    "obj": "1.8",
+    "obj": "1.1",
     "qtype": "Multiple Choice",
     "question": "An administrator receives notification that their supported OS will no longer receive security patches and updates. What most likely explains this communication?",
-    "explanation": "OBJ 1.8: No more security patches almost always means the OS has reached end-of-life. Vendor support contracts expiring do not stop the vendor from releasing patches; a successor OS coexists with the current one until EOL.",
+    "explanation": "OBJ 1.1: No more security patches almost always means the OS has reached end-of-life. Vendor support contracts expiring do not stop the vendor from releasing patches; a successor OS coexists with the current one until EOL.",
     "options": [
       "Hardware manufacturer support has expired",
       "The operating system has reached end of life",
@@ -181,10 +181,10 @@
   },
   {
     "id": "yt010",
-    "obj": "1.9",
+    "obj": "1.2",
     "qtype": "Multiple Choice",
     "question": "What is the best method to deploy custom OS images to 800 devices across four hardware vendors with two user-group types?",
-    "explanation": "OBJ 1.9: A network-based deployment server (PXE, MDT, WDS, etc.) pushes a single image to hundreds of machines in parallel. Per-device copying via XCopy/Robocopy or per-device installation media does not scale to 800 endpoints.",
+    "explanation": "OBJ 1.2: A network-based deployment server (PXE, MDT, WDS, etc.) pushes a single image to hundreds of machines in parallel. Per-device copying via XCopy/Robocopy or per-device installation media does not scale to 800 endpoints.",
     "options": [
       "Use XCopy to clone drives individually",
       "Use Robocopy to transfer files to each device",
@@ -261,10 +261,10 @@
   },
   {
     "id": "yt014",
-    "obj": "1.8",
+    "obj": "1.9",
     "qtype": "Multiple Choice",
     "question": "What Linux command elevates privileges for an administrative task?",
-    "explanation": "OBJ 1.8: `su` (substitute user) switches to another user account, commonly root, to run administrative commands. `runas` is the Windows equivalent. `cmcl` is not a real privilege-elevation command. `net user` is a Windows command for managing local accounts.",
+    "explanation": "OBJ 1.9: `su` (substitute user) switches to another user account, commonly root, to run administrative commands. `runas` is the Windows equivalent. `cmcl` is not a real privilege-elevation command. `net user` is a Windows command for managing local accounts.",
     "options": [
       "runas",
       "cmcl",
@@ -281,10 +281,10 @@
   },
   {
     "id": "yt015",
-    "obj": "1.2",
+    "obj": "1.5",
     "qtype": "Multiple Choice",
     "question": "An application connects to a local database server but displays no data when launched. What command-line tool best troubleshoots this issue?",
-    "explanation": "OBJ 1.2: `netstat` shows active TCP/UDP connections and listening ports, which is exactly what you need to confirm whether the app is reaching the database service. ipconfig is for IP info, nslookup is for DNS, curl is for HTTP(S).",
+    "explanation": "OBJ 1.5: `netstat` shows active TCP/UDP connections and listening ports, which is exactly what you need to confirm whether the app is reaching the database service. ipconfig is for IP info, nslookup is for DNS, curl is for HTTP(S).",
     "options": [
       "ipconfig",
       "nslookup",
@@ -421,10 +421,10 @@
   },
   {
     "id": "yt022",
-    "obj": "1.9",
+    "obj": "1.2",
     "qtype": "Multiple Choice",
     "question": "What is the quickest way to upgrade from Windows 10 to Windows 11 without losing data?",
-    "explanation": "OBJ 1.9: An in-place upgrade installs the new OS while preserving installed apps, user files, and settings. Imaging and clean installs wipe the disk; gpupdate is unrelated (refreshes Group Policy).",
+    "explanation": "OBJ 1.2: An in-place upgrade installs the new OS while preserving installed apps, user files, and settings. Imaging and clean installs wipe the disk; gpupdate is unrelated (refreshes Group Policy).",
     "options": [
       "gpupdate",
       "Image deployment",
@@ -641,10 +641,10 @@
   },
   {
     "id": "yt033",
-    "obj": "1.9",
+    "obj": "1.2",
     "qtype": "Multiple Choice",
     "question": "A technician needs to install operating systems on a large number of workstations. Which method is best?",
-    "explanation": "OBJ 1.9: A network-based image deployment server (PXE/MDT/WDS) installs the OS on many machines in parallel. Per-device media or manual installs do not scale.",
+    "explanation": "OBJ 1.2: A network-based image deployment server (PXE/MDT/WDS) installs the OS on many machines in parallel. Per-device media or manual installs do not scale.",
     "options": [
       "Physical media",
       "Mountable ISOs",
@@ -1021,10 +1021,10 @@
   },
   {
     "id": "yt052",
-    "obj": "1.9",
+    "obj": "1.2",
     "qtype": "Multiple Choice",
     "question": "A support specialist needs to decide whether to install a 32-bit or 64-bit OS architecture on a new computer. Which of the following specifications will help the specialist determine which OS to use?",
-    "explanation": "OBJ 1.9: A 32-bit OS can address only ~4 GB of RAM. Any system with more than 4 GB needs a 64-bit OS to use the additional memory.",
+    "explanation": "OBJ 1.2: A 32-bit OS can address only ~4 GB of RAM. Any system with more than 4 GB needs a 64-bit OS to use the additional memory.",
     "options": [
       "CPU model",
       "Disk drive type",
@@ -1086,10 +1086,10 @@
   },
   {
     "id": "yt055",
-    "obj": "1.9",
+    "obj": "1.2",
     "qtype": "Multiple Choice",
     "question": "A company would like to deploy baseline images to new computers as they are started up on the network. Which of the following boot processes should the company use for this task?",
-    "explanation": "OBJ 1.9: PXE (Preboot eXecution Environment) lets a machine boot from a network deployment server and pull an image automatically — ideal for \"on the network\" image deployment.",
+    "explanation": "OBJ 1.2: PXE (Preboot eXecution Environment) lets a machine boot from a network deployment server and pull an image automatically — ideal for \"on the network\" image deployment.",
     "options": [
       "ISO boot",
       "Secure boot",
@@ -1614,10 +1614,10 @@
   },
   {
     "id": "yt081",
-    "obj": "1.8",
+    "obj": "1.1",
     "qtype": "Multiple Choice",
     "question": "A user application only works with a legacy version of the OS, which is reaching end of life. For security reasons, the company is upgrading to the current OS. Which of the following is the most efficient way to complete the migration while keeping the application accessible?",
-    "explanation": "OBJ 1.8: Install the new OS as the host and run the legacy OS in a VM only when the legacy app is needed. Terminal/bare-metal servers are heavier; multi-boot forces the user to reboot to switch.",
+    "explanation": "OBJ 1.1: Install the new OS as the host and run the legacy OS in a VM only when the legacy app is needed. Terminal/bare-metal servers are heavier; multi-boot forces the user to reboot to switch.",
     "options": [
       "Terminal server",
       "Bare-metal server",
@@ -1999,10 +1999,10 @@
   },
   {
     "id": "yt100",
-    "obj": "1.9",
+    "obj": "1.2",
     "qtype": "Multiple Choice",
     "question": "A technician is unable to upgrade a desktop computer from Windows 10 to Windows 11. Which of the following is most likely preventing the upgrade?",
-    "explanation": "OBJ 1.9: Windows 11 requires TPM 2.0. A missing or disabled TPM will block the upgrade. Disk speed, refresh rate, and RAM latency do not gate Windows 11 eligibility.",
+    "explanation": "OBJ 1.2: Windows 11 requires TPM 2.0. A missing or disabled TPM will block the upgrade. Disk speed, refresh rate, and RAM latency do not gate Windows 11 eligibility.",
     "options": [
       "Missing TPM module",
       "Slow HDD",
@@ -2040,11 +2040,11 @@
   },
   {
     "id": "c2-os-02",
-    "obj": "1.8",
+    "obj": "1.9",
     "qtype": "Multiple Choice",
     "question": "An IT technician is working in a Linux terminal and needs to switch to the superuser (root) account. Which of the following commands should they use?",
     "correct_short": "su",
-    "explanation": "OBJ 1.8: The 'su' (switch user) command is used to switch to the specified user's account, and when used without a username, it prompts for the password to switch to the root account.",
+    "explanation": "OBJ 1.9: The 'su' (switch user) command is used to switch to the specified user's account, and when used without a username, it prompts for the password to switch to the root account.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -2061,11 +2061,11 @@
   },
   {
     "id": "c2-os-03",
-    "obj": "1.9",
+    "obj": "1.2",
     "qtype": "Multiple Choice",
     "question": "Which partition style must be used on a fixed disk to natively support a single partition larger than 2 TB and up to 128 primary partitions in Windows?",
     "correct_short": "GUID Partition Table (GPT)",
-    "explanation": "OBJ 1.9: The GUID Partition Table (GPT) partitioning scheme overcomes the limitations of MBR by natively supporting more than four primary partitions (up to 128 in Windows) and partition sizes over 2 TB.",
+    "explanation": "OBJ 1.2: The GUID Partition Table (GPT) partitioning scheme overcomes the limitations of MBR by natively supporting more than four primary partitions (up to 128 in Windows) and partition sizes over 2 TB.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -2082,11 +2082,11 @@
   },
   {
     "id": "c2-os-04",
-    "obj": "1.2",
+    "obj": "1.5",
     "qtype": "Multiple Choice",
     "question": "A technician suspects that a user's Windows 10 operating system is experiencing issues due to corrupt system files. Which of the following commands will immediately scan and attempt to repair protected system files?",
     "correct_short": "sfc /scannow",
-    "explanation": "OBJ 1.2: The 'sfc /scannow' command runs the System File Checker utility to immediately scan the integrity of all protected Windows system files and replace incorrect or damaged versions.",
+    "explanation": "OBJ 1.5: The 'sfc /scannow' command runs the System File Checker utility to immediately scan the integrity of all protected Windows system files and replace incorrect or damaged versions.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -2145,11 +2145,11 @@
   },
   {
     "id": "c2-os-07",
-    "obj": "1.8",
+    "obj": "1.9",
     "qtype": "Multiple Choice",
     "question": "A technician needs to search inside a specific text file on a Linux machine for a specific word or pattern. Which command line tool should they use?",
     "correct_short": "grep",
-    "explanation": "OBJ 1.8: In Linux, the 'grep' command is used specifically to search inside text files for specific words or patterns, whereas 'find' searches for the files themselves.",
+    "explanation": "OBJ 1.9: In Linux, the 'grep' command is used specifically to search inside text files for specific words or patterns, whereas 'find' searches for the files themselves.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -2166,11 +2166,11 @@
   },
   {
     "id": "c2-os-08",
-    "obj": "1.9",
+    "obj": "1.2",
     "qtype": "Multiple Choice",
     "question": "A system administrator wants to deploy a customized Windows image to multiple computers simultaneously over the network. Which firmware feature must the client network adapters support to initiate this boot method?",
     "correct_short": "Preboot Execution Environment (PXE)",
-    "explanation": "OBJ 1.9: Network booting requires the client network adapters and firmware to be PXE-compliant (Preboot Execution Environment) to locate the installation server via DHCP.",
+    "explanation": "OBJ 1.2: Network booting requires the client network adapters and firmware to be PXE-compliant (Preboot Execution Environment) to locate the installation server via DHCP.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -2187,11 +2187,11 @@
   },
   {
     "id": "c2-os-09",
-    "obj": "1.2",
+    "obj": "1.5",
     "qtype": "Multiple Choice",
     "question": "An IT specialist has made changes to a Group Policy Object in an Active Directory domain. Which command should they run on a client computer to apply these new policies immediately?",
     "correct_short": "gpupdate /force",
-    "explanation": "OBJ 1.2: The 'gpupdate /force' command is used to apply new or changed Group Policy settings to a computer and account profile immediately, overriding the default 90-minute refresh cycle.",
+    "explanation": "OBJ 1.5: The 'gpupdate /force' command is used to apply new or changed Group Policy settings to a computer and account profile immediately, overriding the default 90-minute refresh cycle.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -2250,11 +2250,11 @@
   },
   {
     "id": "c2-os-12",
-    "obj": "1.9",
+    "obj": "1.3",
     "qtype": "Multiple Choice",
     "question": "A user upgrades their computer's physical memory from 4 GB to 16 GB, but the Windows System Information tool still reports only 4 GB of usable RAM. What is the most likely cause?",
     "correct_short": "The system is running a 32-bit edition of Windows.",
-    "explanation": "OBJ 1.9: All 32-bit editions of Windows are structurally limited to addressing a maximum of 4 GB of RAM, regardless of how much physical memory is installed on the motherboard.",
+    "explanation": "OBJ 1.3: All 32-bit editions of Windows are structurally limited to addressing a maximum of 4 GB of RAM, regardless of how much physical memory is installed on the motherboard.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -2271,11 +2271,11 @@
   },
   {
     "id": "c2-os-13",
-    "obj": "1.2",
+    "obj": "1.5",
     "qtype": "Multiple Choice",
     "question": "A technician is using the Windows command prompt and needs to view detailed information about the current partitions, assign drive letters, or extend a volume. Which command-line tool provides an interactive prompt for these tasks?",
     "correct_short": "diskpart",
-    "explanation": "OBJ 1.2: The 'diskpart' command-line utility provides an interactive environment to view, create, format, assign drive letters to, and extend partitions or volumes.",
+    "explanation": "OBJ 1.5: The 'diskpart' command-line utility provides an interactive environment to view, create, format, assign drive letters to, and extend partitions or volumes.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -2292,11 +2292,11 @@
   },
   {
     "id": "c2-os-14",
-    "obj": "1.9",
+    "obj": "1.2",
     "qtype": "Multiple Choice",
     "question": "When setting up a multiboot installation containing both Windows and Linux on a single computer, which of the following is a recommended best practice?",
     "correct_short": "Install Windows first because Windows setup overwrites the boot loader.",
-    "explanation": "OBJ 1.9: It is a best practice to install Windows first because its setup program will automatically overwrite the boot loader, whereas installing Linux afterward allows its GRUB bootloader to successfully detect and list the Windows OS.",
+    "explanation": "OBJ 1.2: It is a best practice to install Windows first because its setup program will automatically overwrite the boot loader, whereas installing Linux afterward allows its GRUB bootloader to successfully detect and list the Windows OS.",
     "sources": [
       {
         "source": "synthetic-220-1202",
@@ -5862,10 +5862,10 @@
   },
   {
     "id": "c2-os-001",
-    "obj": "1.2",
+    "obj": "1.5",
     "qtype": "Multiple Choice",
     "question": "Which Windows command-line tool displays active network connections and their associated port numbers?",
-    "explanation": "OBJ 1.2: netstat (network statistics) displays active TCP/UDP connections, listening ports, routing tables, and network interface statistics. ipconfig shows IP configuration. nslookup queries DNS. tracert traces the route packets take to a destination host. [OBJ:1.2]",
+    "explanation": "OBJ 1.5: netstat (network statistics) displays active TCP/UDP connections, listening ports, routing tables, and network interface statistics. ipconfig shows IP configuration. nslookup queries DNS. tracert traces the route packets take to a destination host. [OBJ:1.2]",
     "options": [
       "ipconfig",
       "netstat",
@@ -5883,10 +5883,10 @@
   },
   {
     "id": "c2-os-002",
-    "obj": "1.2",
+    "obj": "1.5",
     "qtype": "Multiple Choice",
     "question": "A technician needs to check the disk for errors and repair them on a Windows system without booting to a recovery environment. Which command should be used?",
-    "explanation": "OBJ 1.2: chkdsk with /f fixes file system errors and /r locates bad sectors and recovers readable data. For the system drive, it schedules the check at next reboot. sfc /scannow checks and repairs Windows system files. diskpart is for disk partitioning. format C: would erase all data on the drive. [OBJ:1.2]",
+    "explanation": "OBJ 1.5: chkdsk with /f fixes file system errors and /r locates bad sectors and recovers readable data. For the system drive, it schedules the check at next reboot. sfc /scannow checks and repairs Windows system files. diskpart is for disk partitioning. format C: would erase all data on the drive. [OBJ:1.2]",
     "options": [
       "sfc /scannow",
       "chkdsk C: /f /r",
@@ -6177,10 +6177,10 @@
   },
   {
     "id": "c2-os-009",
-    "obj": "1.9",
+    "obj": "1.8",
     "qtype": "Multiple Choice",
     "question": "A macOS user wants to quickly launch applications and search for files without opening Finder. Which built-in macOS feature provides system-wide search and app launch from any screen?",
-    "explanation": "OBJ 1.9: Spotlight (activated with Command+Space or clicking the magnifying glass icon) provides instant system-wide search for apps, files, contacts, emails, web results, and more. Launchpad shows an iOS-style app grid. Mission Control manages windows and virtual desktops. Finder Search is limited to the Finder window. Spotlight is the fastest way to launch apps or find files on macOS. [OBJ:1.9]",
+    "explanation": "OBJ 1.8: Spotlight (activated with Command+Space or clicking the magnifying glass icon) provides instant system-wide search for apps, files, contacts, emails, web results, and more. Launchpad shows an iOS-style app grid. Mission Control manages windows and virtual desktops. Finder Search is limited to the Finder window. Spotlight is the fastest way to launch apps or find files on macOS. [OBJ:1.9]",
     "options": [
       "Launchpad",
       "Mission Control",
@@ -6489,5 +6489,3687 @@
     ],
     "correct_short": "Anti-static wrist strap bonded to the chassis ground, and an anti-static mat",
     "origin": "aplus-adaptive-study (synthetic Core 2 set)"
+  },
+  {
+    "id": "avw-c2-001",
+    "obj": "1.9",
+    "qtype": "Multiple Choice",
+    "question": "A technician needs to move a workstation from Windows 10 Pro to Windows 11 Pro while keeping the user's installed applications, files, and settings. Which method should be used?",
+    "explanation": "OBJ 1.9: An in-place upgrade preserves apps, files, and settings. A clean install or Reset this PC removes installed applications.",
+    "options": [
+      "Clean install",
+      "In-place upgrade",
+      "Reset this PC",
+      "Recovery partition restore"
+    ],
+    "sources": [
+      {
+        "source": "avw-handcrafted",
+        "qnum": 1
+      }
+    ],
+    "correct_short": "In-place upgrade",
+    "is_sample": true,
+    "exam": "core2"
+  },
+  {
+    "id": "avw-c2-002",
+    "obj": "1.5",
+    "qtype": "Multiple Choice",
+    "question": "A workstation has lost connectivity and you have confirmed the cable is good. Which command requests a new IP address from the DHCP server?",
+    "explanation": "OBJ 1.5: ipconfig /renew requests a fresh DHCP lease. /all shows configuration, and the dns switches manage the resolver cache.",
+    "options": [
+      "ipconfig /all",
+      "ipconfig /renew",
+      "ipconfig /flushdns",
+      "ipconfig /displaydns"
+    ],
+    "sources": [
+      {
+        "source": "avw-handcrafted",
+        "qnum": 2
+      }
+    ],
+    "correct_short": "ipconfig /renew",
+    "is_sample": true,
+    "exam": "core2"
+  },
+  {
+    "id": "avw-c2-003",
+    "obj": "1.5",
+    "qtype": "Multiple Choice",
+    "question": "A drive is reporting file-system errors. Which command checks the disk and attempts to repair those errors?",
+    "explanation": "OBJ 1.5: chkdsk /f fixes file-system errors. sfc /scannow repairs protected system files, which is a different problem.",
+    "options": [
+      "sfc /scannow",
+      "chkdsk /f",
+      "diskpart",
+      "format"
+    ],
+    "sources": [
+      {
+        "source": "avw-handcrafted",
+        "qnum": 3
+      }
+    ],
+    "correct_short": "chkdsk /f",
+    "is_sample": true,
+    "exam": "core2"
+  },
+  {
+    "id": "avw-c2-004",
+    "obj": "1.3",
+    "qtype": "Multiple Choice",
+    "question": "Which built-in Windows tool lets you disable startup programs and view CPU and memory usage per process?",
+    "explanation": "OBJ 1.3: Task Manager manages startup items on its Startup tab and shows per-process resource use.",
+    "options": [
+      "Task Manager",
+      "Event Viewer",
+      "Performance Monitor",
+      "Disk Management"
+    ],
+    "sources": [
+      {
+        "source": "avw-handcrafted",
+        "qnum": 4
+      }
+    ],
+    "correct_short": "Task Manager",
+    "is_sample": true,
+    "exam": "core2"
+  },
+  {
+    "id": "avw-c2-005",
+    "obj": "1.3",
+    "qtype": "Multiple Choice",
+    "question": "A technician installs a new internal drive and needs to create a partition and format it in Windows. Which tool should be used?",
+    "explanation": "OBJ 1.3: Disk Management initializes, partitions, and formats drives. Device Manager handles drivers, not partitions.",
+    "options": [
+      "Device Manager",
+      "Disk Management",
+      "Disk Cleanup",
+      "Defragment and Optimize Drives"
+    ],
+    "sources": [
+      {
+        "source": "avw-handcrafted",
+        "qnum": 5
+      }
+    ],
+    "correct_short": "Disk Management",
+    "is_sample": true,
+    "exam": "core2"
+  },
+  {
+    "id": "avw-c2-006",
+    "obj": "1.6",
+    "qtype": "Multiple Choice",
+    "question": "A workstation must be assigned a static IPv4 address. Where in Windows is this configured?",
+    "explanation": "OBJ 1.6: Static addressing is set in the adapter's IPv4 (TCP/IPv4) properties. The firewall and Device Manager do not assign IP addresses.",
+    "options": [
+      "The network adapter's IPv4 properties",
+      "Windows Defender Firewall",
+      "Device Manager",
+      "Programs and Features"
+    ],
+    "sources": [
+      {
+        "source": "avw-handcrafted",
+        "qnum": 6
+      }
+    ],
+    "correct_short": "The network adapter's IPv4 properties",
+    "is_sample": true,
+    "exam": "core2"
+  },
+  {
+    "id": "avw-c2-007",
+    "obj": "2.6",
+    "qtype": "Multiple Choice",
+    "question": "On a standalone Windows Pro workstation, which tool enforces a minimum password length and account lockout policy?",
+    "explanation": "OBJ 2.6: Local Security Policy sets password and lockout policies on a machine that is not joined to a domain.",
+    "options": [
+      "Local Security Policy (secpol.msc)",
+      "Device Manager",
+      "Task Scheduler",
+      "Disk Management"
+    ],
+    "sources": [
+      {
+        "source": "avw-handcrafted",
+        "qnum": 7
+      }
+    ],
+    "correct_short": "Local Security Policy (secpol.msc)",
+    "is_sample": true,
+    "exam": "core2"
+  },
+  {
+    "id": "avw-c2-008",
+    "obj": "2.6",
+    "qtype": "Multiple Choice",
+    "question": "A standard user occasionally needs to run one application that requires administrator rights. Following least privilege, what is the best approach?",
+    "explanation": "OBJ 2.6: Least privilege means elevating only when required, not granting permanent administrator membership.",
+    "options": [
+      "Add the user to the local Administrators group",
+      "Use Run as administrator with an admin credential when needed",
+      "Disable User Account Control",
+      "Grant Everyone Full Control"
+    ],
+    "sources": [
+      {
+        "source": "avw-handcrafted",
+        "qnum": 8
+      }
+    ],
+    "correct_short": "Use Run as administrator with an admin credential when needed",
+    "is_sample": true,
+    "exam": "core2"
+  },
+  {
+    "id": "avw-c2-009",
+    "obj": "2.5",
+    "qtype": "Multiple Choice",
+    "question": "What is the primary purpose of User Account Control (UAC) in Windows?",
+    "explanation": "OBJ 2.5: UAC reduces risk by requiring approval before an action runs with elevated privileges.",
+    "options": [
+      "It encrypts the system drive",
+      "It prompts for consent or credentials before changes that require elevation",
+      "It blocks inbound network traffic",
+      "It schedules automatic backups"
+    ],
+    "sources": [
+      {
+        "source": "avw-handcrafted",
+        "qnum": 9
+      }
+    ],
+    "correct_short": "It prompts for consent or credentials before changes that require elevation",
+    "is_sample": true,
+    "exam": "core2"
+  },
+  {
+    "id": "avw-c2-010",
+    "obj": "2.3",
+    "qtype": "Multiple Choice",
+    "question": "To reduce the risk posed by an unattended workstation in an open office, which setting is the best choice?",
+    "explanation": "OBJ 2.3: An automatic screen lock prevents others from using a session the user has stepped away from.",
+    "options": [
+      "A screen lock with a short timeout that requires re-authentication",
+      "Disabling the firewall",
+      "Sharing the C: drive with Everyone",
+      "Turning off automatic updates"
+    ],
+    "sources": [
+      {
+        "source": "avw-handcrafted",
+        "qnum": 10
+      }
+    ],
+    "correct_short": "A screen lock with a short timeout that requires re-authentication",
+    "is_sample": true,
+    "exam": "core2"
+  },
+  {
+    "id": "avw-c2-011",
+    "obj": "2.6",
+    "qtype": "Multiple Choice",
+    "question": "A user needs to encrypt a single folder of sensitive files on an NTFS volume rather than the entire drive. Which Windows feature does this?",
+    "explanation": "OBJ 2.6: EFS encrypts individual files and folders on NTFS. BitLocker encrypts whole volumes.",
+    "options": [
+      "BitLocker",
+      "EFS (Encrypting File System)",
+      "Windows Defender",
+      "Storage Spaces"
+    ],
+    "sources": [
+      {
+        "source": "avw-handcrafted",
+        "qnum": 11
+      }
+    ],
+    "correct_short": "EFS (Encrypting File System)",
+    "is_sample": true,
+    "exam": "core2"
+  },
+  {
+    "id": "avw-c2-012",
+    "obj": "2.9",
+    "qtype": "Multiple Choice",
+    "question": "After installing a new SOHO router, what is the first security step a technician should take?",
+    "explanation": "OBJ 2.9: Default credentials are publicly known, so changing them first prevents trivial takeover of the device.",
+    "options": [
+      "Enable WPS",
+      "Change the default administrator username and password",
+      "Open all ports",
+      "Disable the built-in firewall"
+    ],
+    "sources": [
+      {
+        "source": "avw-handcrafted",
+        "qnum": 12
+      }
+    ],
+    "correct_short": "Change the default administrator username and password",
+    "is_sample": true,
+    "exam": "core2"
+  },
+  {
+    "id": "avw-c2-013",
+    "obj": "2.9",
+    "qtype": "Multiple Choice",
+    "question": "Which SOHO router feature is commonly disabled because it is vulnerable to brute-force PIN attacks?",
+    "explanation": "OBJ 2.9: The WPS PIN can be brute-forced, so it is best disabled in favor of a strong passphrase.",
+    "options": [
+      "WPA3",
+      "WPS (Wi-Fi Protected Setup)",
+      "DHCP",
+      "NAT"
+    ],
+    "sources": [
+      {
+        "source": "avw-handcrafted",
+        "qnum": 13
+      }
+    ],
+    "correct_short": "WPS (Wi-Fi Protected Setup)",
+    "is_sample": true,
+    "exam": "core2"
+  },
+  {
+    "id": "avw-c2-014",
+    "obj": "2.9",
+    "qtype": "Multiple Choice",
+    "question": "To protect a SOHO router against newly discovered vulnerabilities, what should be kept up to date?",
+    "explanation": "OBJ 2.9: Firmware updates patch known security flaws in the router itself.",
+    "options": [
+      "The firmware",
+      "The SSID name",
+      "The DHCP lease time",
+      "The administrator's desktop wallpaper"
+    ],
+    "sources": [
+      {
+        "source": "avw-handcrafted",
+        "qnum": 14
+      }
+    ],
+    "correct_short": "The firmware",
+    "is_sample": true,
+    "exam": "core2"
+  },
+  {
+    "id": "avw-c2-015",
+    "obj": "2.9",
+    "qtype": "Multiple Answer",
+    "question": "Select TWO steps that improve the security of a SOHO wireless network.",
+    "explanation": "OBJ 2.9: WPA3 is the strongest current encryption, and a guest network isolates visitor devices from the main LAN. WEP is broken and disabling the firewall reduces security.",
+    "options": [
+      "Use WPA3 encryption",
+      "Broadcast the administrator password",
+      "Enable a separate guest network for visitors",
+      "Disable the firewall",
+      "Switch the encryption to WEP"
+    ],
+    "sources": [
+      {
+        "source": "avw-handcrafted",
+        "qnum": 15
+      }
+    ],
+    "correct_picks": [
+      "Use WPA3 encryption",
+      "Enable a separate guest network for visitors"
+    ],
+    "is_sample": true,
+    "exam": "core2"
+  },
+  {
+    "id": "avw-c2-016",
+    "obj": "3.4",
+    "qtype": "Multiple Choice",
+    "question": "A user reports their phone's battery drains quickly and the device runs hot. What is the best first troubleshooting step?",
+    "explanation": "OBJ 3.4: Battery usage data often points to a misbehaving app, which is far less invasive than a reset or hardware swap.",
+    "options": [
+      "Replace the battery",
+      "Check battery usage settings for an app consuming excessive resources",
+      "Perform a factory reset",
+      "Replace the phone"
+    ],
+    "sources": [
+      {
+        "source": "avw-handcrafted",
+        "qnum": 16
+      }
+    ],
+    "correct_short": "Check battery usage settings for an app consuming excessive resources",
+    "is_sample": true,
+    "exam": "core2"
+  },
+  {
+    "id": "avw-c2-017",
+    "obj": "3.5",
+    "qtype": "Multiple Choice",
+    "question": "A user's phone shows high data usage, unfamiliar apps, and frequent pop-ups. What is the most likely cause?",
+    "explanation": "OBJ 3.5: Unexpected apps, pop-ups, and data usage are classic signs of mobile malware, often from apps installed outside the official store.",
+    "options": [
+      "A failing display",
+      "Malware from a sideloaded app",
+      "Low internal storage",
+      "A worn-out battery"
+    ],
+    "sources": [
+      {
+        "source": "avw-handcrafted",
+        "qnum": 17
+      }
+    ],
+    "correct_short": "Malware from a sideloaded app",
+    "is_sample": true,
+    "exam": "core2"
+  },
+  {
+    "id": "avw-c2-018",
+    "obj": "3.4",
+    "qtype": "Multiple Choice",
+    "question": "A phone will not reconnect to a previously working Bluetooth speaker. After toggling Bluetooth off and on with no change, what is the next best step?",
+    "explanation": "OBJ 3.4: Removing the stale pairing and re-pairing resolves most Bluetooth connection problems without drastic measures.",
+    "options": [
+      "Factory reset the phone",
+      "Forget the device and pair it again",
+      "Replace the speaker",
+      "Reinstall the mobile OS"
+    ],
+    "sources": [
+      {
+        "source": "avw-handcrafted",
+        "qnum": 18
+      }
+    ],
+    "correct_short": "Forget the device and pair it again",
+    "is_sample": true,
+    "exam": "core2"
+  },
+  {
+    "id": "avw-c2-019",
+    "obj": "2.6",
+    "qtype": "Multiple Choice",
+    "question": "An organization wants to enforce passcodes and enable remote wipe on employee mobile devices. Which solution provides this?",
+    "explanation": "OBJ 2.6: MDM centrally enforces device policies such as passcodes, encryption, and remote wipe.",
+    "options": [
+      "VPN",
+      "MDM (Mobile Device Management)",
+      "NAT",
+      "RDP"
+    ],
+    "sources": [
+      {
+        "source": "avw-handcrafted",
+        "qnum": 19
+      }
+    ],
+    "correct_short": "MDM (Mobile Device Management)",
+    "is_sample": true,
+    "exam": "core2"
+  },
+  {
+    "id": "avw-c2-020",
+    "obj": "4.1",
+    "qtype": "Multiple Choice",
+    "question": "After resolving a recurring issue, where should a technician record the solution so other staff can reuse it?",
+    "explanation": "OBJ 4.1: A knowledge base preserves solutions for the whole team and speeds future resolution.",
+    "options": [
+      "A personal sticky note",
+      "The knowledge base",
+      "A private email folder",
+      "The recycle bin"
+    ],
+    "sources": [
+      {
+        "source": "avw-handcrafted",
+        "qnum": 20
+      }
+    ],
+    "correct_short": "The knowledge base",
+    "is_sample": true,
+    "exam": "core2"
+  },
+  {
+    "id": "avw-c2-021",
+    "obj": "4.2",
+    "qtype": "Multiple Choice",
+    "question": "In a formal change-management process, which group typically reviews and approves a proposed change before it is implemented?",
+    "explanation": "OBJ 4.2: The CAB evaluates risk and approves or rejects changes before implementation.",
+    "options": [
+      "The end user",
+      "The change advisory board (CAB)",
+      "Any available technician",
+      "The vendor's sales team"
+    ],
+    "sources": [
+      {
+        "source": "avw-handcrafted",
+        "qnum": 21
+      }
+    ],
+    "correct_short": "The change advisory board (CAB)",
+    "is_sample": true,
+    "exam": "core2"
+  },
+  {
+    "id": "avw-c2-022",
+    "obj": "4.3",
+    "qtype": "Multiple Choice",
+    "question": "Which backup strategy keeps three copies of data on two different media types with one copy stored offsite?",
+    "explanation": "OBJ 4.3: The 3-2-1 rule (three copies, two media types, one offsite) protects against most failure and disaster scenarios.",
+    "options": [
+      "RAID 0",
+      "The 3-2-1 rule",
+      "Incremental-only backups",
+      "Differential-only backups"
+    ],
+    "sources": [
+      {
+        "source": "avw-handcrafted",
+        "qnum": 22
+      }
+    ],
+    "correct_short": "The 3-2-1 rule",
+    "is_sample": true,
+    "exam": "core2"
+  },
+  {
+    "id": "avw-c2-023",
+    "obj": "4.7",
+    "qtype": "Multiple Choice",
+    "question": "A frustrated customer is venting about a recurring problem. What is the most professional response?",
+    "explanation": "OBJ 4.7: Active listening and avoiding argument de-escalate the situation and help identify the real issue.",
+    "options": [
+      "Interrupt to correct them",
+      "Listen actively, avoid arguing, and clarify the issue",
+      "Tell them the problem is their fault",
+      "Place them on hold until they calm down"
+    ],
+    "sources": [
+      {
+        "source": "avw-handcrafted",
+        "qnum": 23
+      }
+    ],
+    "correct_short": "Listen actively, avoid arguing, and clarify the issue",
+    "is_sample": true,
+    "exam": "core2"
+  },
+  {
+    "id": "avw-c2-024",
+    "obj": "4.6",
+    "qtype": "Multiple Choice",
+    "question": "Which of the following is considered personally identifiable information (PII)?",
+    "explanation": "OBJ 4.6: A Social Security number can identify a specific individual, so it is PII and must be protected.",
+    "options": [
+      "A public product brochure",
+      "A customer's Social Security number",
+      "A company logo",
+      "A published press release"
+    ],
+    "sources": [
+      {
+        "source": "avw-handcrafted",
+        "qnum": 24
+      }
+    ],
+    "correct_short": "A customer's Social Security number",
+    "is_sample": true,
+    "exam": "core2"
+  },
+  {
+    "id": "avw-c2-025",
+    "obj": "4.4",
+    "qtype": "Multiple Choice",
+    "question": "When working inside a desktop computer, which practice prevents electrostatic discharge from damaging components?",
+    "explanation": "OBJ 4.4: A grounded wrist strap safely equalizes static charge. Carpet and very low humidity increase ESD risk.",
+    "options": [
+      "Wearing an anti-static wrist strap connected to ground",
+      "Standing on carpet while working",
+      "Holding expansion cards by their gold contacts",
+      "Lowering room humidity to zero percent"
+    ],
+    "sources": [
+      {
+        "source": "avw-handcrafted",
+        "qnum": 25
+      }
+    ],
+    "correct_short": "Wearing an anti-static wrist strap connected to ground",
+    "is_sample": true,
+    "exam": "core2"
+  },
+  {
+    "id": "c2-acr-01-f",
+    "obj": "4.6",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym PII stand for?",
+    "options": [
+      "Acceptable Use Policy",
+      "Personally Identifiable Information",
+      "Non-Disclosure Agreement",
+      "Payment Card Industry Data Security Standard"
+    ],
+    "correct_short": "Personally Identifiable Information",
+    "wrong_pick": "Non-Disclosure Agreement",
+    "explanation": "OBJ 4.6 (Operational Procedures): PII stands for Personally Identifiable Information. Data identifying individuals.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "PII",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-01-r",
+    "obj": "4.6",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Data identifying individuals?",
+    "options": [
+      "GFS",
+      "MSDS",
+      "PII",
+      "SSH"
+    ],
+    "correct_short": "PII",
+    "wrong_pick": "MSDS",
+    "explanation": "OBJ 4.6 (Operational Procedures): Data identifying individuals. PII stands for Personally Identifiable Information.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "PII",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-02-f",
+    "obj": "2.3",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym TKIP stand for?",
+    "options": [
+      "Multifactor Authentication",
+      "Business Email Compromise",
+      "Temporal Key Integrity Protocol",
+      "Man-in-the-Middle"
+    ],
+    "correct_short": "Temporal Key Integrity Protocol",
+    "wrong_pick": "Multifactor Authentication",
+    "explanation": "OBJ 2.3 (Security): TKIP stands for Temporal Key Integrity Protocol. Older wireless encryption standard.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "TKIP",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-02-r",
+    "obj": "2.3",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Older wireless encryption standard?",
+    "options": [
+      "RSR",
+      "TKIP",
+      "EDR",
+      "BYOD"
+    ],
+    "correct_short": "TKIP",
+    "wrong_pick": "EDR",
+    "explanation": "OBJ 2.3 (Security): Older wireless encryption standard. TKIP stands for Temporal Key Integrity Protocol.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "TKIP",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-03-f",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym LDAP stand for?",
+    "options": [
+      "Bring Your Own Device",
+      "Encrypting File System",
+      "Lightweight Directory Access Protocol",
+      "Service Set Identifier"
+    ],
+    "correct_short": "Lightweight Directory Access Protocol",
+    "wrong_pick": "Encrypting File System",
+    "explanation": "OBJ 2.1 (Security): LDAP stands for Lightweight Directory Access Protocol. Access protocol for directory services.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "LDAP",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-03-r",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Access protocol for directory services?",
+    "options": [
+      "SAML",
+      "XSS",
+      "LDAP",
+      "EFS"
+    ],
+    "correct_short": "LDAP",
+    "wrong_pick": "SAML",
+    "explanation": "OBJ 2.1 (Security): Access protocol for directory services. LDAP stands for Lightweight Directory Access Protocol.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "LDAP",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-04-f",
+    "obj": "1.11",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym PaaS stand for?",
+    "options": [
+      "Storage Area Network",
+      "Platform as a Service",
+      "Microsoft Management Console",
+      "File Transfer Protocol"
+    ],
+    "correct_short": "Platform as a Service",
+    "wrong_pick": "Storage Area Network",
+    "explanation": "OBJ 1.11 (Operating Systems): PaaS stands for Platform as a Service. Cloud-hosted development platform.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "PaaS",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-04-r",
+    "obj": "1.11",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Cloud-hosted development platform?",
+    "options": [
+      "UEFI",
+      "FTP",
+      "SAN",
+      "PaaS"
+    ],
+    "correct_short": "PaaS",
+    "wrong_pick": "FTP",
+    "explanation": "OBJ 1.11 (Operating Systems): Cloud-hosted development platform. PaaS stands for Platform as a Service.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "PaaS",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-05-f",
+    "obj": "2.5",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym XSS stand for?",
+    "options": [
+      "Wireless Access Point",
+      "Cross-site Scripting",
+      "Access Control List",
+      "DomainKeys Identified Mail"
+    ],
+    "correct_short": "Cross-site Scripting",
+    "wrong_pick": "Wireless Access Point",
+    "explanation": "OBJ 2.5 (Security): XSS stands for Cross-site Scripting. Script injection web attack.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "XSS",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-05-r",
+    "obj": "2.5",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Script injection web attack?",
+    "options": [
+      "DDoS",
+      "MITM",
+      "XSS",
+      "AES"
+    ],
+    "correct_short": "XSS",
+    "wrong_pick": "MITM",
+    "explanation": "OBJ 2.5 (Security): Script injection web attack. XSS stands for Cross-site Scripting.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "XSS",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-06-f",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym IDS stand for?",
+    "options": [
+      "Business Email Compromise",
+      "Cross-site Scripting",
+      "Trusted Platform Module",
+      "Intrusion Detection System"
+    ],
+    "correct_short": "Intrusion Detection System",
+    "wrong_pick": "Business Email Compromise",
+    "explanation": "OBJ 2.1 (Security): IDS stands for Intrusion Detection System. Detects suspicious activity.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "IDS",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-06-r",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Detects suspicious activity?",
+    "options": [
+      "RADIUS",
+      "IDS",
+      "HSM",
+      "MDR"
+    ],
+    "correct_short": "IDS",
+    "wrong_pick": "RADIUS",
+    "explanation": "OBJ 2.1 (Security): Detects suspicious activity. IDS stands for Intrusion Detection System.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "IDS",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-07-f",
+    "obj": "4.6",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym DRM stand for?",
+    "options": [
+      "Redundant Array of Independent Disks",
+      "Digital Rights Management",
+      "Non-Disclosure Agreement",
+      "Grandfather-Father-Son"
+    ],
+    "correct_short": "Digital Rights Management",
+    "wrong_pick": "Grandfather-Father-Son",
+    "explanation": "OBJ 4.6 (Operational Procedures): DRM stands for Digital Rights Management. Restricts digital media usage/copying.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "DRM",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-07-r",
+    "obj": "4.6",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Restricts digital media usage/copying?",
+    "options": [
+      "WinRM",
+      "GFS",
+      "PCI DSS",
+      "DRM"
+    ],
+    "correct_short": "DRM",
+    "wrong_pick": "GFS",
+    "explanation": "OBJ 4.6 (Operational Procedures): Restricts digital media usage/copying. DRM stands for Digital Rights Management.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "DRM",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-08-f",
+    "obj": "2.2",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym UAC stand for?",
+    "options": [
+      "User Account Control",
+      "Authentication, Authorization, and Accounting",
+      "Encrypting File System",
+      "Multifactor Authentication"
+    ],
+    "correct_short": "User Account Control",
+    "wrong_pick": "Encrypting File System",
+    "explanation": "OBJ 2.2 (Security): UAC stands for User Account Control. Windows permission elevation system.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "UAC",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-08-r",
+    "obj": "2.2",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Windows permission elevation system?",
+    "options": [
+      "MFA",
+      "SSL",
+      "UAC",
+      "SSO"
+    ],
+    "correct_short": "UAC",
+    "wrong_pick": "MFA",
+    "explanation": "OBJ 2.2 (Security): Windows permission elevation system. UAC stands for User Account Control.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "UAC",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-09-f",
+    "obj": "1.7",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym SAN stand for?",
+    "options": [
+      "Master Boot Record",
+      "New Technology File System",
+      "Unified Extensible Firmware Interface",
+      "Storage Area Network"
+    ],
+    "correct_short": "Storage Area Network",
+    "wrong_pick": "New Technology File System",
+    "explanation": "OBJ 1.7 (Operating Systems): SAN stands for Storage Area Network. High-speed storage network.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "SAN",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-09-r",
+    "obj": "1.7",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: High-speed storage network?",
+    "options": [
+      "UEFI",
+      "PaaS",
+      "SAN",
+      "MBR"
+    ],
+    "correct_short": "SAN",
+    "wrong_pick": "MBR",
+    "explanation": "OBJ 1.7 (Operating Systems): High-speed storage network. SAN stands for Storage Area Network.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "SAN",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-10-f",
+    "obj": "4.5",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym UPS stand for?",
+    "options": [
+      "Secure Shell",
+      "Personally Identifiable Information",
+      "Uninterruptible Power Supply",
+      "Virtual Private Network"
+    ],
+    "correct_short": "Uninterruptible Power Supply",
+    "wrong_pick": "Secure Shell",
+    "explanation": "OBJ 4.5 (Operational Procedures): UPS stands for Uninterruptible Power Supply. Backup electrical power device.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "UPS",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-10-r",
+    "obj": "4.5",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Backup electrical power device?",
+    "options": [
+      "RDP",
+      "UPS",
+      "WinRM",
+      "NDA"
+    ],
+    "correct_short": "UPS",
+    "wrong_pick": "NDA",
+    "explanation": "OBJ 4.5 (Operational Procedures): Backup electrical power device. UPS stands for Uninterruptible Power Supply.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "UPS",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-11-f",
+    "obj": "1.2",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym MBR stand for?",
+    "options": [
+      "Microsoft Management Console",
+      "Master Boot Record",
+      "Unified Extensible Firmware Interface",
+      "New Technology File System"
+    ],
+    "correct_short": "Master Boot Record",
+    "wrong_pick": "Unified Extensible Firmware Interface",
+    "explanation": "OBJ 1.2 (Operating Systems): MBR stands for Master Boot Record. Legacy boot partition structure.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "MBR",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-11-r",
+    "obj": "1.2",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Legacy boot partition structure?",
+    "options": [
+      "SAN",
+      "FTP",
+      "MBR",
+      "UEFI"
+    ],
+    "correct_short": "MBR",
+    "wrong_pick": "UEFI",
+    "explanation": "OBJ 1.2 (Operating Systems): Legacy boot partition structure. MBR stands for Master Boot Record.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "MBR",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-12-f",
+    "obj": "1.7",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym FTP stand for?",
+    "options": [
+      "Storage Area Network",
+      "File Transfer Protocol",
+      "Unified Extensible Firmware Interface",
+      "New Technology File System"
+    ],
+    "correct_short": "File Transfer Protocol",
+    "wrong_pick": "Storage Area Network",
+    "explanation": "OBJ 1.7 (Operating Systems): FTP stands for File Transfer Protocol. Legacy file transfer method.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "FTP",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-12-r",
+    "obj": "1.7",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Legacy file transfer method?",
+    "options": [
+      "NTFS",
+      "MMC",
+      "SAN",
+      "FTP"
+    ],
+    "correct_short": "FTP",
+    "wrong_pick": "NTFS",
+    "explanation": "OBJ 1.7 (Operating Systems): Legacy file transfer method. FTP stands for File Transfer Protocol.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "FTP",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-13-f",
+    "obj": "2.8",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym BYOD stand for?",
+    "options": [
+      "Potentially Unwanted Program",
+      "Single Sign-on",
+      "Hardware Security Module",
+      "Bring Your Own Device"
+    ],
+    "correct_short": "Bring Your Own Device",
+    "wrong_pick": "Hardware Security Module",
+    "explanation": "OBJ 2.8 (Security): BYOD stands for Bring Your Own Device. Employees use personal devices for work.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "BYOD",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-13-r",
+    "obj": "2.8",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Employees use personal devices for work?",
+    "options": [
+      "TLS",
+      "WAP",
+      "BYOD",
+      "EDR"
+    ],
+    "correct_short": "BYOD",
+    "wrong_pick": "TLS",
+    "explanation": "OBJ 2.8 (Security): Employees use personal devices for work. BYOD stands for Bring Your Own Device.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "BYOD",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-14-f",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym IAM stand for?",
+    "options": [
+      "Identity Access Management",
+      "Distributed Denial of Service",
+      "Single Sign-on",
+      "Temporal Key Integrity Protocol"
+    ],
+    "correct_short": "Identity Access Management",
+    "wrong_pick": "Distributed Denial of Service",
+    "explanation": "OBJ 2.1 (Security): IAM stands for Identity Access Management. Framework managing identities and permissions.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "IAM",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-14-r",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Framework managing identities and permissions?",
+    "options": [
+      "MFA",
+      "PUP",
+      "DLP",
+      "IAM"
+    ],
+    "correct_short": "IAM",
+    "wrong_pick": "PUP",
+    "explanation": "OBJ 2.1 (Security): Framework managing identities and permissions. IAM stands for Identity Access Management.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "IAM",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-15-f",
+    "obj": "4.9",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym VPN stand for?",
+    "options": [
+      "Remote Monitoring and Management",
+      "Acceptable Use Policy",
+      "Electrostatic Discharge",
+      "Virtual Private Network"
+    ],
+    "correct_short": "Virtual Private Network",
+    "wrong_pick": "Remote Monitoring and Management",
+    "explanation": "OBJ 4.9 (Operational Procedures): VPN stands for Virtual Private Network. Encrypted remote connection tunnel.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "VPN",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-15-r",
+    "obj": "4.9",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Encrypted remote connection tunnel?",
+    "options": [
+      "SLA",
+      "RDP",
+      "HIPAA",
+      "VPN"
+    ],
+    "correct_short": "VPN",
+    "wrong_pick": "HIPAA",
+    "explanation": "OBJ 4.9 (Operational Procedures): Encrypted remote connection tunnel. VPN stands for Virtual Private Network.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "VPN",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-16-f",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym UTM stand for?",
+    "options": [
+      "Wi-Fi Protected Access",
+      "Potentially Unwanted Program",
+      "Unified Threat Management",
+      "Secure Sockets Layer"
+    ],
+    "correct_short": "Unified Threat Management",
+    "wrong_pick": "Wi-Fi Protected Access",
+    "explanation": "OBJ 2.1 (Security): UTM stands for Unified Threat Management. Integrated network security system.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "UTM",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-16-r",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Integrated network security system?",
+    "options": [
+      "BYOD",
+      "UTM",
+      "UAC",
+      "WPA"
+    ],
+    "correct_short": "UTM",
+    "wrong_pick": "UAC",
+    "explanation": "OBJ 2.1 (Security): Integrated network security system. UTM stands for Unified Threat Management.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "UTM",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-17-f",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym SAML stand for?",
+    "options": [
+      "Security Assertions Markup Language",
+      "Endpoint Detection and Response",
+      "Wi-Fi Protected Access",
+      "Single Sign-on"
+    ],
+    "correct_short": "Security Assertions Markup Language",
+    "wrong_pick": "Wi-Fi Protected Access",
+    "explanation": "OBJ 2.1 (Security): SAML stands for Security Assertions Markup Language. Single sign-on authentication standard.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "SAML",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-17-r",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Single sign-on authentication standard?",
+    "options": [
+      "PAM",
+      "DMARC",
+      "PUP",
+      "SAML"
+    ],
+    "correct_short": "SAML",
+    "wrong_pick": "PAM",
+    "explanation": "OBJ 2.1 (Security): Single sign-on authentication standard. SAML stands for Security Assertions Markup Language.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "SAML",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-18-f",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym MFA stand for?",
+    "options": [
+      "Intrusion Detection System",
+      "Trusted Platform Module",
+      "Remote Authentication Dial-in User Server",
+      "Multifactor Authentication"
+    ],
+    "correct_short": "Multifactor Authentication",
+    "wrong_pick": "Remote Authentication Dial-in User Server",
+    "explanation": "OBJ 2.1 (Security): MFA stands for Multifactor Authentication. Multiple verification methods required.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "MFA",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-18-r",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Multiple verification methods required?",
+    "options": [
+      "BEC",
+      "DKIM",
+      "MFA",
+      "IDS"
+    ],
+    "correct_short": "MFA",
+    "wrong_pick": "BEC",
+    "explanation": "OBJ 2.1 (Security): Multiple verification methods required. MFA stands for Multifactor Authentication.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "MFA",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-19-f",
+    "obj": "2.5",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym BEC stand for?",
+    "options": [
+      "Business Email Compromise",
+      "Distributed Denial of Service",
+      "Privileged Access Management",
+      "Hardware Security Module"
+    ],
+    "correct_short": "Business Email Compromise",
+    "wrong_pick": "Hardware Security Module",
+    "explanation": "OBJ 2.5 (Security): BEC stands for Business Email Compromise. Fraud attack impersonating trusted contacts.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "BEC",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-19-r",
+    "obj": "2.5",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Fraud attack impersonating trusted contacts?",
+    "options": [
+      "EFS",
+      "PAM",
+      "BEC",
+      "TKIP"
+    ],
+    "correct_short": "BEC",
+    "wrong_pick": "PAM",
+    "explanation": "OBJ 2.5 (Security): Fraud attack impersonating trusted contacts. BEC stands for Business Email Compromise.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "BEC",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-20-f",
+    "obj": "2.11",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym SSL stand for?",
+    "options": [
+      "Authentication, Authorization, and Accounting",
+      "Secure Sockets Layer",
+      "Potentially Unwanted Program",
+      "Remote Authentication Dial-in User Server"
+    ],
+    "correct_short": "Secure Sockets Layer",
+    "wrong_pick": "Potentially Unwanted Program",
+    "explanation": "OBJ 2.11 (Security): SSL stands for Secure Sockets Layer. Older encrypted communications protocol.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "SSL",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-20-r",
+    "obj": "2.11",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Older encrypted communications protocol?",
+    "options": [
+      "IAM",
+      "DKIM",
+      "SSL",
+      "SSO"
+    ],
+    "correct_short": "SSL",
+    "wrong_pick": "SSO",
+    "explanation": "OBJ 2.11 (Security): Older encrypted communications protocol. SSL stands for Secure Sockets Layer.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "SSL",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-21-f",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym AES stand for?",
+    "options": [
+      "Sender Policy Framework",
+      "Single Sign-on",
+      "Potentially Unwanted Program",
+      "Advanced Encryption Standard"
+    ],
+    "correct_short": "Advanced Encryption Standard",
+    "wrong_pick": "Single Sign-on",
+    "explanation": "OBJ 2.1 (Security): AES stands for Advanced Encryption Standard. Modern symmetric encryption algorithm.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "AES",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-21-r",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Modern symmetric encryption algorithm?",
+    "options": [
+      "SSL",
+      "RSR",
+      "PUP",
+      "AES"
+    ],
+    "correct_short": "AES",
+    "wrong_pick": "PUP",
+    "explanation": "OBJ 2.1 (Security): Modern symmetric encryption algorithm. AES stands for Advanced Encryption Standard.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "AES",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-22-f",
+    "obj": "1.4",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym NTFS stand for?",
+    "options": [
+      "Master Boot Record",
+      "Platform as a Service",
+      "New Technology File System",
+      "Microsoft Management Console"
+    ],
+    "correct_short": "New Technology File System",
+    "wrong_pick": "Platform as a Service",
+    "explanation": "OBJ 1.4 (Operating Systems): NTFS stands for New Technology File System. Modern Windows file system.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "NTFS",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-22-r",
+    "obj": "1.4",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Modern Windows file system?",
+    "options": [
+      "NTFS",
+      "MBR",
+      "PaaS",
+      "MMC"
+    ],
+    "correct_short": "NTFS",
+    "wrong_pick": "MMC",
+    "explanation": "OBJ 1.4 (Operating Systems): Modern Windows file system. NTFS stands for New Technology File System.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "NTFS",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-23-f",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym AAA stand for?",
+    "options": [
+      "Endpoint Detection and Response",
+      "Man-in-the-Middle",
+      "Authentication, Authorization, and Accounting",
+      "Multifactor Authentication"
+    ],
+    "correct_short": "Authentication, Authorization, and Accounting",
+    "wrong_pick": "Man-in-the-Middle",
+    "explanation": "OBJ 2.1 (Security): AAA stands for Authentication, Authorization, and Accounting. Security framework controlling and tracking access.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "AAA",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-23-r",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Security framework controlling and tracking access?",
+    "options": [
+      "AES",
+      "TPM",
+      "RADIUS",
+      "AAA"
+    ],
+    "correct_short": "AAA",
+    "wrong_pick": "AES",
+    "explanation": "OBJ 2.1 (Security): Security framework controlling and tracking access. AAA stands for Authentication, Authorization, and Accounting.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "AAA",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-24-f",
+    "obj": "4.1",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym SLA stand for?",
+    "options": [
+      "Redundant Array of Independent Disks",
+      "Virtual Private Network",
+      "Uninterruptible Power Supply",
+      "Service-level Agreement"
+    ],
+    "correct_short": "Service-level Agreement",
+    "wrong_pick": "Virtual Private Network",
+    "explanation": "OBJ 4.1 (Operational Procedures): SLA stands for Service-level Agreement. Contract defining service expectations.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "SLA",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-24-r",
+    "obj": "4.1",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Contract defining service expectations?",
+    "options": [
+      "MSDS",
+      "SLA",
+      "VPN",
+      "RDP"
+    ],
+    "correct_short": "SLA",
+    "wrong_pick": "VPN",
+    "explanation": "OBJ 4.1 (Operational Procedures): Contract defining service expectations. SLA stands for Service-level Agreement.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "SLA",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-25-f",
+    "obj": "2.11",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym TLS stand for?",
+    "options": [
+      "Wi-Fi Protected Access",
+      "Transport Layer Security",
+      "Domain-based Message Authentication, Reporting, and Conformance",
+      "Personal Identity Verification"
+    ],
+    "correct_short": "Transport Layer Security",
+    "wrong_pick": "Wi-Fi Protected Access",
+    "explanation": "OBJ 2.11 (Security): TLS stands for Transport Layer Security. Secure encrypted communications protocol.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "TLS",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-25-r",
+    "obj": "2.11",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Secure encrypted communications protocol?",
+    "options": [
+      "SSID",
+      "TLS",
+      "RSR",
+      "BEC"
+    ],
+    "correct_short": "TLS",
+    "wrong_pick": "BEC",
+    "explanation": "OBJ 2.11 (Security): Secure encrypted communications protocol. TLS stands for Transport Layer Security.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "TLS",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-26-f",
+    "obj": "4.3",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym GFS stand for?",
+    "options": [
+      "Redundant Array of Independent Disks",
+      "Electrostatic Discharge",
+      "Grandfather-Father-Son",
+      "Windows Remote Management"
+    ],
+    "correct_short": "Grandfather-Father-Son",
+    "wrong_pick": "Redundant Array of Independent Disks",
+    "explanation": "OBJ 4.3 (Operational Procedures): GFS stands for Grandfather-Father-Son. Rotating backup schedule method.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "GFS",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-26-r",
+    "obj": "4.3",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Rotating backup schedule method?",
+    "options": [
+      "HIPAA",
+      "ESD",
+      "RAID",
+      "GFS"
+    ],
+    "correct_short": "GFS",
+    "wrong_pick": "ESD",
+    "explanation": "OBJ 4.3 (Operational Procedures): Rotating backup schedule method. GFS stands for Grandfather-Father-Son.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "GFS",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-27-f",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym SSO stand for?",
+    "options": [
+      "Secure Sockets Layer",
+      "Sender Policy Framework",
+      "Lightweight Directory Access Protocol",
+      "Single Sign-on"
+    ],
+    "correct_short": "Single Sign-on",
+    "wrong_pick": "Sender Policy Framework",
+    "explanation": "OBJ 2.1 (Security): SSO stands for Single Sign-on. One login for multiple systems.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "SSO",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-27-r",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: One login for multiple systems?",
+    "options": [
+      "TLS",
+      "PAM",
+      "SSO",
+      "BYOD"
+    ],
+    "correct_short": "SSO",
+    "wrong_pick": "PAM",
+    "explanation": "OBJ 2.1 (Security): One login for multiple systems. SSO stands for Single Sign-on.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "SSO",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-28-f",
+    "obj": "4.6",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym EOL stand for?",
+    "options": [
+      "Grandfather-Father-Son",
+      "End-of-life",
+      "Material Safety Data Sheet",
+      "Service-level Agreement"
+    ],
+    "correct_short": "End-of-life",
+    "wrong_pick": "Material Safety Data Sheet",
+    "explanation": "OBJ 4.6 (Operational Procedures): EOL stands for End-of-life. Product support termination.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "EOL",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-28-r",
+    "obj": "4.6",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Product support termination?",
+    "options": [
+      "UPS",
+      "NDA",
+      "SLA",
+      "EOL"
+    ],
+    "correct_short": "EOL",
+    "wrong_pick": "NDA",
+    "explanation": "OBJ 4.6 (Operational Procedures): Product support termination. EOL stands for End-of-life.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "EOL",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-29-f",
+    "obj": "4.1",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym NDA stand for?",
+    "options": [
+      "Health Insurance Portability and Accountability Act",
+      "Uninterruptible Power Supply",
+      "Non-Disclosure Agreement",
+      "Windows Remote Management"
+    ],
+    "correct_short": "Non-Disclosure Agreement",
+    "wrong_pick": "Windows Remote Management",
+    "explanation": "OBJ 4.1 (Operational Procedures): NDA stands for Non-Disclosure Agreement. Confidentiality protection agreement.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "NDA",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-29-r",
+    "obj": "4.1",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Confidentiality protection agreement?",
+    "options": [
+      "NDA",
+      "RAID",
+      "PCI DSS",
+      "HIPAA"
+    ],
+    "correct_short": "NDA",
+    "wrong_pick": "RAID",
+    "explanation": "OBJ 4.1 (Operational Procedures): Confidentiality protection agreement. NDA stands for Non-Disclosure Agreement.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "NDA",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-30-f",
+    "obj": "4.1",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym AUP stand for?",
+    "options": [
+      "Acceptable Use Policy",
+      "Payment Card Industry Data Security Standard",
+      "Virtual Private Network",
+      "Windows Remote Management"
+    ],
+    "correct_short": "Acceptable Use Policy",
+    "wrong_pick": "Payment Card Industry Data Security Standard",
+    "explanation": "OBJ 4.1 (Operational Procedures): AUP stands for Acceptable Use Policy. Rules for using company technology resources.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "AUP",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-30-r",
+    "obj": "4.1",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Rules for using company technology resources?",
+    "options": [
+      "SSH",
+      "HIPAA",
+      "AUP",
+      "PII"
+    ],
+    "correct_short": "AUP",
+    "wrong_pick": "PII",
+    "explanation": "OBJ 4.1 (Operational Procedures): Rules for using company technology resources. AUP stands for Acceptable Use Policy.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "AUP",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-31-f",
+    "obj": "2.2",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym EFS stand for?",
+    "options": [
+      "Encrypting File System",
+      "Authentication, Authorization, and Accounting",
+      "Access Control List",
+      "Identity Access Management"
+    ],
+    "correct_short": "Encrypting File System",
+    "wrong_pick": "Authentication, Authorization, and Accounting",
+    "explanation": "OBJ 2.2 (Security): EFS stands for Encrypting File System. Windows file encryption feature.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "EFS",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-31-r",
+    "obj": "2.2",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Windows file encryption feature?",
+    "options": [
+      "MFA",
+      "DDoS",
+      "DLP",
+      "EFS"
+    ],
+    "correct_short": "EFS",
+    "wrong_pick": "DLP",
+    "explanation": "OBJ 2.2 (Security): Windows file encryption feature. EFS stands for Encrypting File System.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "EFS",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-32-f",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym PAM stand for?",
+    "options": [
+      "Privileged Access Management",
+      "Rapid Security Response",
+      "Distributed Denial of Service",
+      "One-time Password/Passcode"
+    ],
+    "correct_short": "Privileged Access Management",
+    "wrong_pick": "Rapid Security Response",
+    "explanation": "OBJ 2.1 (Security): PAM stands for Privileged Access Management. Controls high-level administrative access.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "PAM",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-32-r",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Controls high-level administrative access?",
+    "options": [
+      "PAM",
+      "OTP",
+      "TKIP",
+      "BYOD"
+    ],
+    "correct_short": "PAM",
+    "wrong_pick": "BYOD",
+    "explanation": "OBJ 2.1 (Security): Controls high-level administrative access. PAM stands for Privileged Access Management.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "PAM",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-33-f",
+    "obj": "4.4",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym ESD stand for?",
+    "options": [
+      "End-user License Agreement",
+      "Electrostatic Discharge",
+      "Material Safety Data Sheet",
+      "Non-Disclosure Agreement"
+    ],
+    "correct_short": "Electrostatic Discharge",
+    "wrong_pick": "End-user License Agreement",
+    "explanation": "OBJ 4.4 (Operational Procedures): ESD stands for Electrostatic Discharge. Static electricity damaging electronics.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "ESD",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-33-r",
+    "obj": "4.4",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Static electricity damaging electronics?",
+    "options": [
+      "ESD",
+      "RDP",
+      "VPN",
+      "RMM"
+    ],
+    "correct_short": "ESD",
+    "wrong_pick": "RDP",
+    "explanation": "OBJ 4.4 (Operational Procedures): Static electricity damaging electronics. ESD stands for Electrostatic Discharge.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "ESD",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-34-f",
+    "obj": "4.6",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym PCI DSS stand for?",
+    "options": [
+      "Windows Remote Management",
+      "Payment Card Industry Data Security Standard",
+      "Remote Desktop Protocol",
+      "Acceptable Use Policy"
+    ],
+    "correct_short": "Payment Card Industry Data Security Standard",
+    "wrong_pick": "Remote Desktop Protocol",
+    "explanation": "OBJ 4.6 (Operational Procedures): PCI DSS stands for Payment Card Industry Data Security Standard. Credit card security standard.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "PCI DSS",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-34-r",
+    "obj": "4.6",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Credit card security standard?",
+    "options": [
+      "EULA",
+      "SOP",
+      "PCI DSS",
+      "GFS"
+    ],
+    "correct_short": "PCI DSS",
+    "wrong_pick": "GFS",
+    "explanation": "OBJ 4.6 (Operational Procedures): Credit card security standard. PCI DSS stands for Payment Card Industry Data Security Standard.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "PCI DSS",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-35-f",
+    "obj": "2.3",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym RADIUS stand for?",
+    "options": [
+      "Remote Authentication Dial-in User Server",
+      "Intrusion Detection System",
+      "Unified Threat Management",
+      "Multifactor Authentication"
+    ],
+    "correct_short": "Remote Authentication Dial-in User Server",
+    "wrong_pick": "Intrusion Detection System",
+    "explanation": "OBJ 2.3 (Security): RADIUS stands for Remote Authentication Dial-in User Server. Centralized authentication protocol.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "RADIUS",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-35-r",
+    "obj": "2.3",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Centralized authentication protocol?",
+    "options": [
+      "RADIUS",
+      "SPF",
+      "XDR",
+      "BEC"
+    ],
+    "correct_short": "RADIUS",
+    "wrong_pick": "SPF",
+    "explanation": "OBJ 2.3 (Security): Centralized authentication protocol. RADIUS stands for Remote Authentication Dial-in User Server.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "RADIUS",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-36-f",
+    "obj": "2.8",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym MDM stand for?",
+    "options": [
+      "Mobile Device Management",
+      "Wireless Access Point",
+      "Personal Identity Verification",
+      "User Account Control"
+    ],
+    "correct_short": "Mobile Device Management",
+    "wrong_pick": "Personal Identity Verification",
+    "explanation": "OBJ 2.8 (Security): MDM stands for Mobile Device Management. Centralized management of mobile devices.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "MDM",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-36-r",
+    "obj": "2.8",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Centralized management of mobile devices?",
+    "options": [
+      "MFA",
+      "TLS",
+      "DMARC",
+      "MDM"
+    ],
+    "correct_short": "MDM",
+    "wrong_pick": "MFA",
+    "explanation": "OBJ 2.8 (Security): Centralized management of mobile devices. MDM stands for Mobile Device Management.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "MDM",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-37-f",
+    "obj": "2.5",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym MITM stand for?",
+    "options": [
+      "Sender Policy Framework",
+      "Man-in-the-Middle",
+      "Wi-Fi Protected Access",
+      "Privileged Access Management"
+    ],
+    "correct_short": "Man-in-the-Middle",
+    "wrong_pick": "Privileged Access Management",
+    "explanation": "OBJ 2.5 (Security): MITM stands for Man-in-the-Middle. Attack intercepting communications.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "MITM",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-37-r",
+    "obj": "2.5",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Attack intercepting communications?",
+    "options": [
+      "HSM",
+      "ACL",
+      "MITM",
+      "PIV"
+    ],
+    "correct_short": "MITM",
+    "wrong_pick": "PIV",
+    "explanation": "OBJ 2.5 (Security): Attack intercepting communications. MITM stands for Man-in-the-Middle.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "MITM",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-38-f",
+    "obj": "4.6",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym HIPAA stand for?",
+    "options": [
+      "Secure Shell",
+      "Health Insurance Portability and Accountability Act",
+      "Redundant Array of Independent Disks",
+      "Non-Disclosure Agreement"
+    ],
+    "correct_short": "Health Insurance Portability and Accountability Act",
+    "wrong_pick": "Secure Shell",
+    "explanation": "OBJ 4.6 (Operational Procedures): HIPAA stands for Health Insurance Portability and Accountability Act. US healthcare privacy law.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "HIPAA",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-38-r",
+    "obj": "4.6",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: US healthcare privacy law?",
+    "options": [
+      "WinRM",
+      "GFS",
+      "HIPAA",
+      "RDP"
+    ],
+    "correct_short": "HIPAA",
+    "wrong_pick": "WinRM",
+    "explanation": "OBJ 4.6 (Operational Procedures): US healthcare privacy law. HIPAA stands for Health Insurance Portability and Accountability Act.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "HIPAA",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-39-f",
+    "obj": "4.3",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym RAID stand for?",
+    "options": [
+      "Health Insurance Portability and Accountability Act",
+      "Redundant Array of Independent Disks",
+      "Digital Rights Management",
+      "Windows Remote Management"
+    ],
+    "correct_short": "Redundant Array of Independent Disks",
+    "wrong_pick": "Health Insurance Portability and Accountability Act",
+    "explanation": "OBJ 4.3 (Operational Procedures): RAID stands for Redundant Array of Independent Disks. Multi-drive storage redundancy/performance setup.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "RAID",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-39-r",
+    "obj": "4.3",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Multi-drive storage redundancy/performance setup?",
+    "options": [
+      "SLA",
+      "RAID",
+      "RMM",
+      "NDA"
+    ],
+    "correct_short": "RAID",
+    "wrong_pick": "RMM",
+    "explanation": "OBJ 4.3 (Operational Procedures): Multi-drive storage redundancy/performance setup. RAID stands for Redundant Array of Independent Disks.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "RAID",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-40-f",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym HSM stand for?",
+    "options": [
+      "One-time Password/Passcode",
+      "Hardware Security Module",
+      "Universal Plug and Play",
+      "Authentication, Authorization, and Accounting"
+    ],
+    "correct_short": "Hardware Security Module",
+    "wrong_pick": "One-time Password/Passcode",
+    "explanation": "OBJ 2.1 (Security): HSM stands for Hardware Security Module. Dedicated cryptographic security hardware.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "HSM",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-40-r",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Dedicated cryptographic security hardware?",
+    "options": [
+      "MFA",
+      "HSM",
+      "DMARC",
+      "WAP"
+    ],
+    "correct_short": "HSM",
+    "wrong_pick": "MFA",
+    "explanation": "OBJ 2.1 (Security): Dedicated cryptographic security hardware. HSM stands for Hardware Security Module.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "HSM",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-41-f",
+    "obj": "2.5",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym SPF stand for?",
+    "options": [
+      "Domain-based Message Authentication, Reporting, and Conformance",
+      "Sender Policy Framework",
+      "Authentication, Authorization, and Accounting",
+      "Mobile Device Management"
+    ],
+    "correct_short": "Sender Policy Framework",
+    "wrong_pick": "Mobile Device Management",
+    "explanation": "OBJ 2.5 (Security): SPF stands for Sender Policy Framework. Email anti-spoofing validation.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "SPF",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-41-r",
+    "obj": "2.5",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Email anti-spoofing validation?",
+    "options": [
+      "IAM",
+      "OTP",
+      "WAP",
+      "SPF"
+    ],
+    "correct_short": "SPF",
+    "wrong_pick": "OTP",
+    "explanation": "OBJ 2.5 (Security): Email anti-spoofing validation. SPF stands for Sender Policy Framework.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "SPF",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-42-f",
+    "obj": "2.5",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym DDoS stand for?",
+    "options": [
+      "Secure Sockets Layer",
+      "Distributed Denial of Service",
+      "Authentication, Authorization, and Accounting",
+      "Privileged Access Management"
+    ],
+    "correct_short": "Distributed Denial of Service",
+    "wrong_pick": "Privileged Access Management",
+    "explanation": "OBJ 2.5 (Security): DDoS stands for Distributed Denial of Service. Coordinated traffic flood attack.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "DDoS",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-42-r",
+    "obj": "2.5",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Coordinated traffic flood attack?",
+    "options": [
+      "DDoS",
+      "TPM",
+      "TLS",
+      "RADIUS"
+    ],
+    "correct_short": "DDoS",
+    "wrong_pick": "TPM",
+    "explanation": "OBJ 2.5 (Security): Coordinated traffic flood attack. DDoS stands for Distributed Denial of Service.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "DDoS",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-43-f",
+    "obj": "4.1",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym SOP stand for?",
+    "options": [
+      "Virtual Private Network",
+      "Windows Remote Management",
+      "Standard Operating Procedure",
+      "Payment Card Industry Data Security Standard"
+    ],
+    "correct_short": "Standard Operating Procedure",
+    "wrong_pick": "Virtual Private Network",
+    "explanation": "OBJ 4.1 (Operational Procedures): SOP stands for Standard Operating Procedure. Step-by-step operational instructions.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "SOP",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-43-r",
+    "obj": "4.1",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Step-by-step operational instructions?",
+    "options": [
+      "MSDS",
+      "EULA",
+      "SOP",
+      "SLA"
+    ],
+    "correct_short": "SOP",
+    "wrong_pick": "MSDS",
+    "explanation": "OBJ 4.1 (Operational Procedures): Step-by-step operational instructions. SOP stands for Standard Operating Procedure.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "SOP",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-44-f",
+    "obj": "2.2",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym TPM stand for?",
+    "options": [
+      "Time-based One-time Password",
+      "Trusted Platform Module",
+      "Data Loss Prevention",
+      "Advanced Encryption Standard"
+    ],
+    "correct_short": "Trusted Platform Module",
+    "wrong_pick": "Advanced Encryption Standard",
+    "explanation": "OBJ 2.2 (Security): TPM stands for Trusted Platform Module. Secure cryptographic hardware chip.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "TPM",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-44-r",
+    "obj": "2.2",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Secure cryptographic hardware chip?",
+    "options": [
+      "SSO",
+      "SSL",
+      "ACL",
+      "TPM"
+    ],
+    "correct_short": "TPM",
+    "wrong_pick": "SSO",
+    "explanation": "OBJ 2.2 (Security): Secure cryptographic hardware chip. TPM stands for Trusted Platform Module.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "TPM",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-45-f",
+    "obj": "2.3",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym WPA stand for?",
+    "options": [
+      "Wi-Fi Protected Access",
+      "Managed Detection and Response",
+      "Bring Your Own Device",
+      "Business Email Compromise"
+    ],
+    "correct_short": "Wi-Fi Protected Access",
+    "wrong_pick": "Managed Detection and Response",
+    "explanation": "OBJ 2.3 (Security): WPA stands for Wi-Fi Protected Access. Current wireless network encryption standard.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "WPA",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-45-r",
+    "obj": "2.3",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Current wireless network encryption standard?",
+    "options": [
+      "WPA",
+      "MITM",
+      "MDR",
+      "UAC"
+    ],
+    "correct_short": "WPA",
+    "wrong_pick": "MDR",
+    "explanation": "OBJ 2.3 (Security): Current wireless network encryption standard. WPA stands for Wi-Fi Protected Access.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "WPA",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-46-f",
+    "obj": "4.6",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym EULA stand for?",
+    "options": [
+      "Payment Card Industry Data Security Standard",
+      "Electrostatic Discharge",
+      "End-user License Agreement",
+      "Redundant Array of Independent Disks"
+    ],
+    "correct_short": "End-user License Agreement",
+    "wrong_pick": "Electrostatic Discharge",
+    "explanation": "OBJ 4.6 (Operational Procedures): EULA stands for End-user License Agreement. License agreement for using software.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "EULA",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-46-r",
+    "obj": "4.6",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: License agreement for using software?",
+    "options": [
+      "EOL",
+      "UPS",
+      "PII",
+      "EULA"
+    ],
+    "correct_short": "EULA",
+    "wrong_pick": "PII",
+    "explanation": "OBJ 4.6 (Operational Procedures): License agreement for using software. EULA stands for End-user License Agreement.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "EULA",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-47-f",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym DLP stand for?",
+    "options": [
+      "Universal Plug and Play",
+      "Potentially Unwanted Program",
+      "Data Loss Prevention",
+      "Access Control List"
+    ],
+    "correct_short": "Data Loss Prevention",
+    "wrong_pick": "Potentially Unwanted Program",
+    "explanation": "OBJ 2.1 (Security): DLP stands for Data Loss Prevention. Stops sensitive data from leaving.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "DLP",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-47-r",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Stops sensitive data from leaving?",
+    "options": [
+      "XDR",
+      "TKIP",
+      "DLP",
+      "AES"
+    ],
+    "correct_short": "DLP",
+    "wrong_pick": "TKIP",
+    "explanation": "OBJ 2.1 (Security): Stops sensitive data from leaving. DLP stands for Data Loss Prevention.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "DLP",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-48-f",
+    "obj": "2.4",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym PUP stand for?",
+    "options": [
+      "Wi-Fi Protected Access",
+      "Cross-site Scripting",
+      "Potentially Unwanted Program",
+      "Endpoint Detection and Response"
+    ],
+    "correct_short": "Potentially Unwanted Program",
+    "wrong_pick": "Cross-site Scripting",
+    "explanation": "OBJ 2.4 (Security): PUP stands for Potentially Unwanted Program. Unwanted bundled software.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "PUP",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-48-r",
+    "obj": "2.4",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Unwanted bundled software?",
+    "options": [
+      "WPA",
+      "TPM",
+      "XDR",
+      "PUP"
+    ],
+    "correct_short": "PUP",
+    "wrong_pick": "WPA",
+    "explanation": "OBJ 2.4 (Security): Unwanted bundled software. PUP stands for Potentially Unwanted Program.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "PUP",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-49-f",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym OTP stand for?",
+    "options": [
+      "Unified Threat Management",
+      "One-time Password/Passcode",
+      "Wireless Access Point",
+      "DomainKeys Identified Mail"
+    ],
+    "correct_short": "One-time Password/Passcode",
+    "wrong_pick": "Unified Threat Management",
+    "explanation": "OBJ 2.1 (Security): OTP stands for One-time Password/Passcode. Single-use temporary passcode.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "OTP",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-49-r",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Single-use temporary passcode?",
+    "options": [
+      "UAC",
+      "HSM",
+      "MFA",
+      "OTP"
+    ],
+    "correct_short": "OTP",
+    "wrong_pick": "HSM",
+    "explanation": "OBJ 2.1 (Security): Single-use temporary passcode. OTP stands for One-time Password/Passcode.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "OTP",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-50-f",
+    "obj": "1.2",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym UEFI stand for?",
+    "options": [
+      "Unified Extensible Firmware Interface",
+      "Master Boot Record",
+      "Storage Area Network",
+      "Platform as a Service"
+    ],
+    "correct_short": "Unified Extensible Firmware Interface",
+    "wrong_pick": "Platform as a Service",
+    "explanation": "OBJ 1.2 (Operating Systems): UEFI stands for Unified Extensible Firmware Interface. Modern firmware interface replacing BIOS.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "UEFI",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-50-r",
+    "obj": "1.2",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Modern firmware interface replacing BIOS?",
+    "options": [
+      "SAN",
+      "UEFI",
+      "MMC",
+      "FTP"
+    ],
+    "correct_short": "UEFI",
+    "wrong_pick": "FTP",
+    "explanation": "OBJ 1.2 (Operating Systems): Modern firmware interface replacing BIOS. UEFI stands for Unified Extensible Firmware Interface.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "UEFI",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-51-f",
+    "obj": "4.9",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym RDP stand for?",
+    "options": [
+      "Windows Remote Management",
+      "Electrostatic Discharge",
+      "Remote Desktop Protocol",
+      "Remote Monitoring and Management"
+    ],
+    "correct_short": "Remote Desktop Protocol",
+    "wrong_pick": "Remote Monitoring and Management",
+    "explanation": "OBJ 4.9 (Operational Procedures): RDP stands for Remote Desktop Protocol. Microsoft remote desktop access.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "RDP",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-51-r",
+    "obj": "4.9",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Microsoft remote desktop access?",
+    "options": [
+      "RAID",
+      "RDP",
+      "UPS",
+      "EOL"
+    ],
+    "correct_short": "RDP",
+    "wrong_pick": "EOL",
+    "explanation": "OBJ 4.9 (Operational Procedures): Microsoft remote desktop access. RDP stands for Remote Desktop Protocol.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "RDP",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-52-f",
+    "obj": "4.9",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym SSH stand for?",
+    "options": [
+      "End-of-life",
+      "Windows Remote Management",
+      "Acceptable Use Policy",
+      "Secure Shell"
+    ],
+    "correct_short": "Secure Shell",
+    "wrong_pick": "End-of-life",
+    "explanation": "OBJ 4.9 (Operational Procedures): SSH stands for Secure Shell. Encrypted remote command-line access.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "SSH",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-52-r",
+    "obj": "4.9",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Encrypted remote command-line access?",
+    "options": [
+      "SSH",
+      "NDA",
+      "GFS",
+      "VPN"
+    ],
+    "correct_short": "SSH",
+    "wrong_pick": "NDA",
+    "explanation": "OBJ 4.9 (Operational Procedures): Encrypted remote command-line access. SSH stands for Secure Shell.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "SSH",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-53-f",
+    "obj": "4.9",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym RMM stand for?",
+    "options": [
+      "Remote Monitoring and Management",
+      "End-user License Agreement",
+      "Standard Operating Procedure",
+      "Service-level Agreement"
+    ],
+    "correct_short": "Remote Monitoring and Management",
+    "wrong_pick": "End-user License Agreement",
+    "explanation": "OBJ 4.9 (Operational Procedures): RMM stands for Remote Monitoring and Management. Remote IT management software.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "RMM",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-53-r",
+    "obj": "4.9",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Remote IT management software?",
+    "options": [
+      "RMM",
+      "DRM",
+      "GFS",
+      "RAID"
+    ],
+    "correct_short": "RMM",
+    "wrong_pick": "DRM",
+    "explanation": "OBJ 4.9 (Operational Procedures): Remote IT management software. RMM stands for Remote Monitoring and Management.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "RMM",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-54-f",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym EDR stand for?",
+    "options": [
+      "Remote Authentication Dial-in User Server",
+      "Mobile Device Management",
+      "Endpoint Detection and Response",
+      "One-time Password/Passcode"
+    ],
+    "correct_short": "Endpoint Detection and Response",
+    "wrong_pick": "Remote Authentication Dial-in User Server",
+    "explanation": "OBJ 2.1 (Security): EDR stands for Endpoint Detection and Response. Endpoint threat detection and response tool.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "EDR",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-54-r",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Endpoint threat detection and response tool?",
+    "options": [
+      "PUP",
+      "EDR",
+      "UAC",
+      "SSO"
+    ],
+    "correct_short": "EDR",
+    "wrong_pick": "SSO",
+    "explanation": "OBJ 2.1 (Security): Endpoint threat detection and response tool. EDR stands for Endpoint Detection and Response.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "EDR",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-55-f",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym MDR stand for?",
+    "options": [
+      "Authentication, Authorization, and Accounting",
+      "Trusted Platform Module",
+      "Managed Detection and Response",
+      "Advanced Encryption Standard"
+    ],
+    "correct_short": "Managed Detection and Response",
+    "wrong_pick": "Advanced Encryption Standard",
+    "explanation": "OBJ 2.1 (Security): MDR stands for Managed Detection and Response. Outsourced/managed threat detection service.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "MDR",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-55-r",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Outsourced/managed threat detection service?",
+    "options": [
+      "MDR",
+      "TLS",
+      "ACL",
+      "UAC"
+    ],
+    "correct_short": "MDR",
+    "wrong_pick": "TLS",
+    "explanation": "OBJ 2.1 (Security): Outsourced/managed threat detection service. MDR stands for Managed Detection and Response.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "MDR",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-56-f",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym XDR stand for?",
+    "options": [
+      "Universal Plug and Play",
+      "Extended Detection and Response",
+      "Mobile Device Management",
+      "Single Sign-on"
+    ],
+    "correct_short": "Extended Detection and Response",
+    "wrong_pick": "Single Sign-on",
+    "explanation": "OBJ 2.1 (Security): XDR stands for Extended Detection and Response. Detection and response across multiple security layers.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "XDR",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-56-r",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Detection and response across multiple security layers?",
+    "options": [
+      "RSR",
+      "ACL",
+      "XDR",
+      "WAP"
+    ],
+    "correct_short": "XDR",
+    "wrong_pick": "ACL",
+    "explanation": "OBJ 2.1 (Security): Detection and response across multiple security layers. XDR stands for Extended Detection and Response.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "XDR",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-57-f",
+    "obj": "2.5",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym DKIM stand for?",
+    "options": [
+      "Temporal Key Integrity Protocol",
+      "Time-based One-time Password",
+      "Potentially Unwanted Program",
+      "DomainKeys Identified Mail"
+    ],
+    "correct_short": "DomainKeys Identified Mail",
+    "wrong_pick": "Temporal Key Integrity Protocol",
+    "explanation": "OBJ 2.5 (Security): DKIM stands for DomainKeys Identified Mail. Email signing for sender authentication.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "DKIM",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-57-r",
+    "obj": "2.5",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Email signing for sender authentication?",
+    "options": [
+      "WPA",
+      "XSS",
+      "RSR",
+      "DKIM"
+    ],
+    "correct_short": "DKIM",
+    "wrong_pick": "XSS",
+    "explanation": "OBJ 2.5 (Security): Email signing for sender authentication. DKIM stands for DomainKeys Identified Mail.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "DKIM",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-58-f",
+    "obj": "2.5",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym DMARC stand for?",
+    "options": [
+      "Identity Access Management",
+      "Service Set Identifier",
+      "Domain-based Message Authentication, Reporting, and Conformance",
+      "Transport Layer Security"
+    ],
+    "correct_short": "Domain-based Message Authentication, Reporting, and Conformance",
+    "wrong_pick": "Service Set Identifier",
+    "explanation": "OBJ 2.5 (Security): DMARC stands for Domain-based Message Authentication, Reporting, and Conformance. Email policy building on SPF and DKIM.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "DMARC",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-58-r",
+    "obj": "2.5",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Email policy building on SPF and DKIM?",
+    "options": [
+      "WAP",
+      "MDM",
+      "TPM",
+      "DMARC"
+    ],
+    "correct_short": "DMARC",
+    "wrong_pick": "WAP",
+    "explanation": "OBJ 2.5 (Security): Email policy building on SPF and DKIM. DMARC stands for Domain-based Message Authentication, Reporting, and Conformance.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "DMARC",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-59-f",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym TOTP stand for?",
+    "options": [
+      "Security Assertions Markup Language",
+      "Wireless Access Point",
+      "Secure Sockets Layer",
+      "Time-based One-time Password"
+    ],
+    "correct_short": "Time-based One-time Password",
+    "wrong_pick": "Wireless Access Point",
+    "explanation": "OBJ 2.1 (Security): TOTP stands for Time-based One-time Password. Time-limited one-time code from an authenticator.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "TOTP",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-59-r",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Time-limited one-time code from an authenticator?",
+    "options": [
+      "TKIP",
+      "WPA",
+      "BEC",
+      "TOTP"
+    ],
+    "correct_short": "TOTP",
+    "wrong_pick": "WPA",
+    "explanation": "OBJ 2.1 (Security): Time-limited one-time code from an authenticator. TOTP stands for Time-based One-time Password.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "TOTP",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-60-f",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym PIV stand for?",
+    "options": [
+      "Personal Identity Verification",
+      "Intrusion Detection System",
+      "Identity Access Management",
+      "Managed Detection and Response"
+    ],
+    "correct_short": "Personal Identity Verification",
+    "wrong_pick": "Managed Detection and Response",
+    "explanation": "OBJ 2.1 (Security): PIV stands for Personal Identity Verification. Government smart-card identity credential.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "PIV",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-60-r",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Government smart-card identity credential?",
+    "options": [
+      "UPnP",
+      "PIV",
+      "SSL",
+      "TOTP"
+    ],
+    "correct_short": "PIV",
+    "wrong_pick": "UPnP",
+    "explanation": "OBJ 2.1 (Security): Government smart-card identity credential. PIV stands for Personal Identity Verification.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "PIV",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-61-f",
+    "obj": "1.4",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym MMC stand for?",
+    "options": [
+      "Master Boot Record",
+      "Storage Area Network",
+      "File Transfer Protocol",
+      "Microsoft Management Console"
+    ],
+    "correct_short": "Microsoft Management Console",
+    "wrong_pick": "Storage Area Network",
+    "explanation": "OBJ 1.4 (Operating Systems): MMC stands for Microsoft Management Console. Windows console hosting admin snap-ins.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "MMC",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-61-r",
+    "obj": "1.4",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Windows console hosting admin snap-ins?",
+    "options": [
+      "SAN",
+      "NTFS",
+      "MMC",
+      "FTP"
+    ],
+    "correct_short": "MMC",
+    "wrong_pick": "NTFS",
+    "explanation": "OBJ 1.4 (Operating Systems): Windows console hosting admin snap-ins. MMC stands for Microsoft Management Console.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "MMC",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-62-f",
+    "obj": "4.5",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym MSDS stand for?",
+    "options": [
+      "Windows Remote Management",
+      "Grandfather-Father-Son",
+      "Standard Operating Procedure",
+      "Material Safety Data Sheet"
+    ],
+    "correct_short": "Material Safety Data Sheet",
+    "wrong_pick": "Standard Operating Procedure",
+    "explanation": "OBJ 4.5 (Operational Procedures): MSDS stands for Material Safety Data Sheet. Safety document for handling materials.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "MSDS",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-62-r",
+    "obj": "4.5",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Safety document for handling materials?",
+    "options": [
+      "SSH",
+      "AUP",
+      "MSDS",
+      "PCI DSS"
+    ],
+    "correct_short": "MSDS",
+    "wrong_pick": "PCI DSS",
+    "explanation": "OBJ 4.5 (Operational Procedures): Safety document for handling materials. MSDS stands for Material Safety Data Sheet.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "MSDS",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-63-f",
+    "obj": "2.10",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym UPnP stand for?",
+    "options": [
+      "Wireless Access Point",
+      "Service Set Identifier",
+      "Universal Plug and Play",
+      "Time-based One-time Password"
+    ],
+    "correct_short": "Universal Plug and Play",
+    "wrong_pick": "Time-based One-time Password",
+    "explanation": "OBJ 2.10 (Security): UPnP stands for Universal Plug and Play. Automatic device discovery and port-opening feature.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "UPnP",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-63-r",
+    "obj": "2.10",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Automatic device discovery and port-opening feature?",
+    "options": [
+      "TLS",
+      "UPnP",
+      "AES",
+      "TOTP"
+    ],
+    "correct_short": "UPnP",
+    "wrong_pick": "TLS",
+    "explanation": "OBJ 2.10 (Security): Automatic device discovery and port-opening feature. UPnP stands for Universal Plug and Play.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "UPnP",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-64-f",
+    "obj": "2.7",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym RSR stand for?",
+    "options": [
+      "Potentially Unwanted Program",
+      "Rapid Security Response",
+      "Hardware Security Module",
+      "Identity Access Management"
+    ],
+    "correct_short": "Rapid Security Response",
+    "wrong_pick": "Hardware Security Module",
+    "explanation": "OBJ 2.7 (Security): RSR stands for Rapid Security Response. Apple's fast out-of-band security patch.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "RSR",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-64-r",
+    "obj": "2.7",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Apple's fast out-of-band security patch?",
+    "options": [
+      "RSR",
+      "DDoS",
+      "MFA",
+      "MDR"
+    ],
+    "correct_short": "RSR",
+    "wrong_pick": "MDR",
+    "explanation": "OBJ 2.7 (Security): Apple's fast out-of-band security patch. RSR stands for Rapid Security Response.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "RSR",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-65-f",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym ACL stand for?",
+    "options": [
+      "Wi-Fi Protected Access",
+      "Single Sign-on",
+      "Managed Detection and Response",
+      "Access Control List"
+    ],
+    "correct_short": "Access Control List",
+    "wrong_pick": "Managed Detection and Response",
+    "explanation": "OBJ 2.1 (Security): ACL stands for Access Control List. Rules listing permitted or denied access.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "ACL",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-65-r",
+    "obj": "2.1",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Rules listing permitted or denied access?",
+    "options": [
+      "TKIP",
+      "TPM",
+      "SSL",
+      "ACL"
+    ],
+    "correct_short": "ACL",
+    "wrong_pick": "TKIP",
+    "explanation": "OBJ 2.1 (Security): Rules listing permitted or denied access. ACL stands for Access Control List.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "ACL",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-66-f",
+    "obj": "2.10",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym SSID stand for?",
+    "options": [
+      "Distributed Denial of Service",
+      "Service Set Identifier",
+      "Authentication, Authorization, and Accounting",
+      "Access Control List"
+    ],
+    "correct_short": "Service Set Identifier",
+    "wrong_pick": "Distributed Denial of Service",
+    "explanation": "OBJ 2.10 (Security): SSID stands for Service Set Identifier. Wireless network name.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "SSID",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-66-r",
+    "obj": "2.10",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Wireless network name?",
+    "options": [
+      "PUP",
+      "AES",
+      "SSID",
+      "EDR"
+    ],
+    "correct_short": "SSID",
+    "wrong_pick": "PUP",
+    "explanation": "OBJ 2.10 (Security): Wireless network name. SSID stands for Service Set Identifier.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "SSID",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-67-f",
+    "obj": "2.10",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym WAP stand for?",
+    "options": [
+      "DomainKeys Identified Mail",
+      "Bring Your Own Device",
+      "Wireless Access Point",
+      "Potentially Unwanted Program"
+    ],
+    "correct_short": "Wireless Access Point",
+    "wrong_pick": "DomainKeys Identified Mail",
+    "explanation": "OBJ 2.10 (Security): WAP stands for Wireless Access Point. Device broadcasting a Wi-Fi network.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "WAP",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-67-r",
+    "obj": "2.10",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Device broadcasting a Wi-Fi network?",
+    "options": [
+      "WAP",
+      "TPM",
+      "XSS",
+      "DKIM"
+    ],
+    "correct_short": "WAP",
+    "wrong_pick": "DKIM",
+    "explanation": "OBJ 2.10 (Security): Device broadcasting a Wi-Fi network. WAP stands for Wireless Access Point.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "WAP",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-68-f",
+    "obj": "4.9",
+    "qtype": "Multiple Choice",
+    "question": "What does the acronym WinRM stand for?",
+    "options": [
+      "Windows Remote Management",
+      "Uninterruptible Power Supply",
+      "Payment Card Industry Data Security Standard",
+      "Remote Desktop Protocol"
+    ],
+    "correct_short": "Windows Remote Management",
+    "wrong_pick": "Uninterruptible Power Supply",
+    "explanation": "OBJ 4.9 (Operational Procedures): WinRM stands for Windows Remote Management. Windows remote management protocol.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "WinRM",
+        "direction": "expansion"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
+  },
+  {
+    "id": "c2-acr-68-r",
+    "obj": "4.9",
+    "qtype": "Multiple Choice",
+    "question": "Which acronym matches this description: Windows remote management protocol?",
+    "options": [
+      "MSDS",
+      "DRM",
+      "SSH",
+      "WinRM"
+    ],
+    "correct_short": "WinRM",
+    "wrong_pick": "SSH",
+    "explanation": "OBJ 4.9 (Operational Procedures): Windows remote management protocol. WinRM stands for Windows Remote Management.",
+    "sources": [
+      {
+        "set": "Acronym Quiz",
+        "term": "WinRM",
+        "direction": "acronym"
+      }
+    ],
+    "origin": "Acronym Quiz import (2026-06-01)"
   }
 ]

@@ -19,9 +19,15 @@ export const SHOT_DIR = join(HARNESS_DIR, '__shots__');
 // URL + a stop() fn. Eliminates the port-collision flakiness the old
 // /tmp/smoke scripts had.
 export async function startServer() {
-  const proc = spawn('python3', ['-m', 'http.server', '0'], {
+  // `-u` + PYTHONUNBUFFERED force Python to flush its "Serving HTTP on
+  // ... port N" banner immediately. Without this, stdout/stderr to a
+  // pipe (not a TTY) is block-buffered, so the banner can sit unflushed
+  // and the port-parse below times out on slow CI runners even though
+  // the server is up. (See CI flake on PR #69.)
+  const proc = spawn('python3', ['-u', '-m', 'http.server', '0'], {
     cwd: REPO_ROOT,
     stdio: ['ignore', 'pipe', 'pipe'],
+    env: { ...process.env, PYTHONUNBUFFERED: '1' },
   });
   let buf = '';
   const port = await new Promise((resolve, reject) => {
@@ -33,7 +39,9 @@ export async function startServer() {
     proc.stdout.on('data', onData);
     proc.stderr.on('data', onData);  // python prints the serving line to stderr on some versions
     proc.on('error', reject);
-    setTimeout(() => reject(new Error('server did not start in 10s')), 10000);
+    // Generous window: CI cold-starts (apt + chromium install just ran)
+    // can delay the first scheduler tick well past a few seconds.
+    setTimeout(() => reject(new Error('server did not start in 30s')), 30000);
   });
   // Give the listener a beat to actually accept connections.
   await wait(150);
