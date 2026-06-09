@@ -7050,10 +7050,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym PII stand for?",
     "options": [
-      "Acceptable Use Policy",
+      "Private Internet Identifier",
+      "Personal Information Index",
       "Personally Identifiable Information",
-      "Non-Disclosure Agreement",
-      "Payment Card Industry Data Security Standard"
+      "Protected Internal Inventory"
     ],
     "correct_short": "Personally Identifiable Information",
     "wrong_pick": "Non-Disclosure Agreement",
@@ -7096,10 +7096,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym TKIP stand for?",
     "options": [
-      "Multifactor Authentication",
-      "Business Email Compromise",
+      "Transport Key Isolation Protocol",
+      "Trusted Kernel Integrity Process",
       "Temporal Key Integrity Protocol",
-      "Man-in-the-Middle"
+      "Temporary Key Issuance Procedure"
     ],
     "correct_short": "Temporal Key Integrity Protocol",
     "wrong_pick": "Multifactor Authentication",
@@ -7142,10 +7142,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym LDAP stand for?",
     "options": [
-      "Bring Your Own Device",
-      "Encrypting File System",
+      "Local Domain Authentication Protocol",
+      "Layered Data Access Permission",
       "Lightweight Directory Access Protocol",
-      "Service Set Identifier"
+      "Logical Directory Addressing Protocol"
     ],
     "correct_short": "Lightweight Directory Access Protocol",
     "wrong_pick": "Encrypting File System",
@@ -7188,10 +7188,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym PaaS stand for?",
     "options": [
-      "Storage Area Network",
+      "Provisioning as a Service",
+      "Protection as a Service",
       "Platform as a Service",
-      "Microsoft Management Console",
-      "File Transfer Protocol"
+      "Patching as a Service"
     ],
     "correct_short": "Platform as a Service",
     "wrong_pick": "Storage Area Network",
@@ -7234,10 +7234,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym XSS stand for?",
     "options": [
-      "Wireless Access Point",
+      "Content Security Scanning",
+      "Centralized Security Standard",
       "Cross-site Scripting",
-      "Access Control List",
-      "DomainKeys Identified Mail"
+      "Cipher Security System"
     ],
     "correct_short": "Cross-site Scripting",
     "wrong_pick": "Wireless Access Point",
@@ -7280,10 +7280,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym IDS stand for?",
     "options": [
-      "Business Email Compromise",
-      "Cross-site Scripting",
-      "Trusted Platform Module",
-      "Intrusion Detection System"
+      "Internet Directory Service",
+      "Integrated Defense Suite",
+      "Intrusion Detection System",
+      "Identity Distribution Service"
     ],
     "correct_short": "Intrusion Detection System",
     "wrong_pick": "Business Email Compromise",
@@ -7326,10 +7326,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym DRM stand for?",
     "options": [
-      "Redundant Array of Independent Disks",
+      "Data Recovery Manager",
+      "Device Registration Module",
       "Digital Rights Management",
-      "Non-Disclosure Agreement",
-      "Grandfather-Father-Son"
+      "Dynamic Resource Mapping"
     ],
     "correct_short": "Digital Rights Management",
     "wrong_pick": "Grandfather-Father-Son",
@@ -7372,10 +7372,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym UAC stand for?",
     "options": [
+      "Universal Access Credential",
+      "User Authentication Console",
       "User Account Control",
-      "Authentication, Authorization, and Accounting",
-      "Encrypting File System",
-      "Multifactor Authentication"
+      "Unified Application Configuration"
     ],
     "correct_short": "User Account Control",
     "wrong_pick": "Encrypting File System",
@@ -7418,10 +7418,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym SAN stand for?",
     "options": [
-      "Master Boot Record",
-      "New Technology File System",
-      "Unified Extensible Firmware Interface",
-      "Storage Area Network"
+      "Secure Access Node",
+      "System Administration Network",
+      "Storage Area Network",
+      "Shared Application Namespace"
     ],
     "correct_short": "Storage Area Network",
     "wrong_pick": "New Technology File System",
@@ -7464,10 +7464,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym UPS stand for?",
     "options": [
-      "Secure Shell",
-      "Personally Identifiable Information",
+      "Universal Power System",
+      "Unified Protection Service",
       "Uninterruptible Power Supply",
-      "Virtual Private Network"
+      "Uninterruptible Processing Server"
     ],
     "correct_short": "Uninterruptible Power Supply",
     "wrong_pick": "Secure Shell",
@@ -7510,10 +7510,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym MBR stand for?",
     "options": [
-      "Microsoft Management Console",
+      "Memory Buffer Register",
+      "Managed Backup Repository",
       "Master Boot Record",
-      "Unified Extensible Firmware Interface",
-      "New Technology File System"
+      "Main Boot Routine"
     ],
     "correct_short": "Master Boot Record",
     "wrong_pick": "Unified Extensible Firmware Interface",
@@ -7556,10 +7556,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym FTP stand for?",
     "options": [
-      "Storage Area Network",
+      "Fast Transport Process",
+      "File Tracking Protocol",
       "File Transfer Protocol",
-      "Unified Extensible Firmware Interface",
-      "New Technology File System"
+      "Folder Transport Pipeline"
     ],
     "correct_short": "File Transfer Protocol",
     "wrong_pick": "Storage Area Network",
@@ -7602,10 +7602,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym BYOD stand for?",
     "options": [
-      "Potentially Unwanted Program",
-      "Single Sign-on",
-      "Hardware Security Module",
-      "Bring Your Own Device"
+      "Build Your Own Domain",
+      "Backup Your Own Data",
+      "Bring Your Own Device",
+      "Bring Your Own Disk"
     ],
     "correct_short": "Bring Your Own Device",
     "wrong_pick": "Hardware Security Module",
@@ -7648,10 +7648,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym IAM stand for?",
     "options": [
+      "Internet Account Manager",
+      "Integrated Authentication Module",
       "Identity Access Management",
-      "Distributed Denial of Service",
-      "Single Sign-on",
-      "Temporal Key Integrity Protocol"
+      "Information Asset Monitoring"
     ],
     "correct_short": "Identity Access Management",
     "wrong_pick": "Distributed Denial of Service",
@@ -7694,10 +7694,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym VPN stand for?",
     "options": [
-      "Remote Monitoring and Management",
-      "Acceptable Use Policy",
-      "Electrostatic Discharge",
-      "Virtual Private Network"
+      "Verified Proxy Node",
+      "Virtual Packet Numbering",
+      "Virtual Private Network",
+      "Volume Protection Network"
     ],
     "correct_short": "Virtual Private Network",
     "wrong_pick": "Remote Monitoring and Management",
@@ -7740,10 +7740,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym UTM stand for?",
     "options": [
-      "Wi-Fi Protected Access",
-      "Potentially Unwanted Program",
+      "Universal Traffic Monitor",
+      "User Token Manager",
       "Unified Threat Management",
-      "Secure Sockets Layer"
+      "Unified Transport Mechanism"
     ],
     "correct_short": "Unified Threat Management",
     "wrong_pick": "Wi-Fi Protected Access",
@@ -7786,10 +7786,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym SAML stand for?",
     "options": [
+      "Secure Access Management Layer",
+      "System Application Messaging Link",
       "Security Assertions Markup Language",
-      "Endpoint Detection and Response",
-      "Wi-Fi Protected Access",
-      "Single Sign-on"
+      "Single Authentication Markup Listing"
     ],
     "correct_short": "Security Assertions Markup Language",
     "wrong_pick": "Wi-Fi Protected Access",
@@ -7832,10 +7832,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym MFA stand for?",
     "options": [
-      "Intrusion Detection System",
-      "Trusted Platform Module",
-      "Remote Authentication Dial-in User Server",
-      "Multifactor Authentication"
+      "Mobile File Archive",
+      "Multi-Format Analyzer",
+      "Multifactor Authentication",
+      "Managed Firewall Appliance"
     ],
     "correct_short": "Multifactor Authentication",
     "wrong_pick": "Remote Authentication Dial-in User Server",
@@ -7878,10 +7878,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym BEC stand for?",
     "options": [
+      "Backup Encryption Cipher",
+      "Browser Exploit Code",
       "Business Email Compromise",
-      "Distributed Denial of Service",
-      "Privileged Access Management",
-      "Hardware Security Module"
+      "Basic Endpoint Configuration"
     ],
     "correct_short": "Business Email Compromise",
     "wrong_pick": "Hardware Security Module",
@@ -7924,10 +7924,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym SSL stand for?",
     "options": [
-      "Authentication, Authorization, and Accounting",
+      "System Security Log",
+      "Single Session Login",
       "Secure Sockets Layer",
-      "Potentially Unwanted Program",
-      "Remote Authentication Dial-in User Server"
+      "Secure Server Link"
     ],
     "correct_short": "Secure Sockets Layer",
     "wrong_pick": "Potentially Unwanted Program",
@@ -7970,10 +7970,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym AES stand for?",
     "options": [
-      "Sender Policy Framework",
-      "Single Sign-on",
-      "Potentially Unwanted Program",
-      "Advanced Encryption Standard"
+      "Automated Encryption Service",
+      "Application Endpoint Security",
+      "Advanced Encryption Standard",
+      "Adaptive Encryption System"
     ],
     "correct_short": "Advanced Encryption Standard",
     "wrong_pick": "Single Sign-on",
@@ -8016,10 +8016,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym NTFS stand for?",
     "options": [
-      "Master Boot Record",
-      "Platform as a Service",
+      "Network Transfer File Service",
+      "Native Tiered File Storage",
       "New Technology File System",
-      "Microsoft Management Console"
+      "Nested Table Format Standard"
     ],
     "correct_short": "New Technology File System",
     "wrong_pick": "Platform as a Service",
@@ -8062,10 +8062,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym AAA stand for?",
     "options": [
-      "Endpoint Detection and Response",
-      "Man-in-the-Middle",
+      "Authentication, Authorization, and Auditing",
+      "Access, Authorization, and Accounting",
       "Authentication, Authorization, and Accounting",
-      "Multifactor Authentication"
+      "Authentication, Approval, and Allocation"
     ],
     "correct_short": "Authentication, Authorization, and Accounting",
     "wrong_pick": "Man-in-the-Middle",
@@ -8108,10 +8108,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym SLA stand for?",
     "options": [
-      "Redundant Array of Independent Disks",
-      "Virtual Private Network",
-      "Uninterruptible Power Supply",
-      "Service-level Agreement"
+      "Secure Login Access",
+      "System Logging Application",
+      "Service-level Agreement",
+      "Software License Authorization"
     ],
     "correct_short": "Service-level Agreement",
     "wrong_pick": "Virtual Private Network",
@@ -8154,10 +8154,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym TLS stand for?",
     "options": [
-      "Wi-Fi Protected Access",
+      "Token Login System",
+      "Trusted Local Storage",
       "Transport Layer Security",
-      "Domain-based Message Authentication, Reporting, and Conformance",
-      "Personal Identity Verification"
+      "Traffic Limiting Service"
     ],
     "correct_short": "Transport Layer Security",
     "wrong_pick": "Wi-Fi Protected Access",
@@ -8200,10 +8200,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym GFS stand for?",
     "options": [
-      "Redundant Array of Independent Disks",
-      "Electrostatic Discharge",
+      "Grandparent-Father-Sibling",
+      "Generational-Frequency-Schedule",
       "Grandfather-Father-Son",
-      "Windows Remote Management"
+      "Grandfather-Forward-Sync"
     ],
     "correct_short": "Grandfather-Father-Son",
     "wrong_pick": "Redundant Array of Independent Disks",
@@ -8246,10 +8246,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym SSO stand for?",
     "options": [
-      "Secure Sockets Layer",
-      "Sender Policy Framework",
-      "Lightweight Directory Access Protocol",
-      "Single Sign-on"
+      "Secure Session Origin",
+      "System Service Operator",
+      "Single Sign-on",
+      "Shared Storage Object"
     ],
     "correct_short": "Single Sign-on",
     "wrong_pick": "Sender Policy Framework",
@@ -8292,10 +8292,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym EOL stand for?",
     "options": [
-      "Grandfather-Father-Son",
+      "End-of-License",
+      "Expiration-of-Lifecycle",
       "End-of-life",
-      "Material Safety Data Sheet",
-      "Service-level Agreement"
+      "Edge-of-Load"
     ],
     "correct_short": "End-of-life",
     "wrong_pick": "Material Safety Data Sheet",
@@ -8338,10 +8338,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym NDA stand for?",
     "options": [
-      "Health Insurance Portability and Accountability Act",
-      "Uninterruptible Power Supply",
+      "Network Domain Authority",
+      "New Device Activation",
       "Non-Disclosure Agreement",
-      "Windows Remote Management"
+      "Node Data Allocation"
     ],
     "correct_short": "Non-Disclosure Agreement",
     "wrong_pick": "Windows Remote Management",
@@ -8384,10 +8384,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym AUP stand for?",
     "options": [
+      "Automated Update Process",
+      "Application User Profile",
       "Acceptable Use Policy",
-      "Payment Card Industry Data Security Standard",
-      "Virtual Private Network",
-      "Windows Remote Management"
+      "Access Utilization Plan"
     ],
     "correct_short": "Acceptable Use Policy",
     "wrong_pick": "Payment Card Industry Data Security Standard",
@@ -8430,10 +8430,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym EFS stand for?",
     "options": [
+      "Extended File Storage",
+      "Endpoint Firewall Service",
       "Encrypting File System",
-      "Authentication, Authorization, and Accounting",
-      "Access Control List",
-      "Identity Access Management"
+      "External Format Standard"
     ],
     "correct_short": "Encrypting File System",
     "wrong_pick": "Authentication, Authorization, and Accounting",
@@ -8476,10 +8476,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym PAM stand for?",
     "options": [
+      "Primary Authentication Method",
+      "Protected Application Module",
       "Privileged Access Management",
-      "Rapid Security Response",
-      "Distributed Denial of Service",
-      "One-time Password/Passcode"
+      "Policy Access Monitor"
     ],
     "correct_short": "Privileged Access Management",
     "wrong_pick": "Rapid Security Response",
@@ -8522,10 +8522,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym ESD stand for?",
     "options": [
-      "End-user License Agreement",
+      "Endpoint Security Daemon",
+      "Encrypted Storage Device",
       "Electrostatic Discharge",
-      "Material Safety Data Sheet",
-      "Non-Disclosure Agreement"
+      "Electrical Surge Damage"
     ],
     "correct_short": "Electrostatic Discharge",
     "wrong_pick": "End-user License Agreement",
@@ -8568,10 +8568,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym PCI DSS stand for?",
     "options": [
-      "Windows Remote Management",
+      "Payment Card Integrity Data Safety Standard",
+      "Personal Card Identification Data Security System",
       "Payment Card Industry Data Security Standard",
-      "Remote Desktop Protocol",
-      "Acceptable Use Policy"
+      "Protected Cardholder Information Disclosure Security Standard"
     ],
     "correct_short": "Payment Card Industry Data Security Standard",
     "wrong_pick": "Remote Desktop Protocol",
@@ -8614,10 +8614,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym RADIUS stand for?",
     "options": [
+      "Remote Access Directory for Identity User Security",
+      "Restricted Authorization Daemon for Internal User Systems",
       "Remote Authentication Dial-in User Server",
-      "Intrusion Detection System",
-      "Unified Threat Management",
-      "Multifactor Authentication"
+      "Reliable Authentication Database for Identified User Sessions"
     ],
     "correct_short": "Remote Authentication Dial-in User Server",
     "wrong_pick": "Intrusion Detection System",
@@ -8660,10 +8660,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym MDM stand for?",
     "options": [
+      "Managed Data Migration",
+      "Multi-Domain Mapping",
       "Mobile Device Management",
-      "Wireless Access Point",
-      "Personal Identity Verification",
-      "User Account Control"
+      "Memory Diagnostic Monitor"
     ],
     "correct_short": "Mobile Device Management",
     "wrong_pick": "Personal Identity Verification",
@@ -8706,10 +8706,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym MITM stand for?",
     "options": [
-      "Sender Policy Framework",
+      "Machine-in-the-Middle",
+      "Man-in-the-Mainframe",
       "Man-in-the-Middle",
-      "Wi-Fi Protected Access",
-      "Privileged Access Management"
+      "Malware-in-the-Memory"
     ],
     "correct_short": "Man-in-the-Middle",
     "wrong_pick": "Privileged Access Management",
@@ -8752,10 +8752,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym HIPAA stand for?",
     "options": [
-      "Secure Shell",
+      "Health Information Privacy and Access Act",
+      "Hospital Insurance Protection and Authorization Act",
       "Health Insurance Portability and Accountability Act",
-      "Redundant Array of Independent Disks",
-      "Non-Disclosure Agreement"
+      "Health Industry Practice and Auditing Act"
     ],
     "correct_short": "Health Insurance Portability and Accountability Act",
     "wrong_pick": "Secure Shell",
@@ -8798,10 +8798,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym RAID stand for?",
     "options": [
-      "Health Insurance Portability and Accountability Act",
+      "Rapid Access Indexing Drive",
+      "Remote Array of Internal Drives",
       "Redundant Array of Independent Disks",
-      "Digital Rights Management",
-      "Windows Remote Management"
+      "Resilient Allocation of Internal Data"
     ],
     "correct_short": "Redundant Array of Independent Disks",
     "wrong_pick": "Health Insurance Portability and Accountability Act",
@@ -8844,10 +8844,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym HSM stand for?",
     "options": [
-      "One-time Password/Passcode",
+      "Host System Monitor",
+      "Hybrid Storage Manager",
       "Hardware Security Module",
-      "Universal Plug and Play",
-      "Authentication, Authorization, and Accounting"
+      "Hashed Session Mapping"
     ],
     "correct_short": "Hardware Security Module",
     "wrong_pick": "One-time Password/Passcode",
@@ -8890,10 +8890,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym SPF stand for?",
     "options": [
-      "Domain-based Message Authentication, Reporting, and Conformance",
+      "Secure Packet Filter",
+      "System Patch Function",
       "Sender Policy Framework",
-      "Authentication, Authorization, and Accounting",
-      "Mobile Device Management"
+      "Session Protection Firewall"
     ],
     "correct_short": "Sender Policy Framework",
     "wrong_pick": "Mobile Device Management",
@@ -8936,10 +8936,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym DDoS stand for?",
     "options": [
-      "Secure Sockets Layer",
+      "Delayed Denial of Service",
+      "Distributed Disruption of Servers",
       "Distributed Denial of Service",
-      "Authentication, Authorization, and Accounting",
-      "Privileged Access Management"
+      "Direct Denial of Sessions"
     ],
     "correct_short": "Distributed Denial of Service",
     "wrong_pick": "Privileged Access Management",
@@ -8982,10 +8982,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym SOP stand for?",
     "options": [
-      "Virtual Private Network",
-      "Windows Remote Management",
+      "System Operations Policy",
+      "Secure Output Protocol",
       "Standard Operating Procedure",
-      "Payment Card Industry Data Security Standard"
+      "Service Onboarding Process"
     ],
     "correct_short": "Standard Operating Procedure",
     "wrong_pick": "Virtual Private Network",
@@ -9028,10 +9028,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym TPM stand for?",
     "options": [
-      "Time-based One-time Password",
+      "Threat Prevention Manager",
+      "Token Processing Method",
       "Trusted Platform Module",
-      "Data Loss Prevention",
-      "Advanced Encryption Standard"
+      "Transport Protocol Mapping"
     ],
     "correct_short": "Trusted Platform Module",
     "wrong_pick": "Advanced Encryption Standard",
@@ -9074,10 +9074,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym WPA stand for?",
     "options": [
+      "Wireless Protocol Application",
+      "Wi-Fi Packet Analyzer",
       "Wi-Fi Protected Access",
-      "Managed Detection and Response",
-      "Bring Your Own Device",
-      "Business Email Compromise"
+      "Wired Protection Application"
     ],
     "correct_short": "Wi-Fi Protected Access",
     "wrong_pick": "Managed Detection and Response",
@@ -9120,10 +9120,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym EULA stand for?",
     "options": [
-      "Payment Card Industry Data Security Standard",
-      "Electrostatic Discharge",
+      "End-user Login Authorization",
+      "Encrypted User Logging Application",
       "End-user License Agreement",
-      "Redundant Array of Independent Disks"
+      "Enterprise User Lifecycle Agreement"
     ],
     "correct_short": "End-user License Agreement",
     "wrong_pick": "Electrostatic Discharge",
@@ -9166,10 +9166,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym DLP stand for?",
     "options": [
-      "Universal Plug and Play",
-      "Potentially Unwanted Program",
+      "Domain Logon Policy",
+      "Device Lifecycle Provisioning",
       "Data Loss Prevention",
-      "Access Control List"
+      "Dynamic Link Protocol"
     ],
     "correct_short": "Data Loss Prevention",
     "wrong_pick": "Potentially Unwanted Program",
@@ -9212,10 +9212,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym PUP stand for?",
     "options": [
-      "Wi-Fi Protected Access",
-      "Cross-site Scripting",
+      "Privileged User Permission",
+      "Protected USB Port",
       "Potentially Unwanted Program",
-      "Endpoint Detection and Response"
+      "Persistent Update Package"
     ],
     "correct_short": "Potentially Unwanted Program",
     "wrong_pick": "Cross-site Scripting",
@@ -9258,10 +9258,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym OTP stand for?",
     "options": [
-      "Unified Threat Management",
+      "Operational Token Protocol",
+      "Open Terminal Protocol",
       "One-time Password/Passcode",
-      "Wireless Access Point",
-      "DomainKeys Identified Mail"
+      "Offline Token Provisioning"
     ],
     "correct_short": "One-time Password/Passcode",
     "wrong_pick": "Unified Threat Management",
@@ -9304,10 +9304,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym UEFI stand for?",
     "options": [
+      "Universal Encryption and Firewall Integration",
+      "User Endpoint File Indexing",
       "Unified Extensible Firmware Interface",
-      "Master Boot Record",
-      "Storage Area Network",
-      "Platform as a Service"
+      "Unified Extended Format Identifier"
     ],
     "correct_short": "Unified Extensible Firmware Interface",
     "wrong_pick": "Platform as a Service",
@@ -9350,10 +9350,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym RDP stand for?",
     "options": [
-      "Windows Remote Management",
-      "Electrostatic Discharge",
+      "Rapid Deployment Package",
+      "Resource Distribution Protocol",
       "Remote Desktop Protocol",
-      "Remote Monitoring and Management"
+      "Remote Diagnostic Port"
     ],
     "correct_short": "Remote Desktop Protocol",
     "wrong_pick": "Remote Monitoring and Management",
@@ -9396,10 +9396,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym SSH stand for?",
     "options": [
-      "End-of-life",
-      "Windows Remote Management",
-      "Acceptable Use Policy",
-      "Secure Shell"
+      "System Service Handler",
+      "Secure Socket Host",
+      "Secure Shell",
+      "Session Security Handler"
     ],
     "correct_short": "Secure Shell",
     "wrong_pick": "End-of-life",
@@ -9442,10 +9442,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym RMM stand for?",
     "options": [
+      "Remote Maintenance and Management",
+      "Resource Mapping Module",
       "Remote Monitoring and Management",
-      "End-user License Agreement",
-      "Standard Operating Procedure",
-      "Service-level Agreement"
+      "Realtime Monitoring and Mitigation"
     ],
     "correct_short": "Remote Monitoring and Management",
     "wrong_pick": "End-user License Agreement",
@@ -9488,10 +9488,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym EDR stand for?",
     "options": [
-      "Remote Authentication Dial-in User Server",
-      "Mobile Device Management",
+      "Encrypted Data Repository",
+      "Event Detection and Reporting",
       "Endpoint Detection and Response",
-      "One-time Password/Passcode"
+      "Endpoint Defense Resource"
     ],
     "correct_short": "Endpoint Detection and Response",
     "wrong_pick": "Remote Authentication Dial-in User Server",
@@ -9534,10 +9534,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym MDR stand for?",
     "options": [
-      "Authentication, Authorization, and Accounting",
-      "Trusted Platform Module",
+      "Mobile Data Roaming",
+      "Managed Detection and Recovery",
       "Managed Detection and Response",
-      "Advanced Encryption Standard"
+      "Multi-Domain Routing"
     ],
     "correct_short": "Managed Detection and Response",
     "wrong_pick": "Advanced Encryption Standard",
@@ -9580,10 +9580,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym XDR stand for?",
     "options": [
-      "Universal Plug and Play",
+      "External Disk Repository",
+      "Event Data Repository",
       "Extended Detection and Response",
-      "Mobile Device Management",
-      "Single Sign-on"
+      "Endpoint Dispatch Response"
     ],
     "correct_short": "Extended Detection and Response",
     "wrong_pick": "Single Sign-on",
@@ -9626,10 +9626,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym DKIM stand for?",
     "options": [
-      "Temporal Key Integrity Protocol",
-      "Time-based One-time Password",
-      "Potentially Unwanted Program",
-      "DomainKeys Identified Mail"
+      "Distributed Key Infrastructure Mail",
+      "Domain-based Key Integrity Mechanism",
+      "DomainKeys Identified Mail",
+      "Digital Key Identity Management"
     ],
     "correct_short": "DomainKeys Identified Mail",
     "wrong_pick": "Temporal Key Integrity Protocol",
@@ -9672,10 +9672,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym DMARC stand for?",
     "options": [
-      "Identity Access Management",
-      "Service Set Identifier",
+      "Domain Message Authentication and Routing Control",
+      "Distributed Message Auditing and Reporting Compliance",
       "Domain-based Message Authentication, Reporting, and Conformance",
-      "Transport Layer Security"
+      "Domain-based Mail Authorization and Reporting Compliance"
     ],
     "correct_short": "Domain-based Message Authentication, Reporting, and Conformance",
     "wrong_pick": "Service Set Identifier",
@@ -9718,10 +9718,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym TOTP stand for?",
     "options": [
-      "Security Assertions Markup Language",
-      "Wireless Access Point",
-      "Secure Sockets Layer",
-      "Time-based One-time Password"
+      "Time-bound One-Touch Passphrase",
+      "Transient One-Time Token Protocol",
+      "Time-based One-time Password",
+      "Temporal One-Time Protocol"
     ],
     "correct_short": "Time-based One-time Password",
     "wrong_pick": "Wireless Access Point",
@@ -9764,10 +9764,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym PIV stand for?",
     "options": [
+      "Public Internet Validation",
+      "Protected Information Vault",
       "Personal Identity Verification",
-      "Intrusion Detection System",
-      "Identity Access Management",
-      "Managed Detection and Response"
+      "Packet Inspection Verifier"
     ],
     "correct_short": "Personal Identity Verification",
     "wrong_pick": "Managed Detection and Response",
@@ -9810,10 +9810,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym MMC stand for?",
     "options": [
-      "Master Boot Record",
-      "Storage Area Network",
-      "File Transfer Protocol",
-      "Microsoft Management Console"
+      "Memory Mapping Controller",
+      "Managed Module Cache",
+      "Microsoft Management Console",
+      "Multi-Monitor Configuration"
     ],
     "correct_short": "Microsoft Management Console",
     "wrong_pick": "Storage Area Network",
@@ -9856,10 +9856,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym MSDS stand for?",
     "options": [
-      "Windows Remote Management",
-      "Grandfather-Father-Son",
-      "Standard Operating Procedure",
-      "Material Safety Data Sheet"
+      "Material Safety Disposal Standard",
+      "Managed Storage Data Service",
+      "Material Safety Data Sheet",
+      "Mandatory Security Data Specification"
     ],
     "correct_short": "Material Safety Data Sheet",
     "wrong_pick": "Standard Operating Procedure",
@@ -9902,10 +9902,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym UPnP stand for?",
     "options": [
-      "Wireless Access Point",
-      "Service Set Identifier",
+      "Universal Printing and Publishing",
+      "Unified Plug-in Protocol",
       "Universal Plug and Play",
-      "Time-based One-time Password"
+      "Universal Port and Protocol"
     ],
     "correct_short": "Universal Plug and Play",
     "wrong_pick": "Time-based One-time Password",
@@ -9948,10 +9948,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym RSR stand for?",
     "options": [
-      "Potentially Unwanted Program",
+      "Remote Session Recorder",
+      "Redundant Storage Replication",
       "Rapid Security Response",
-      "Hardware Security Module",
-      "Identity Access Management"
+      "Resource Scheduling Routine"
     ],
     "correct_short": "Rapid Security Response",
     "wrong_pick": "Hardware Security Module",
@@ -9994,10 +9994,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym ACL stand for?",
     "options": [
-      "Wi-Fi Protected Access",
-      "Single Sign-on",
-      "Managed Detection and Response",
-      "Access Control List"
+      "Application Configuration Layer",
+      "Authentication Credential Lookup",
+      "Access Control List",
+      "Automated Compliance Log"
     ],
     "correct_short": "Access Control List",
     "wrong_pick": "Managed Detection and Response",
@@ -10040,10 +10040,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym SSID stand for?",
     "options": [
-      "Distributed Denial of Service",
+      "System Session Identity Descriptor",
+      "Secure Subnet Internet Directory",
       "Service Set Identifier",
-      "Authentication, Authorization, and Accounting",
-      "Access Control List"
+      "Signal Strength Indicator Device"
     ],
     "correct_short": "Service Set Identifier",
     "wrong_pick": "Distributed Denial of Service",
@@ -10086,10 +10086,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym WAP stand for?",
     "options": [
-      "DomainKeys Identified Mail",
-      "Bring Your Own Device",
+      "Web Application Proxy",
+      "Wired Authentication Protocol",
       "Wireless Access Point",
-      "Potentially Unwanted Program"
+      "Workstation Access Policy"
     ],
     "correct_short": "Wireless Access Point",
     "wrong_pick": "DomainKeys Identified Mail",
@@ -10132,10 +10132,10 @@
     "qtype": "Multiple Choice",
     "question": "What does the acronym WinRM stand for?",
     "options": [
+      "Windows Resource Monitor",
+      "Wireless Remote Management",
       "Windows Remote Management",
-      "Uninterruptible Power Supply",
-      "Payment Card Industry Data Security Standard",
-      "Remote Desktop Protocol"
+      "Workstation Remote Monitor"
     ],
     "correct_short": "Windows Remote Management",
     "wrong_pick": "Uninterruptible Power Supply",
