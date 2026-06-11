@@ -93,6 +93,7 @@ async function run() {
     // ── localStorage-quota resilience (PR #58) ──────────────────
     r.head('localStorage-quota resilience');
     await page.evaluate(() => {
+      window.__origSetItem = Storage.prototype.setItem;
       Storage.prototype.setItem = function () { const e = new Error('QuotaExceededError'); e.name = 'QuotaExceededError'; throw e; };
     });
     // Rate a few cards — bumpStreak + saveProgress will hit the throwing setItem
@@ -111,6 +112,8 @@ async function run() {
     }));
     survived.card ? r.ok('app keeps rendering when localStorage throws') : r.ng('app broke when localStorage threw');
     survived.toast ? r.ok('user warned once about storage failure') : r.info('quota toast not visible in window (may have auto-dismissed)');
+    // Restore a working setItem so later blocks (sync Save) can persist.
+    await page.evaluate(() => { if (window.__origSetItem) Storage.prototype.setItem = window.__origSetItem; });
 
     // ── Sync & backup dialog (☁️ header icon) ───────────────────
     r.head('sync & backup dialog');
@@ -138,10 +141,22 @@ async function run() {
     syncDlg.hasInputs && syncDlg.hasActions
       ? r.ok('config inputs + push/pull actions present in dialog')
       : r.ng(`sync config controls missing: ${JSON.stringify(syncDlg)}`);
+    // Fill + Save → the header sync button should gain the "backup on" dot.
+    const badgeOn = await page.evaluate(() => {
+      const ov = document.getElementById('sync-overlay');
+      ov.querySelector('#cloud-url').value = 'https://example.supabase.co';
+      ov.querySelector('#cloud-key').value = 'anon-test-key';
+      ov.querySelector('#cloud-sync').value = 'smoke-sync-key';
+      ov.querySelector('#cloud-save').click();
+      return document.getElementById('sync-btn')?.classList.contains('is-configured');
+    });
+    badgeOn ? r.ok('Save marks the header sync icon as configured') : r.ng('sync icon did not show configured badge after Save');
     await page.keyboard.press('Escape');
     await wait(200);
     const syncClosed = await page.evaluate(() => !document.getElementById('sync-overlay'));
     syncClosed ? r.ok('Escape closes the Sync dialog') : r.ng('Escape did not close Sync dialog');
+    // Clean up the config we just wrote so later assertions/state stay neutral.
+    await page.evaluate(() => ['supabase.url','supabase.key','supabase.syncKey'].forEach(k => localStorage.removeItem(k)));
 
     // ── Console-error scoreboard ────────────────────────────────
     r.head('console errors');

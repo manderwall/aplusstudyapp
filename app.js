@@ -5350,6 +5350,18 @@ function syncStatusLine() {
   };
 }
 
+// Toggle the "backup is on" dot on the header sync button. Cheap enough
+// to call on init + after any config change.
+function updateSyncBadge() {
+  const btn = $('#sync-btn');
+  if (!btn) return;
+  const { configured } = syncStatusLine();
+  btn.classList.toggle('is-configured', configured);
+  btn.title = configured
+    ? 'Sync & backup — on (tap to manage)'
+    : 'Sync & backup (save across devices)';
+}
+
 function showSync() {
   const cfg = getCloudCfg();
   const status = syncStatusLine();
@@ -5468,6 +5480,7 @@ function showSync() {
       banner.classList.toggle('is-off', !s.configured);
       $('#sync-status-text').textContent = s.text;
     }
+    updateSyncBadge();
   };
 
   $('#sync-copy-sql').addEventListener('click', async (e) => {
@@ -5721,6 +5734,7 @@ async function init() {
   $('#focus-btn')?.addEventListener('click', toggleFocus);
   $('#help-btn')?.addEventListener('click', showHelp);
   $('#sync-btn')?.addEventListener('click', showSync);
+  updateSyncBadge();
 
   // If the user set a PIN on a prior session, gate everything behind it
   // before any sensitive data is loaded. A null key (returned after "Forgot

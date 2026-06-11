@@ -306,7 +306,7 @@ header h1 {
 .settings-meta.hud-urgent { color: var(--bad); font-weight: 600; }
 .settings-meta.hud-past   { color: var(--text-dim); font-style: italic; }
 
-#theme-btn, #focus-btn, #help-btn, #listen-btn {
+#theme-btn, #focus-btn, #help-btn, #listen-btn, #sync-btn {
   background: var(--surface-2);
   border: 1px solid var(--border);
   width: 36px;
@@ -322,8 +322,22 @@ header h1 {
   color: var(--text);
   transition: transform 0.1s, background 0.1s;
 }
-#theme-btn:active, #focus-btn:active, #help-btn:active, #listen-btn:active { transform: scale(0.92); }
-#theme-btn:hover, #focus-btn:hover, #help-btn:hover, #listen-btn:hover { background: var(--border); }
+#theme-btn:active, #focus-btn:active, #help-btn:active, #listen-btn:active, #sync-btn:active { transform: scale(0.92); }
+#theme-btn:hover, #focus-btn:hover, #help-btn:hover, #listen-btn:hover, #sync-btn:hover { background: var(--border); }
+/* Sync button carries a small "backup is on" dot once cloud sync is
+   configured, so a user can see at a glance their progress is backed up. */
+#sync-btn { position: relative; }
+#sync-btn.is-configured::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--good);
+  border: 1.5px solid var(--surface-2);
+}
 #listen-btn[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
 
 /* ─── Welcome / landing overlay ─── */
@@ -2925,7 +2939,7 @@ button.q-image-zoom:hover img { box-shadow: 0 0 0 2px var(--accent); }
 @media print {
   body { background: #fff !important; color: #000 !important; }
   header, #tabbar, .filter-bar, .search-row, .reading-toc,
-  #help-btn, #focus-btn, #theme-btn, #listen-btn, #toast-host,
+  #help-btn, #focus-btn, #theme-btn, #listen-btn, #sync-btn, #toast-host,
   .reading-top-link, .scratchpad-wrap, .skip-link,
   .img-zoom-overlay { display: none !important; }
   #main { padding: 0 !important; max-width: 100% !important; }
