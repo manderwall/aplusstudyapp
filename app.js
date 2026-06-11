@@ -1233,6 +1233,29 @@ function updateHUD() {
     }
   }
   hud.textContent = parts.join(' · ');
+  updateDueBadge();
+}
+
+// Spaced-repetition "due" pill on the Study tab. Mirrors the HUD's
+// anxiety-mode suppression so the count stays consistent.
+function updateDueBadge() {
+  const badge = $('#study-due-badge');
+  if (!badge) return;
+  // "Review backlog": cards already SEEN that have come due again. New
+  // unseen cards are deliberately excluded — counting them would just
+  // mirror the deck size on a fresh install and never feel like a backlog.
+  // Suppressed in Anxiety Mode (hides numeric pressure cues).
+  const due = pref('anxiety') === 'on' ? 0
+    : state.questions.filter(q => (state.progress[q.id]?.seen || 0) > 0 && isDue(q)).length;
+  if (due > 0) {
+    badge.textContent = due > 99 ? '99+' : String(due);
+    badge.hidden = false;
+    badge.setAttribute('aria-hidden', 'false');
+    badge.setAttribute('aria-label', `${due} cards due for review`);
+  } else {
+    badge.hidden = true;
+    badge.setAttribute('aria-hidden', 'true');
+  }
 }
 
 //─── MODE: STUDY (flashcards with self-rating) ──────────────
@@ -2458,6 +2481,35 @@ function renderStats() {
         <div class="outcomes-loading">Loading outcome log…</div>
       </div>
 
+      ${renderQuizHistoryHTML()}
+
+      <h3 class="stats-h numeric-ui">Last 90 days</h3>
+      <div class="numeric-ui">${renderHeatmapHTML()}</div>
+
+      <h3 class="stats-h numeric-ui">Mastery by Objective</h3>
+      <p class="stats-sub numeric-ui">Tap a row to drill that objective in Study.</p>
+      <div class="obj-bar-list numeric-ui">
+        ${objStats.map(s => {
+          const pct = s.total > 0 ? (s.mastered / s.total) * 100 : 0;
+          const tier = pct >= 80 ? 'high' : pct >= 50 ? 'mid' : pct > 0 ? 'low' : 'none';
+          const accLabel = s.seen > 0 ? `${s.accuracy}%` : '—';
+          return `
+          <button class="obj-bar" data-obj-drill="${escapeHtml(s.obj)}" aria-label="Drill OBJ ${escapeHtml(s.obj)} in Study mode" data-tier="${tier}">
+            <div class="obj-label">OBJ ${escapeHtml(s.obj)}</div>
+            <div class="bar-track" role="progressbar" aria-valuenow="${Math.round(pct)}" aria-valuemin="0" aria-valuemax="100" aria-label="OBJ ${escapeHtml(s.obj)} mastery">
+              <div class="bar-fill" style="width: ${pct}%"></div>
+            </div>
+            <div class="obj-count">${s.mastered}/${s.total}</div>
+            <div class="obj-acc">${accLabel}</div>
+          </button>`;
+        }).join('')}
+      </div>
+
+      ${renderReferenceBookHTML()}
+
+      <details class="settings-collapse">
+        <summary class="settings-summary">⚙️ Settings, accessibility &amp; tools</summary>
+
       <h3 class="stats-h">Accessibility</h3>
       <div class="settings-panel">
         <div class="settings-row">
@@ -2507,32 +2559,6 @@ function renderStats() {
           </span>
         </div>
       </div>
-
-      ${renderQuizHistoryHTML()}
-
-      <h3 class="stats-h numeric-ui">Last 90 days</h3>
-      <div class="numeric-ui">${renderHeatmapHTML()}</div>
-
-      <h3 class="stats-h numeric-ui">Mastery by Objective</h3>
-      <p class="stats-sub numeric-ui">Tap a row to drill that objective in Study.</p>
-      <div class="obj-bar-list numeric-ui">
-        ${objStats.map(s => {
-          const pct = s.total > 0 ? (s.mastered / s.total) * 100 : 0;
-          const tier = pct >= 80 ? 'high' : pct >= 50 ? 'mid' : pct > 0 ? 'low' : 'none';
-          const accLabel = s.seen > 0 ? `${s.accuracy}%` : '—';
-          return `
-          <button class="obj-bar" data-obj-drill="${escapeHtml(s.obj)}" aria-label="Drill OBJ ${escapeHtml(s.obj)} in Study mode" data-tier="${tier}">
-            <div class="obj-label">OBJ ${escapeHtml(s.obj)}</div>
-            <div class="bar-track" role="progressbar" aria-valuenow="${Math.round(pct)}" aria-valuemin="0" aria-valuemax="100" aria-label="OBJ ${escapeHtml(s.obj)} mastery">
-              <div class="bar-fill" style="width: ${pct}%"></div>
-            </div>
-            <div class="obj-count">${s.mastered}/${s.total}</div>
-            <div class="obj-acc">${accLabel}</div>
-          </button>`;
-        }).join('')}
-      </div>
-
-      ${renderReferenceBookHTML()}
 
       <h3 class="stats-h">Options</h3>
       <div class="settings-panel">
@@ -2618,6 +2644,7 @@ function renderStats() {
       </div>
 
       <button class="reset-btn" id="reset-btn">Reset progress for ${escapeHtml(examDef(state.exam).label)}</button>
+      </details>
     </div>
   `;
   $('#reset-btn').addEventListener('click', async () => {
@@ -3462,6 +3489,9 @@ function setMode(mode) {
   else if (mode === 'quiz') renderQuiz();
   else if (mode === 'reading') renderReading();
   else if (mode === 'stats') renderStats();
+  // Keep the Study-tab "due" pill fresh on every tab switch (renderStats
+  // sets the HUD directly and doesn't call updateHUD).
+  updateDueBadge();
   // Brief fade-in cue so mode swaps don't feel like a hard cut. Honors
   // prefers-reduced-motion (CSS rule turns the animation off). Only fires
   // on real mode changes, not on per-card re-renders within a mode.
@@ -3722,8 +3752,9 @@ function toggleFocus() {
   haptic(5);
   const btn = $('#focus-btn');
   if (btn) {
-    // Closed lock = focus mode engaged (chrome hidden); open lock = normal view.
-    btn.textContent = state.focus ? '🔒' : '🔓';
+    // 🎯 stays put; the engaged state is shown via accent fill (aria-pressed),
+    // matching the Listen button — clearer than the old 🔒/🔓 swap, which
+    // read as "security lock" and collided with the PIN-lock feature.
     btn.setAttribute('aria-pressed', state.focus ? 'true' : 'false');
     btn.setAttribute('aria-label', state.focus ? 'Exit focus mode' : 'Enter focus mode');
   }
@@ -5104,8 +5135,11 @@ function showWelcome() {
     else if (action === 'stats')     { setMode('stats'); }
     else if (action === 'set-exam-date') { setMode('stats'); }
     // For Study-focused actions, auto-enter Focus Mode: hides tab bar, filter
-    // bar, HUD, and card meta so it's just the card. Exit with F or the 🔒 button.
+    // bar, HUD, and card meta so it's just the card. Exit with F or the 🎯 button.
     if (studyActions.has(action) && !state.focus) toggleFocus();
+    // First-run: name the header icons once the welcome is out of the way
+    // (skipped automatically if Focus Mode just hid the chrome).
+    maybeShowIconLegend();
   };
 
   $('#welcome-close').addEventListener('click', () => close(null));
@@ -5129,6 +5163,44 @@ function showWelcome() {
                     overlay.querySelector('button');
     primary?.focus();
   }, 0);
+}
+
+//─── FIRST-RUN ICON LEGEND (coachmark) ───────────────────────
+// A one-time, non-modal popover that names the header icons so the bare
+// emoji aren't a guessing game. Shown once (localStorage-gated) after the
+// welcome dialog is dismissed. Lightweight by design — it doesn't trap
+// focus or inert the app; dismiss with the button, Escape, or any header
+// button click.
+function maybeShowIconLegend() {
+  if (localStorage.getItem('iconLegendSeen')) return;
+  if (location.search.includes('skipWelcome')) return;   // keep tests clean
+  if (state.focus) return;                               // chrome is hidden
+  if ($('#welcome-overlay') || $('#icon-legend')) return;
+  const cloudSvg = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 16.5a4 4 0 0 1-.5-7.97A5.5 5.5 0 0 1 17.5 8a3.5 3.5 0 0 1 .5 6.95"/><path d="M9.7 13.2 12 10.9l2.3 2.3"/><path d="M12 10.9v6.4"/></svg>';
+  const html = `
+    <div id="icon-legend" role="dialog" aria-label="What the buttons at the top do">
+      <div class="legend-arrow" aria-hidden="true"></div>
+      <p class="legend-title">The buttons up here ↑</p>
+      <ul class="legend-list">
+        <li><span class="legend-ic">❓</span> Help &amp; setup guides</li>
+        <li><span class="legend-ic">${cloudSvg}</span> Sync &amp; back up across devices</li>
+        <li><span class="legend-ic">🎯</span> Focus mode — hide everything but the card</li>
+        <li><span class="legend-ic">🌓</span> Light / dark theme</li>
+      </ul>
+      <p class="legend-note">🔈 A “read aloud” button also appears while you study.</p>
+      <button type="button" class="welcome-btn primary legend-dismiss" id="legend-dismiss">Got it</button>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+  const el = $('#icon-legend');
+  const dismiss = () => {
+    lsSet('iconLegendSeen', '1');
+    document.removeEventListener('keydown', onKey);
+    el.remove();
+  };
+  const onKey = (e) => { if (e.key === 'Escape') dismiss(); };
+  $('#legend-dismiss').addEventListener('click', dismiss);
+  document.addEventListener('keydown', onKey);
+  setTimeout(() => $('#legend-dismiss')?.focus(), 0);
 }
 
 //─── HELP & SETUP DIALOG ─────────────────────────────────────
@@ -5762,6 +5834,10 @@ async function init() {
   // Skippable via ?skipWelcome=1 for tests.
   if (!localStorage.getItem('welcomeDismissed') && !location.search.includes('skipWelcome')) {
     showWelcome();
+  } else {
+    // Returning user (welcome suppressed): still offer the one-time icon
+    // legend so the header changes are explained at least once.
+    maybeShowIconLegend();
   }
 
   // Deferred installers — none of these block first interaction.

@@ -158,6 +158,52 @@ async function run() {
     // Clean up the config we just wrote so later assertions/state stay neutral.
     await page.evaluate(() => ['supabase.url','supabase.key','supabase.syncKey'].forEach(k => localStorage.removeItem(k)));
 
+    // ── Focus-mode icon: toggles via aria-pressed, no glyph swap ─
+    r.head('focus-mode icon');
+    const focusState = await page.evaluate(() => {
+      const b = document.getElementById('focus-btn');
+      const before = b.getAttribute('aria-pressed');
+      b.click();
+      const after = b.getAttribute('aria-pressed');
+      const glyph = (b.textContent || '').trim();
+      b.click(); // restore
+      return { before, after, glyph };
+    });
+    (focusState.before === 'false' && focusState.after === 'true' && focusState.glyph === '🎯')
+      ? r.ok('focus button toggles aria-pressed and keeps the 🎯 glyph')
+      : r.ng(`focus button wrong: ${JSON.stringify(focusState)}`);
+
+    // ── Stats: settings tucked into a collapsed section ─────────
+    r.head('stats / settings split');
+    await page.evaluate(() => document.querySelector('.tab[data-mode="stats"]')?.click());
+    await wait(400);
+    const statsLayout = await page.evaluate(() => {
+      const wrap = document.querySelector('.stats-wrap');
+      const collapse = document.querySelector('.settings-collapse');
+      // Pure-stats heading (Active exam) should come before the settings collapse.
+      const activeExam = [...document.querySelectorAll('.stats-h')].find(h => /active exam/i.test(h.textContent));
+      const order = activeExam && collapse
+        ? (activeExam.compareDocumentPosition(collapse) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
+        : false;
+      return {
+        hasCollapse: !!collapse,
+        collapsedByDefault: collapse ? !collapse.open : false,
+        // settings controls live inside the collapse (in DOM even while closed)
+        settingsInside: !!collapse?.querySelector('[data-pref="contrast"]') && !!collapse?.querySelector('#reset-btn'),
+        statsBeforeSettings: order,
+      };
+    });
+    statsLayout.hasCollapse && statsLayout.collapsedByDefault ? r.ok('settings live in a collapsed section on Stats') : r.ng(`settings collapse missing/open: ${JSON.stringify(statsLayout)}`);
+    statsLayout.settingsInside ? r.ok('accessibility + reset controls moved inside the collapse') : r.ng('settings controls not inside collapse');
+    statsLayout.statsBeforeSettings ? r.ok('Active-exam stats render before the settings collapse') : r.ng('stats/settings order wrong');
+    // Expanding it still exposes the working controls (handlers bind by id).
+    const expandWorks = await page.evaluate(() => {
+      const c = document.querySelector('.settings-collapse');
+      c.open = true;
+      return !!document.querySelector('.settings-collapse [data-pref="size"] button');
+    });
+    expandWorks ? r.ok('expanding the collapse reveals the settings controls') : r.ng('controls missing after expand');
+
     // ── Console-error scoreboard ────────────────────────────────
     r.head('console errors');
     errors.length === 0 ? r.ok('zero uncaught console errors across the walk') : r.ng(`${errors.length} console error(s): ${errors.slice(0, 3).join(' | ')}`);
