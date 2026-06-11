@@ -112,6 +112,37 @@ async function run() {
     survived.card ? r.ok('app keeps rendering when localStorage throws') : r.ng('app broke when localStorage threw');
     survived.toast ? r.ok('user warned once about storage failure') : r.info('quota toast not visible in window (may have auto-dismissed)');
 
+    // ── Sync & backup dialog (☁️ header icon) ───────────────────
+    r.head('sync & backup dialog');
+    await page.evaluate(() => document.getElementById('sync-btn')?.click());
+    await wait(300);
+    const syncDlg = await page.evaluate(() => {
+      const ov = document.getElementById('sync-overlay');
+      if (!ov) return { open: false };
+      const sql = ov.querySelector('#sync-sql')?.textContent || '';
+      return {
+        open: true,
+        // The SQL must match what the app actually calls (RPCs), not the
+        // old direct-table policies — that mismatch was the doc bug.
+        hasRpcSql: sql.includes('progress_push') && sql.includes('progress_pull'),
+        noStalePolicy: !/create policy/i.test(sql),
+        hasInputs: !!(ov.querySelector('#cloud-url') && ov.querySelector('#cloud-key') && ov.querySelector('#cloud-sync')),
+        hasActions: !!(ov.querySelector('#cloud-push') && ov.querySelector('#cloud-pull')),
+      };
+    });
+    if (syncDlg.open) r.ok('☁️ button opens the Sync & backup dialog');
+    else r.ng('Sync dialog did not open');
+    syncDlg.hasRpcSql && syncDlg.noStalePolicy
+      ? r.ok('setup SQL matches the RPC functions the app calls')
+      : r.ng(`setup SQL wrong: ${JSON.stringify(syncDlg)}`);
+    syncDlg.hasInputs && syncDlg.hasActions
+      ? r.ok('config inputs + push/pull actions present in dialog')
+      : r.ng(`sync config controls missing: ${JSON.stringify(syncDlg)}`);
+    await page.keyboard.press('Escape');
+    await wait(200);
+    const syncClosed = await page.evaluate(() => !document.getElementById('sync-overlay'));
+    syncClosed ? r.ok('Escape closes the Sync dialog') : r.ng('Escape did not close Sync dialog');
+
     // ── Console-error scoreboard ────────────────────────────────
     r.head('console errors');
     errors.length === 0 ? r.ok('zero uncaught console errors across the walk') : r.ng(`${errors.length} console error(s): ${errors.slice(0, 3).join(' | ')}`);

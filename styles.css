@@ -221,7 +221,7 @@ html[data-contrast="high"] {
      is the default; we explicitly keep borders + outlines on interactive
      surfaces so they don't render edgeless against the system bg. */
   .card, .option, .obj-section, .rate-btn, .action,
-  #welcome-overlay, #help-overlay, #feedback-overlay,
+  #welcome-overlay, #help-overlay, #feedback-overlay, #sync-overlay,
   #pin-overlay, #lock-overlay, #img-zoom-overlay, #pdf-viewer-overlay,
   .toast {
     border: 1px solid CanvasText !important;
@@ -1892,7 +1892,7 @@ button.obj-bar .obj-acc {
 /* ─── Help & Setup overlay ─── */
 /* Uses the same modal scaffolding as #welcome-overlay so behavior is
    consistent (centered card on a dimmed page, ESC to close). */
-#help-overlay {
+#help-overlay, #sync-overlay {
   position: fixed;
   inset: 0;
   z-index: 1000;
@@ -1903,6 +1903,62 @@ button.obj-bar .obj-acc {
   background: rgba(0, 0, 0, 0.55);
   overflow-y: auto;
 }
+
+/* ── Sync & backup dialog ────────────────────────────────────── */
+/* Status banner: at-a-glance "are you backed up?" cue. */
+.sync-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+.sync-status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: var(--text-dim);
+}
+.sync-status.is-on  { border-color: var(--good); }
+.sync-status.is-on  .sync-status-dot { background: var(--good); }
+.sync-status.is-off .sync-status-dot { background: var(--warn); }
+/* "Copy the SQL" affordance sits above the code block. */
+.copy-sql-btn { display: inline-block; margin: 6px 0; }
+.sync-form .settings-vrow { margin-bottom: 10px; }
+.sync-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 6px;
+}
+.sync-autosync { margin-top: 4px; }
+
+/* Stats → "Open Sync & backup" row: a tappable card-style pointer that
+   replaces the old inline config block. */
+.sync-open-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text);
+}
+.sync-open-row:hover { border-color: var(--accent); }
+.sync-open-icon { font-size: 22px; flex: 0 0 auto; }
+.sync-open-text { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0; }
+.sync-open-title { font-weight: 600; font-size: 14px; }
+.sync-open-sub { font-size: 12px; color: var(--text-dim); }
+.sync-open-chevron { font-size: 22px; color: var(--text-dim); flex: 0 0 auto; }
 .help-card { max-width: 640px; padding-bottom: 24px; }
 .help-section {
   border: 1px solid var(--border);

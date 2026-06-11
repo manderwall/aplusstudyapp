@@ -2489,10 +2489,6 @@ function renderStats() {
           <span>Haptic feedback</span>
           <input type="checkbox" data-pref="haptics" data-on="on" data-off="off" ${pref('haptics')==='on'?'checked':''}>
         </label>
-        <label class="settings-row">
-          <span>Auto-sync to cloud (every 5s after save)</span>
-          <input type="checkbox" data-pref="autosync" data-on="on" data-off="off" ${pref('autosync')==='on'?'checked':''}>
-        </label>
         <label class="settings-row" title="Hides accuracy %, progress numbers, and mastery bars. Keeps streak + session timer.">
           <span>Anxiety Mode (hide numbers)</span>
           <input type="checkbox" data-pref="anxiety" data-on="on" data-off="off" ${pref('anxiety')==='on'?'checked':''}>
@@ -2608,34 +2604,17 @@ function renderStats() {
         </div>
       </div>
 
-      <h3 class="stats-h">Cloud sync (Supabase)</h3>
+      <h3 class="stats-h">Cloud sync &amp; backup</h3>
       <div class="settings-panel">
-        <div class="settings-stack">
-          <label class="settings-vrow">
-            <span class="settings-vlabel">Project URL</span>
-            <input id="cloud-url" type="url" placeholder="https://xxxx.supabase.co" value="${escapeHtml(getCloudCfg().url)}">
-          </label>
-          <label class="settings-vrow">
-            <span class="settings-vlabel">Anon key</span>
-            <input id="cloud-key" type="password" placeholder="eyJ…" value="${escapeHtml(getCloudCfg().key)}">
-          </label>
-          <label class="settings-vrow">
-            <span class="settings-vlabel">Sync key (any string you pick — same on every device)</span>
-            <input id="cloud-sync" type="text" placeholder="your-sync-key" value="${escapeHtml(getCloudCfg().syncKey)}">
-          </label>
-          <div class="settings-actions" style="justify-content: space-between; padding: 4px 0;">
-            <span class="settings-meta" id="cloud-status">${
-              localStorage.getItem('supabase.lastSync')
-                ? `Last sync: ${new Date(localStorage.getItem('supabase.lastSync')).toLocaleString()}`
-                : 'Not yet synced.'
-            }</span>
-            <span class="settings-actions">
-              <button class="small-btn" id="cloud-save">Save</button>
-              <button class="small-btn" id="cloud-pull">⬇ Pull</button>
-              <button class="small-btn" id="cloud-push">⬆ Push</button>
-            </span>
-          </div>
-        </div>
+        <button type="button" class="sync-open-row" id="open-sync-btn">
+          <span class="sync-open-icon" aria-hidden="true">☁️</span>
+          <span class="sync-open-text">
+            <span class="sync-open-title">Sync &amp; backup</span>
+            <span class="sync-open-sub" id="stats-sync-sub">${escapeHtml(syncStatusLine().text)}</span>
+          </span>
+          <span class="sync-open-chevron" aria-hidden="true">›</span>
+        </button>
+        <p class="settings-meta">Optional. Back up your progress and study across devices. Also on the ☁️ button at the top.</p>
       </div>
 
       <button class="reset-btn" id="reset-btn">Reset progress for ${escapeHtml(examDef(state.exam).label)}</button>
@@ -2736,10 +2715,7 @@ function renderStats() {
   $('#pin-change')?.addEventListener('click', () => pinChangeFlow());
   $('#pin-remove')?.addEventListener('click', () => pinRemoveFlow());
 
-  $('#cloud-save')?.addEventListener('click', () => {
-    saveCloudCfg($('#cloud-url').value.trim(), $('#cloud-key').value.trim(), $('#cloud-sync').value.trim());
-    setCloudStatus('Configuration saved.');
-  });
+  $('#open-sync-btn')?.addEventListener('click', showSync);
   $('#share-copy-btn')?.addEventListener('click', async (e) => {
     const btn = e.currentTarget;
     const url = btn.dataset.url;
@@ -2755,24 +2731,6 @@ function renderStats() {
       // so the user can still grab the URL manually.
       window.prompt('Copy this URL:', url);
     }
-  });
-  $('#cloud-push')?.addEventListener('click', async () => {
-    setCloudStatus('Pushing…');
-    try {
-      saveCloudCfg($('#cloud-url').value.trim(), $('#cloud-key').value.trim(), $('#cloud-sync').value.trim());
-      await cloudPush();
-      setCloudStatus(`Pushed ${new Date().toLocaleTimeString()}`);
-    } catch (e) { setCloudStatus(`Push failed: ${e.message}`, true); }
-  });
-  $('#cloud-pull')?.addEventListener('click', async () => {
-    if (!confirm('Pull will overwrite local progress with cloud data. Continue?')) return;
-    setCloudStatus('Pulling…');
-    try {
-      saveCloudCfg($('#cloud-url').value.trim(), $('#cloud-key').value.trim(), $('#cloud-sync').value.trim());
-      await cloudPull();
-      setCloudStatus(`Pulled ${new Date().toLocaleTimeString()}`);
-      renderStats();
-    } catch (e) { setCloudStatus(`Pull failed: ${e.message}`, true); }
   });
 }
 
@@ -5234,32 +5192,11 @@ function showHelp() {
         </details>
 
         <details class="help-section">
-          <summary>☁️ Sync between devices (optional — Supabase)</summary>
+          <summary>☁️ Sync &amp; backup between devices (optional)</summary>
           <div class="help-body">
-            <p>If you study on both iPad and iPhone, optional Supabase sync keeps your progress in sync. Free tier is plenty. Skip this if you only use one device.</p>
-            <p><strong>One-time backend setup (~5 min):</strong></p>
-            <ol>
-              <li>Make a free project at <strong>supabase.com</strong>.</li>
-              <li>In the project's SQL editor, paste and Run:
-                <pre>create table if not exists progress (
-  sync_key text primary key,
-  data jsonb not null,
-  updated_at timestamptz default now()
-);
-alter table progress enable row level security;
-create policy "anon read"   on progress for select using (true);
-create policy "anon write"  on progress for insert with check (true);
-create policy "anon update" on progress for update using (true);</pre>
-              </li>
-              <li>In <strong>Settings → API</strong>, copy your <em>Project URL</em> and <em>anon / public key</em>.</li>
-            </ol>
-            <p><strong>On each device:</strong></p>
-            <ol>
-              <li>Open <strong>Stats → Cloud sync (Supabase)</strong>.</li>
-              <li>Paste the URL, anon key, and pick a <strong>Sync key</strong> (any string — same on every device, e.g. <code>my-aplus-2026</code>).</li>
-              <li>Tap <strong>Save</strong>, then <strong>⬆ Push</strong> from your main device.</li>
-              <li>On the other device, tap <strong>⬇ Pull</strong> to grab the latest.</li>
-            </ol>
+            <p>If you study on more than one device — or just want a backup — optional cloud sync keeps your progress together. It's free and skippable if you only use one device.</p>
+            <p>Setup now lives behind the <strong>☁️ button at the top of the screen</strong>, with a copy-paste setup script and step-by-step instructions.</p>
+            <button type="button" class="action primary" id="help-open-sync">☁️ Open Sync &amp; backup</button>
           </div>
         </details>
 
@@ -5296,7 +5233,7 @@ create policy "anon update" on progress for update using (true);</pre>
             <ul>
               <li><strong>Page won't load:</strong> check connection, then clear the cache (section above).</li>
               <li><strong>Cards seem to skip:</strong> reinstall the home-screen icon — you may be on an old service-worker cache.</li>
-              <li><strong>Lost your progress after wipe:</strong> if you set up Supabase, tap <strong>Stats → Cloud sync → ⬇ Pull</strong> on this device.</li>
+              <li><strong>Lost your progress after wipe:</strong> if you set up sync, tap the <strong>☁️ button → ⬇ Pull</strong> on this device.</li>
               <li>
                 <strong>Send feedback or report a bug:</strong>
                 <button type="button" class="action primary feedback-cta" id="help-feedback-btn">📨 Email a report</button>
@@ -5343,10 +5280,236 @@ create policy "anon update" on progress for update using (true);</pre>
     close();
     showFeedback();
   });
+  $('#help-open-sync')?.addEventListener('click', () => {
+    close();
+    showSync();
+  });
   document.addEventListener('keydown', onKeydown);
   setTimeout(() => {
     overlay.querySelector('summary')?.focus();
   }, 0);
+}
+
+//─── SYNC & BACKUP DIALOG (☁️ header icon) ────────────────────
+// One-time, copy-paste-able Supabase setup that matches what the app
+// actually calls (the progress_push / progress_pull RPCs from the
+// security-hardening PR — NOT the old direct-table policies). Lives
+// behind its own header icon so cross-device backup is discoverable
+// instead of buried at the bottom of Stats. Reuses the help-overlay
+// scaffolding + the standard setAppInert + trapFocus a11y pattern.
+
+// The exact SQL a brand-new project needs: the table (closed to anon)
+// plus the two SECURITY DEFINER functions the app talks to. Kept here
+// as the single source of truth shown in-app; mirrors
+// docs/supabase-sync-hardening.sql (which only patches an existing
+// table). $$ is a Postgres body delimiter, safe inside a JS template.
+const SUPABASE_SETUP_SQL = `-- A+ Study cloud sync — run once in Supabase:
+-- Project → SQL Editor → New query → paste → Run.
+
+create table if not exists public.progress (
+  sync_key   text primary key,
+  data       jsonb not null,
+  updated_at timestamptz default now()
+);
+alter table public.progress enable row level security;
+-- No anon policies on purpose: the table is reachable ONLY through the
+-- two functions below, and each one requires your sync key.
+
+create or replace function public.progress_pull(p_sync_key text)
+returns table (data jsonb, updated_at timestamptz)
+language sql security definer set search_path = public as $$
+  select p.data, p.updated_at
+  from public.progress p
+  where p.sync_key = p_sync_key;
+$$;
+
+create or replace function public.progress_push(p_sync_key text, p_data jsonb)
+returns void
+language sql security definer set search_path = public as $$
+  insert into public.progress (sync_key, data, updated_at)
+  values (p_sync_key, p_data, now())
+  on conflict (sync_key) do update
+    set data = excluded.data, updated_at = excluded.updated_at;
+$$;
+
+grant execute on function public.progress_pull(text)        to anon;
+grant execute on function public.progress_push(text, jsonb) to anon;`;
+
+function syncStatusLine() {
+  const { url, key, syncKey } = getCloudCfg();
+  const configured = !!(url && key && syncKey);
+  const last = localStorage.getItem('supabase.lastSync');
+  if (!configured) {
+    return { configured, text: 'Not set up yet — this device saves locally only.' };
+  }
+  return {
+    configured,
+    text: last
+      ? `Connected. Last sync: ${new Date(last).toLocaleString()}`
+      : 'Connected — not synced yet. Tap ⬆ Push to back up.',
+  };
+}
+
+function showSync() {
+  const cfg = getCloudCfg();
+  const status = syncStatusLine();
+  const html = `
+    <div id="sync-overlay" role="dialog" aria-modal="true" aria-labelledby="sync-title">
+      <div class="welcome-card help-card">
+        <button class="welcome-close" id="sync-close" aria-label="Close sync">✕</button>
+        <h2 id="sync-title">☁️ Sync &amp; backup</h2>
+        <p class="welcome-intro">Your progress is always saved on <strong>this</strong> device automatically. Cloud sync is optional — turn it on to back up your progress and study across more than one device (e.g. iPad + phone).</p>
+
+        <div class="sync-status ${status.configured ? 'is-on' : 'is-off'}" id="sync-status-banner" role="status">
+          <span class="sync-status-dot" aria-hidden="true"></span>
+          <span id="sync-status-text">${escapeHtml(status.text)}</span>
+        </div>
+
+        <details class="help-section">
+          <summary>🤔 Do I even need this?</summary>
+          <div class="help-body">
+            <p><strong>Only use one device?</strong> You can skip all of this — your progress is already safe on this device and works offline.</p>
+            <p><strong>Want a backup, or study on two devices?</strong> Set up the free Supabase backend once (below), then connect each device with the same sync key.</p>
+          </div>
+        </details>
+
+        <details class="help-section" ${status.configured ? '' : 'open'}>
+          <summary>1️⃣ Set up the backend (one time, ~5 min)</summary>
+          <div class="help-body">
+            <ol>
+              <li>Make a free project at <strong>supabase.com</strong> (no card needed).</li>
+              <li>Open the project → <strong>SQL Editor</strong> → <strong>New query</strong>.</li>
+              <li>Paste the script below and click <strong>Run</strong>. (Sets up the storage table + the two secure functions this app uses.)
+                <button type="button" class="copy-sql-btn small-btn" id="sync-copy-sql">📋 Copy the SQL</button>
+                <pre id="sync-sql">${escapeHtml(SUPABASE_SETUP_SQL)}</pre>
+              </li>
+              <li>Open <strong>Project Settings → API</strong> and copy two things: the <em>Project URL</em> and the <em>anon / public key</em>.</li>
+            </ol>
+          </div>
+        </details>
+
+        <details class="help-section" ${status.configured ? 'open' : ''}>
+          <summary>2️⃣ Connect this device</summary>
+          <div class="help-body">
+            <div class="settings-stack sync-form">
+              <label class="settings-vrow">
+                <span class="settings-vlabel">Project URL</span>
+                <input id="cloud-url" type="url" placeholder="https://xxxx.supabase.co" value="${escapeHtml(cfg.url)}">
+              </label>
+              <label class="settings-vrow">
+                <span class="settings-vlabel">Anon / public key</span>
+                <input id="cloud-key" type="password" placeholder="eyJ…" value="${escapeHtml(cfg.key)}">
+              </label>
+              <label class="settings-vrow">
+                <span class="settings-vlabel">Sync key — pick any long random string, use the <em>same</em> one on every device (e.g. <code>my-aplus-7Kp2qX</code>)</span>
+                <input id="cloud-sync" type="text" placeholder="your-sync-key" value="${escapeHtml(cfg.syncKey)}">
+              </label>
+              <p class="settings-meta">Your sync key is the only thing protecting your data — use something long and unguessable, and keep it private.</p>
+              <div class="sync-actions">
+                <button class="small-btn" id="cloud-save">💾 Save</button>
+                <button class="small-btn" id="cloud-push">⬆ Push (back up this device)</button>
+                <button class="small-btn" id="cloud-pull">⬇ Pull (load onto this device)</button>
+              </div>
+              <label class="settings-row sync-autosync">
+                <span>Auto-sync after each save (every 5s)</span>
+                <input type="checkbox" id="sync-autosync" ${pref('autosync')==='on'?'checked':''}>
+              </label>
+              <p class="settings-meta" id="cloud-status">${escapeHtml(status.text)}</p>
+            </div>
+          </div>
+        </details>
+
+        <details class="help-section">
+          <summary>🆘 Sync isn't working?</summary>
+          <div class="help-body">
+            <ul>
+              <li><strong>Push/Pull fails:</strong> re-check the Project URL and anon key (Settings → API). Make sure you ran the full SQL script above.</li>
+              <li><strong>"No row found for sync key":</strong> you haven't pushed from any device yet — tap <strong>⬆ Push</strong> on the device that has your progress first.</li>
+              <li><strong>Two devices disagree:</strong> Push from the one that's most up-to-date, then Pull on the other.</li>
+              <li><strong>First device, fresh install:</strong> Pull <em>replaces</em> local progress with the cloud copy — only Pull onto a device you're okay overwriting.</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+  `;
+  $('#sync-overlay')?.remove();
+  document.body.insertAdjacentHTML('beforeend', html);
+  const overlay = $('#sync-overlay');
+  const previouslyFocused = document.activeElement;
+  setAppInert(true);
+  const releaseTrap = trapFocus(overlay);
+  const close = () => {
+    releaseTrap();
+    setAppInert(false);
+    document.removeEventListener('keydown', onKeydown);
+    overlay.remove();
+    if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
+      previouslyFocused.focus();
+    }
+  };
+  const onKeydown = (e) => {
+    if ($('#sync-overlay') !== overlay) return;
+    if (e.key === 'Escape') { close(); return; }
+  };
+  $('#sync-close').addEventListener('click', close);
+  document.addEventListener('keydown', onKeydown);
+
+  const readInputs = () => saveCloudCfg(
+    $('#cloud-url').value.trim(),
+    $('#cloud-key').value.trim(),
+    $('#cloud-sync').value.trim(),
+  );
+  const refreshBanner = () => {
+    const s = syncStatusLine();
+    const banner = $('#sync-status-banner');
+    if (banner) {
+      banner.classList.toggle('is-on', s.configured);
+      banner.classList.toggle('is-off', !s.configured);
+      $('#sync-status-text').textContent = s.text;
+    }
+  };
+
+  $('#sync-copy-sql').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    const original = btn.textContent;
+    try {
+      await navigator.clipboard.writeText(SUPABASE_SETUP_SQL);
+      btn.textContent = '✓ Copied!';
+    } catch {
+      window.prompt('Copy this SQL, then run it in the Supabase SQL editor:', SUPABASE_SETUP_SQL);
+    }
+    setTimeout(() => { btn.textContent = original; }, 1600);
+  });
+  $('#cloud-save').addEventListener('click', () => {
+    readInputs();
+    setCloudStatus('Configuration saved.');
+    refreshBanner();
+  });
+  $('#cloud-push').addEventListener('click', async () => {
+    setCloudStatus('Pushing…');
+    try {
+      readInputs();
+      await cloudPush();
+      setCloudStatus(`Pushed ${new Date().toLocaleTimeString()}`);
+    } catch (e) { setCloudStatus(`Push failed: ${e.message}`, true); }
+    refreshBanner();
+  });
+  $('#cloud-pull').addEventListener('click', async () => {
+    if (!confirm('Pull will overwrite local progress with the cloud copy. Continue?')) return;
+    setCloudStatus('Pulling…');
+    try {
+      readInputs();
+      await cloudPull();
+      setCloudStatus(`Pulled ${new Date().toLocaleTimeString()}`);
+      if (state.mode === 'stats') renderStats();
+    } catch (e) { setCloudStatus(`Pull failed: ${e.message}`, true); }
+    refreshBanner();
+  });
+  $('#sync-autosync').addEventListener('change', (e) => {
+    setPref('autosync', e.target.checked ? 'on' : 'off');
+  });
+  setTimeout(() => { $('#sync-close')?.focus(); }, 0);
 }
 
 //─── FEEDBACK / BUG-REPORT DIALOG ─────────────────────────────
@@ -5557,6 +5720,7 @@ async function init() {
   $('#theme-btn')?.addEventListener('click', cycleTheme);
   $('#focus-btn')?.addEventListener('click', toggleFocus);
   $('#help-btn')?.addEventListener('click', showHelp);
+  $('#sync-btn')?.addEventListener('click', showSync);
 
   // If the user set a PIN on a prior session, gate everything behind it
   // before any sensitive data is loaded. A null key (returned after "Forgot
