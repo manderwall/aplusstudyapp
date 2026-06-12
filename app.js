@@ -2160,6 +2160,11 @@ function renderReading() {
   const tocHtml = `
     <nav class="reading-toc" aria-label="Reading sections">
       <div class="reading-toc-title">Sections</div>
+      <div class="reading-toc-search-row">
+        <input id="reading-toc-search" type="search" class="reading-toc-search"
+               placeholder="Filter sections… (e.g. RAID, 1.2)"
+               aria-label="Filter reading sections" autocomplete="off">
+      </div>
       <ol class="reading-toc-list">
         ${objs.map(obj => {
           const fix = state.conceptFixes[obj];
@@ -2167,12 +2172,14 @@ function renderReading() {
           // keys (mnemonics, troubleshooting) get title-cased on their own.
           const isNumeric = /^\d+\.\d+$/.test(obj);
           const label = isNumeric ? `OBJ ${obj}` : obj.charAt(0).toUpperCase() + obj.slice(1);
-          return `<li><a href="#${sectionId(obj)}" class="reading-toc-link" data-toc="${escapeHtml(obj)}">
+          const haystack = `${label} ${fix.title}`.toLowerCase();
+          return `<li data-toc-search="${escapeHtml(haystack)}"><a href="#${sectionId(obj)}" class="reading-toc-link" data-toc="${escapeHtml(obj)}">
             <span class="reading-toc-num">${escapeHtml(label)}</span>
             <span class="reading-toc-text">${escapeHtml(fix.title)}</span>
           </a></li>`;
         }).join('')}
       </ol>
+      <p class="reading-toc-empty" hidden>No sections match.</p>
     </nav>`;
 
   const sectionsHtml = objs.map(obj => {
@@ -2206,6 +2213,23 @@ function renderReading() {
       <div class="reading-list">${sectionsHtml}</div>
     </div>`;
 
+  // Live filter for the section list — type an OBJ number or a keyword
+  // (e.g. "RAID", "1.2") to narrow a long TOC instead of eyeballing it.
+  // Filters only the nav list; the reading sections themselves stay put.
+  const tocSearch = $('#reading-toc-search');
+  if (tocSearch) {
+    tocSearch.addEventListener('input', () => {
+      const q = tocSearch.value.trim().toLowerCase();
+      let any = false;
+      $$('.reading-toc-list li').forEach(li => {
+        const show = !q || (li.dataset.tocSearch || '').includes(q);
+        li.hidden = !show;
+        if (show) any = true;
+      });
+      const empty = $('.reading-toc-empty');
+      if (empty) empty.hidden = any || !q;
+    });
+  }
   // Smooth scroll for the "back to top" links and TOC anchors. Keeps URL hash
   // in sync so users can deep-link to a section.
   $$('.reading-toc-link').forEach(a => {

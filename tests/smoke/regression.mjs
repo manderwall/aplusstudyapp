@@ -204,6 +204,35 @@ async function run() {
     });
     expandWorks ? r.ok('expanding the collapse reveals the settings controls') : r.ng('controls missing after expand');
 
+    // ── Reading TOC live filter ─────────────────────────────────
+    r.head('reading section filter');
+    await page.evaluate(() => document.querySelector('.tab[data-mode="reading"]')?.click());
+    // Reading content (concept-fixes) loads async; wait for the TOC.
+    await page.waitForSelector('#reading-toc-search', { timeout: 5000 }).catch(() => {});
+    const readingFilter = await page.evaluate(() => {
+      const input = document.getElementById('reading-toc-search');
+      const items = () => [...document.querySelectorAll('.reading-toc-list li')];
+      const total = items().length;
+      if (!input || total === 0) return { ok: false, total };
+      // No-match query hides everything + shows the empty note.
+      input.value = 'zzzznomatchqwerty';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      const noneVisible = items().every(li => li.hidden);
+      const emptyShown = !document.querySelector('.reading-toc-empty')?.hidden;
+      // Clearing restores all.
+      input.value = '';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      const allVisible = items().every(li => !li.hidden);
+      return { ok: true, total, noneVisible, emptyShown, allVisible };
+    });
+    if (!readingFilter.ok) r.info(`reading filter not exercised (no TOC rendered: ${JSON.stringify(readingFilter)})`);
+    else {
+      readingFilter.noneVisible && readingFilter.emptyShown
+        ? r.ok('no-match query hides all sections + shows empty note')
+        : r.ng(`filter no-match wrong: ${JSON.stringify(readingFilter)}`);
+      readingFilter.allVisible ? r.ok('clearing the filter restores all sections') : r.ng('filter did not restore sections');
+    }
+
     // ── Console-error scoreboard ────────────────────────────────
     r.head('console errors');
     errors.length === 0 ? r.ok('zero uncaught console errors across the walk') : r.ng(`${errors.length} console error(s): ${errors.slice(0, 3).join(' | ')}`);
