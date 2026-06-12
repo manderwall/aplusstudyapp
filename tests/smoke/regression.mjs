@@ -63,6 +63,12 @@ async function run() {
       return !document.getElementById('reveal-btn')?.disabled;
     });
     revealReady ? r.ok('Reveal arms after the required pick(s)') : r.ng('Reveal stayed disabled after picking');
+    // Armed Reveal advertises its keyboard shortcut (hidden on touch via CSS).
+    const revealKbd = await page.evaluate(() => {
+      const hint = document.querySelector('#reveal-btn .kbd-hint');
+      return hint ? hint.textContent.trim() : null;
+    });
+    revealKbd === 'Space' ? r.ok('armed Reveal button shows its Space key hint') : r.ng(`reveal kbd hint wrong: ${JSON.stringify(revealKbd)}`);
     await page.evaluate(() => document.getElementById('reveal-btn')?.click());
     await wait(500);
     const revealed = await page.evaluate(() => !!document.querySelector('.rate-btn'));

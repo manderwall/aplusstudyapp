@@ -1362,7 +1362,7 @@ function renderStudy() {
         // No-options qtype (free-text, image-only PBQ stems): Reveal is
         // always enabled; the question itself IS the retrieval prompt.
         const armed = !hasOptions || picked || state.committed;
-        const revealLabel = armed ? 'Reveal answer'
+        const revealLabel = armed ? 'Reveal answer<span class="kbd-hint" aria-hidden="true">Space</span>'
                                   : (ma ? `Pick ${needCount} answers, then reveal (${pickedCount}/${needCount})`
                                         : 'Pick an answer, then reveal');
         return `
