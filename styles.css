@@ -44,6 +44,11 @@
   --text: #e8e5df;
   --text-dim: #9e9b95;
   --accent: #74a8cf;
+  /* Text/iconography that sits ON an --accent fill. Theme-aware so it
+     passes WCAG-AA in both modes: black on the light-blue dark-mode
+     accent (8.5:1), white on the darkened light-mode accent (6.1:1).
+     A single static color can't clear AA on both accents. */
+  --on-accent: #000000;
   --good: #4ade80;
   --warn: #fbbf24;
   --bad: #f87171;
@@ -68,6 +73,7 @@
        Darken them for light mode; all four pass 5:1+ as text on white,
        and 5:1+ for white-on-button. */
     --accent: #2e6388;
+    --on-accent: #ffffff;
     --good:   #15803d;
     --warn:   #92400e;
     --bad:    #b91c1c;
@@ -161,7 +167,7 @@ html[data-focus] #main { padding-top: 12px; }
 .seg-control button:last-child { border-right: none; }
 .seg-control button.active {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 /* Fonts (Atkinson Hyperlegible, OpenDyslexic) are loaded dynamically by JS
@@ -338,8 +344,8 @@ header h1 {
   background: var(--good);
   border: 1.5px solid var(--surface-2);
 }
-#listen-btn[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
-#focus-btn[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+#listen-btn[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+#focus-btn[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
 
 /* ─── Stats → collapsible "Settings & tools" section ─── */
 /* Keeps the Stats tab focused on actual stats; settings live one tap away. */
@@ -530,7 +536,7 @@ button.welcome-countdown-cta:hover { background: var(--surface); border-color: v
 .welcome-btn:active { transform: scale(0.99); }
 .welcome-btn.primary {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   border-color: var(--accent);
 }
 .welcome-btn.primary:hover { background: var(--accent); filter: brightness(1.1); }
@@ -636,7 +642,7 @@ button.welcome-countdown-cta:hover { background: var(--surface); border-color: v
   padding: 0 4px;
   border-radius: 9px;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   font-size: 10px;
   font-weight: 700;
   line-height: 17px;
@@ -864,11 +870,13 @@ button.action {
   padding: 0 16px;
 }
 button.action:active { transform: scale(0.97); }
-/* Black text on every colored button for WCAG-AA contrast across both
-   themes. Previous #fff on --accent (#5aa6ff) was 2.52:1 and #fff on
-   --bad (#f87171) was 2.77:1 — both well below the 4.5:1 floor. Black
-   on these passes 5:1+ in dark, 7:1+ in light. */
-button.action.primary { background: var(--accent); color: #000; border-color: var(--accent); }
+/* On-fill text for WCAG-AA contrast across both themes. The accent fill
+   uses the theme-aware --on-accent token (black on the light-blue dark
+   accent, white on the darkened light accent) so it clears AA at any
+   text size in both modes — a single static color cannot. --good/--warn
+   keep #000: their fills are light enough in both themes for large
+   button text (≥3:1). Previous #fff on --accent was 2.52:1. */
+button.action.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
 button.action.good { background: var(--good); color: #000; border-color: var(--good); }
 button.action.warn { background: var(--warn); color: #000; border-color: var(--warn); }
 button.action.bad { background: var(--bad); color: #000; border-color: var(--bad); }
@@ -1021,7 +1029,7 @@ button.action.rate-btn .rate-interval {
 }
 .scratchpad-controls button.active {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   border-color: var(--accent);
 }
 
@@ -1114,7 +1122,7 @@ html[data-motion="reduced"] #main.mode-entering { animation: none; }
 .filter-collapse[open] > summary.filter-summary { margin-bottom: 10px; }
 .filter-summary-pill {
   font-size: 11px; padding: 2px 8px; border-radius: 999px;
-  background: var(--accent); color: #fff;
+  background: var(--accent); color: var(--on-accent);
 }
 
 /* Search bar (above filter bar in Study/Quiz) */
@@ -1164,7 +1172,7 @@ html[data-motion="reduced"] #main.mode-entering { animation: none; }
 }
 .filter-bar button.active {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   border-color: var(--accent);
 }
 .filter-bar button.due-chip {
@@ -1305,7 +1313,7 @@ html[data-motion="reduced"] #main.mode-entering { animation: none; }
 .q-option.picked .q-letter {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 /* Post-reveal: correct answer — green row, green letter badge, ✓ on the right */
@@ -2673,7 +2681,7 @@ html[data-motion="reduced"] .quiz-progress-fill { transition: none; }
    bigger + bordered so it doesn't get tapped accidentally. */
 .mock-start-row { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--border); text-align: center; }
 .mock-start-btn { width: 100%; padding: 16px !important; font-size: 15px !important; border: 2px solid var(--accent) !important; background: var(--surface) !important; color: var(--accent) !important; }
-.mock-start-btn:not([disabled]):hover { background: var(--accent) !important; color: #fff !important; }
+.mock-start-btn:not([disabled]):hover { background: var(--accent) !important; color: var(--on-accent) !important; }
 .mock-start-btn[disabled] { opacity: 0.5; cursor: not-allowed; border-color: var(--border) !important; color: var(--text-dim) !important; }
 .mock-start-desc { margin-top: 8px; font-size: 12px; color: var(--text-dim); line-height: 1.4; }
 

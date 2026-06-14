@@ -69,6 +69,13 @@ async function run() {
       return hint ? hint.textContent.trim() : null;
     });
     revealKbd === 'Space' ? r.ok('armed Reveal button shows its Space key hint') : r.ng(`reveal kbd hint wrong: ${JSON.stringify(revealKbd)}`);
+    // Accent-fill text uses the theme-aware --on-accent token (AA in both themes).
+    const onAccent = await page.evaluate(() => {
+      const tok = getComputedStyle(document.documentElement).getPropertyValue('--on-accent').trim();
+      const btn = getComputedStyle(document.getElementById('reveal-btn')).color;
+      return { tok, btn };
+    });
+    (onAccent.tok && /^#|rgb/.test(onAccent.tok)) ? r.ok(`--on-accent token resolves (${onAccent.tok})`) : r.ng(`--on-accent missing: ${JSON.stringify(onAccent)}`);
     await page.evaluate(() => document.getElementById('reveal-btn')?.click());
     await wait(500);
     const revealed = await page.evaluate(() => !!document.querySelector('.rate-btn'));
