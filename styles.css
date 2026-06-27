@@ -2150,14 +2150,30 @@ button.obj-bar .obj-acc {
 .help-kbd-table td { padding: 4px 8px 4px 0; vertical-align: top; }
 .help-kbd-table td:first-child { white-space: nowrap; width: 1%; }
 .help-footer { margin-top: 16px; }
-.help-disclaimer {
+.help-credit {
   margin-top: 16px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.help-credit a { color: var(--accent); text-decoration: none; font-weight: 500; }
+.help-credit a:hover { text-decoration: underline; }
+.help-disclaimer {
+  margin-top: 12px;
   padding-top: 12px;
   border-top: 1px solid var(--border);
   font-size: 12px;
   line-height: 1.5;
   color: var(--text-dim);
 }
+/* Welcome dialog author credit */
+.welcome-credit {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+.welcome-credit a { color: var(--accent); text-decoration: none; font-weight: 500; }
+.welcome-credit a:hover { text-decoration: underline; }
 
 /* Welcome dialog's "open setup & help" footer link */
 .welcome-help-link {

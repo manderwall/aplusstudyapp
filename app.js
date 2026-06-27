@@ -5146,6 +5146,10 @@ function showWelcome() {
           New here, or need to install / sync between devices?
           <a href="#" id="welcome-open-help">Open setup &amp; help →</a>
         </p>
+        <p class="welcome-credit">
+          Built by <strong>Amanda Kondrat'yev</strong> · open-source (MIT) ·
+          <a href="https://github.com/manderwall/aplusstudyapp" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </p>
       </div>
     </div>
   `;
@@ -5371,6 +5375,11 @@ function showHelp() {
           <button type="button" class="welcome-btn primary" id="help-open-welcome">
             <span class="wbtn-title">← Back to "Pick a starting point"</span>
           </button>
+          <p class="help-credit">
+            <strong>A+ Study</strong> — created by Amanda Kondrat'yev.
+            <a href="https://github.com/manderwall/aplusstudyapp" target="_blank" rel="noopener noreferrer">Source on GitHub</a> ·
+            <a href="mailto:amandakondratyev@gmail.com">amandakondratyev@gmail.com</a>
+          </p>
           <p class="help-disclaimer">
             Unofficial, independent study aid — <strong>not affiliated with,
             authorized, or endorsed by CompTIA</strong>. “CompTIA” and “A+” are
@@ -5663,7 +5672,7 @@ function showSync() {
 // iPhone 15 Pro, Safari, app version v73" by hand. On submit, opens a
 // mailto: link to amanda; falls back to a copy-to-clipboard if the
 // device has no mail client configured. No backend required.
-const FEEDBACK_EMAIL = 'hello@amandavanderwall.com';
+const FEEDBACK_EMAIL = 'amandakondratyev@gmail.com';
 async function getCacheVersion() {
   // The SW writes a constant `aplus-study-v<N>`; reading it out of the
   // active SW lets us tag reports with the version the user is actually
