@@ -2347,6 +2347,17 @@ button.share-copy.share-copied { background: var(--good); color: #000; border-co
   button.action { flex-basis: 100%; }
 }
 
+/* Very narrow phones (≤360px, e.g. iPhone SE 1st-gen at 320px): the header
+   row — title + "N / M" counter + five icon buttons — overran the viewport
+   by a few px, causing a whole-page horizontal scroll. Tighten the gaps and
+   button padding so it fits without wrapping. */
+@media (max-width: 360px) {
+  header { padding: 10px 12px; }
+  .header-right { gap: 6px; }
+  .header-right button { padding: 5px 7px; }
+  #progress-hud { font-size: 11px; }
+}
+
 /* Landscape phone (≤500px tall): the header + filter row + card meta
    was eating the full visible viewport, leaving the question stem
    below the fold. Compact everything vertically so at least one option

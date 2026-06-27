@@ -2,7 +2,7 @@
 
 A Progressive Web App (PWA) for studying the CompTIA A+ Core 2 (220-1202) exam. Built for my own studying — neurodivergent-first, offline-capable, Apple-Pencil-aware — and open for anyone to fork. Installs to home screen on **iPad** (full Pencil support) **or iPhone** (thumb-friendly layout, swipe to advance).
 
-> ⚠️ **Unofficial, independent project — not affiliated with, authorized, or endorsed by CompTIA.** All questions are original, written from the publicly published exam objectives; no real exam content is reproduced. See [Legal / disclaimer](#legal--disclaimer). “CompTIA” and “A+” are trademarks of CompTIA.
+> ⚠️ **Unofficial, independent project — not affiliated with, authorized, or endorsed by CompTIA.** All questions are original, written from the publicly published exam objectives; no real exam content is reproduced. See [Legal and disclaimer](#legal-and-disclaimer). “CompTIA” and “A+” are trademarks of CompTIA.
 
 ![PWA](https://img.shields.io/badge/PWA-installable-5aa6ff)
 ![Build](https://img.shields.io/badge/build_step-none-4ade80)
@@ -321,7 +321,7 @@ studyapp/
 All questions are **original**, written against CompTIA's publicly published
 [exam objectives](https://www.comptia.org/certifications/a) — no real exam
 content, and nothing copied from anyone's practice tests. (See
-[Legal / disclaimer](#legal--disclaimer).) To add your own:
+[Legal and disclaimer](#legal-and-disclaimer).) To add your own:
 
 ```bash
 # 1. Append objects to data/core2/questions.json (schema in docs/DATA-FORMAT.md).
@@ -359,7 +359,7 @@ tests it — the same thing any third-party study guide does.
 - **Interactive (drag/order/match) PBQs aren't supported.** PBQ support is image + multiple-choice; drag-to-reorder interactions are out of scope.
 - **Cross-device sync is manual.** iPhone and iPad keep separate progress unless you wire up Supabase (see "Cloud sync" below) and tap Push/Pull. Stats → Export/Import works as a no-backend alternative.
 
-## Legal / disclaimer
+## Legal and disclaimer
 
 This is an **independent, unofficial** study aid shared as a personal portfolio
 project. It is **not affiliated with, sponsored, authorized, or endorsed by

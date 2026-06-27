@@ -7686,7 +7686,7 @@
     "id": "c2-acr-15-r",
     "obj": "4.9",
     "qtype": "Multiple Choice",
-    "question": "Which acronym matches this description: Encrypted remote connection tunnel?",
+    "question": "Which acronym matches this description: Encrypted tunnel connecting a device into a private network over the internet?",
     "options": [
       "RDP",
       "SSH",
@@ -7774,7 +7774,7 @@
     "id": "c2-acr-17-r",
     "obj": "2.1",
     "qtype": "Multiple Choice",
-    "question": "Which acronym matches this description: Single sign-on authentication standard?",
+    "question": "Which acronym matches this description: XML-based standard for exchanging single sign-on authentication assertions between identity and service providers?",
     "options": [
       "OAuth",
       "OIDC",
@@ -8126,7 +8126,7 @@
     "id": "c2-acr-25-r",
     "obj": "2.11",
     "qtype": "Multiple Choice",
-    "question": "Which acronym matches this description: Secure encrypted communications protocol?",
+    "question": "Which acronym matches this description: Protocol that secures HTTPS web traffic using certificates?",
     "options": [
       "SSH",
       "IPsec",
@@ -8566,7 +8566,7 @@
     "id": "c2-acr-35-r",
     "obj": "2.3",
     "qtype": "Multiple Choice",
-    "question": "Which acronym matches this description: Centralized authentication protocol?",
+    "question": "Which acronym matches this description: Centralized AAA protocol that authenticates network access (VPN, Wi-Fi, dial-in)?",
     "options": [
       "LDAP",
       "SAML",
