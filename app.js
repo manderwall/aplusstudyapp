@@ -5364,7 +5364,7 @@ function showHelp() {
               <li><strong>Lost your progress after wipe:</strong> if you set up sync, tap the <strong>☁️ button → ⬇ Pull</strong> on this device.</li>
               <li>
                 <strong>Send feedback or report a bug:</strong>
-                <button type="button" class="action primary feedback-cta" id="help-feedback-btn">📨 Email a report</button>
+                <button type="button" class="action primary feedback-cta" id="help-feedback-btn">🐛 Report an issue</button>
                 <span class="help-aux">(pre-fills the screen you're on + device info so you don't have to type it out)</span>
               </li>
             </ul>
@@ -5378,7 +5378,7 @@ function showHelp() {
           <p class="help-credit">
             <strong>A+ Study</strong> — created by Amanda Kondrat'yev.
             <a href="https://github.com/manderwall/aplusstudyapp" target="_blank" rel="noopener noreferrer">Source on GitHub</a> ·
-            <a href="mailto:amandakondratyev@gmail.com">amandakondratyev@gmail.com</a>
+            <a href="https://github.com/manderwall/aplusstudyapp/issues" target="_blank" rel="noopener noreferrer">Report an issue</a>
           </p>
           <p class="help-disclaimer">
             Unofficial, independent study aid — <strong>not affiliated with,
@@ -5670,9 +5670,9 @@ function showSync() {
 // Opens an in-app form that pre-fills the screen the user is on + device
 // info, so a classmate doesn't have to type "I was on Quiz card #7,
 // iPhone 15 Pro, Safari, app version v73" by hand. On submit, opens a
-// mailto: link to amanda; falls back to a copy-to-clipboard if the
-// device has no mail client configured. No backend required.
-const FEEDBACK_EMAIL = 'amandakondratyev@gmail.com';
+// prefilled GitHub issue (no personal email or backend involved); falls
+// back to copy-to-clipboard if the report is too long for the URL.
+const FEEDBACK_ISSUES_URL = 'https://github.com/manderwall/aplusstudyapp/issues/new';
 async function getCacheVersion() {
   // The SW writes a constant `aplus-study-v<N>`; reading it out of the
   // active SW lets us tag reports with the version the user is actually
@@ -5725,7 +5725,7 @@ async function showFeedback() {
         <div id="fbk-error" class="pind-error" role="alert" hidden></div>
         <div class="pind-actions">
           <button type="button" class="action" id="fbk-copy">Copy report</button>
-          <button type="button" class="action primary" id="fbk-send">Send via email →</button>
+          <button type="button" class="action primary" id="fbk-send">Open a GitHub issue →</button>
         </div>
       </div>
     </div>`;
@@ -5767,21 +5767,25 @@ async function showFeedback() {
 
   $('#fbk-send').addEventListener('click', () => {
     const body = buildReport();
-    const subject = 'A+ Study — bug report / feedback';
-    // mailto: max URL length is ~2000 chars; if we overflow, fall back to
-    // copying and tell the user.
-    const url = `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    if (url.length > 1900) {
+    const title = 'Bug report / feedback';
+    // GitHub prefills a new issue from ?title=&body= on the new-issue URL.
+    // A very long body can exceed the server's URL limit, so if we'd
+    // overflow, copy the report and open a blank new-issue form instead.
+    const base = `${FEEDBACK_ISSUES_URL}?title=${encodeURIComponent(title)}`;
+    const url = `${base}&body=${encodeURIComponent(body)}`;
+    if (url.length > 6000) {
       navigator.clipboard?.writeText(body);
-      toast('Report too long for email — copied to clipboard. Paste it into a new email to ' + FEEDBACK_EMAIL, 'info', 6000);
+      toast('Report copied — paste it into the GitHub issue that just opened.', 'info', 6000);
+      window.open(base, '_blank', 'noopener');
       close();
       return;
     }
-    // Open the mail client. On iOS this may navigate the current tab;
-    // restore by opening in a new window where possible.
+    // Open the prefilled new-issue form (submitting requires a GitHub login;
+    // no personal email or backend involved). On iOS a blocked popup falls
+    // back to in-tab navigation.
     try {
-      const w = window.open(url, '_blank');
-      if (!w) location.href = url;  // popup blocked → in-tab navigation
+      const w = window.open(url, '_blank', 'noopener');
+      if (!w) location.href = url;
     } catch { location.href = url; }
     setTimeout(close, 200);
   });
@@ -5789,7 +5793,7 @@ async function showFeedback() {
   $('#fbk-copy').addEventListener('click', async () => {
     const body = buildReport();
     try {
-      await navigator.clipboard.writeText(`To: ${FEEDBACK_EMAIL}\nSubject: A+ Study — bug report / feedback\n\n${body}`);
+      await navigator.clipboard.writeText(body);
       const btn = $('#fbk-copy');
       const orig = btn.textContent;
       btn.textContent = 'Copied ✓';
@@ -5799,7 +5803,7 @@ async function showFeedback() {
       // Clipboard blocked — show the text so user can long-press select it
       const errEl = $('#fbk-error');
       errEl.hidden = false;
-      errEl.textContent = `Couldn't copy automatically. Email ${FEEDBACK_EMAIL} with: ${body.slice(0, 200)}…`;
+      errEl.textContent = `Couldn't copy automatically. Select and copy this, then paste it into a GitHub issue: ${body.slice(0, 200)}…`;
     }
   });
 

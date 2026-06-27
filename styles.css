@@ -44,10 +44,8 @@
   --text: #e8e5df;
   --text-dim: #9e9b95;
   --accent: #74a8cf;
-  /* Text/iconography that sits ON an --accent fill. Mirrors the shared
-     smartiasis design-system token --color-accent-fg (#fff light, navy
-     #0e1117 dark — see amandavanderwall-portfolio/docs/DESIGN-SYSTEM.md)
-     so the app family reads as one practice. Theme-aware so it clears
+  /* Text/iconography that sits ON an --accent fill (#fff light, navy
+     #0e1117 dark). Theme-aware so it clears
      WCAG-AA on both accents: navy on the light-blue dark accent (7.6:1),
      white on the darkened light accent (6.5:1). A single static color
      can't pass on both. */
