@@ -1,12 +1,15 @@
 # A+ Study — iPad + iPhone Study App
 
-A Progressive Web App (PWA) for the CompTIA A+ Core 2 (220-1202) exam. Built for my own studying — neurodivergent-first, offline-capable, Apple-Pencil-aware — and open for anyone to fork. Installs to home screen on **iPad** (full Pencil support) **or iPhone** (thumb-friendly layout, swipe to advance).
+A Progressive Web App (PWA) for studying the CompTIA A+ Core 2 (220-1202) exam. Built for my own studying — neurodivergent-first, offline-capable, Apple-Pencil-aware — and open for anyone to fork. Installs to home screen on **iPad** (full Pencil support) **or iPhone** (thumb-friendly layout, swipe to advance).
+
+> ⚠️ **Unofficial, independent project — not affiliated with, authorized, or endorsed by CompTIA.** All questions are original, written from the publicly published exam objectives; no real exam content is reproduced. See [Legal / disclaimer](#legal--disclaimer). “CompTIA” and “A+” are trademarks of CompTIA.
 
 ![PWA](https://img.shields.io/badge/PWA-installable-5aa6ff)
 ![Build](https://img.shields.io/badge/build_step-none-4ade80)
 ![Dependencies](https://img.shields.io/badge/runtime_deps-0-4ade80)
-![Tests](https://img.shields.io/badge/tests-48_passing-4ade80)
+![Tests](https://img.shields.io/badge/tests-75_passing-4ade80)
 ![License](https://img.shields.io/badge/license-MIT-blue)
+![Unofficial](https://img.shields.io/badge/CompTIA-unofficial-orange)
 
 **🔗 Live demo:** [aplusstudyapp.pages.dev](https://aplusstudyapp.pages.dev) — installable; works fully offline once loaded.
 
@@ -313,26 +316,27 @@ studyapp/
     └── icon-512.png     # Web manifest (high-res)
 ```
 
-### Ingesting more pretests
+### Adding more questions
 
-When more pretest PDFs/DOCXs come in, the two scripts under `scripts/` handle
-the round-trip:
+All questions are **original**, written against CompTIA's publicly published
+[exam objectives](https://www.comptia.org/certifications/a) — no real exam
+content, and nothing copied from anyone's practice tests. (See
+[Legal / disclaimer](#legal--disclaimer).) To add your own:
 
 ```bash
-# 1. Extract questions + options + correct answer + PBQ images from a pretest PDF
-#    Writes/merges into data/core2/questions.json by default.
-node scripts/extract-pretest-v2.mjs <pretestNum> <path/to/pretest_N.pdf>
+# 1. Append objects to data/core2/questions.json (schema in docs/DATA-FORMAT.md).
+#    Each needs a unique id, an obj, the question, options, and the answer.
 
-# 2. Dedupe across pretests (merges duplicates, fills q.sources)
+# 2. Dedupe / normalize across the bank
 node scripts/dedupe.mjs
 
-# 3. Validate
+# 3. Validate (catches unwinnable questions, mismatched objectives, etc.)
 node scripts/validate-questions.mjs --all
 ```
 
-Pretest-derived IDs use `p<pretestNum>q<qnum>`; if a pretest re-uses a number
-with different content, append `_2` (e.g. `p3q18_2`). Drop a `--deck=<path>`
-flag on the extract scripts to target a future deck other than Core 2.
+Write questions in your own words. The fastest safe workflow is to pick an
+objective, study the underlying concept, and author a fresh scenario that
+tests it — the same thing any third-party study guide does.
 
 ### Ideas for extensions
 
@@ -354,4 +358,33 @@ flag on the extract scripts to target a future deck other than Core 2.
 - **No Performance-Based Questions (PBQs) yet.** The real Core 2 exam includes a few image / simulation PBQs (motherboard diagrams, router admin screens, etc.). The renderer is image-ready (drop a question with `qtype: "PBQ"` and `image:` / `images:` path and it just works), but the current bank doesn't include any. Tracked in the project handoff.
 - **Interactive (drag/order/match) PBQs aren't supported.** PBQ support is image + multiple-choice; drag-to-reorder interactions are out of scope.
 - **Cross-device sync is manual.** iPhone and iPad keep separate progress unless you wire up Supabase (see "Cloud sync" below) and tap Push/Pull. Stats → Export/Import works as a no-backend alternative.
+
+## Legal / disclaimer
+
+This is an **independent, unofficial** study aid shared as a personal portfolio
+project. It is **not affiliated with, sponsored, authorized, or endorsed by
+CompTIA**, and it is not an official CompTIA product.
+
+- **Trademarks.** "CompTIA" and "A+" are trademarks (or registered trademarks)
+  of the Computing Technology Industry Association (CompTIA). They are used here
+  only nominatively — i.e. to truthfully describe the certification exam this
+  app is designed to help you study for. No claim is made to any CompTIA mark,
+  and no affiliation or endorsement is implied.
+- **Questions are original.** Every question in `data/` was written from scratch
+  against CompTIA's **publicly published exam objectives**, which list the topics
+  the exam covers. Exam objectives are facts about the test; the questions that
+  teach those topics are this project's own wording. **No actual CompTIA exam
+  questions, official practice-test items, or other copyrighted question banks
+  are reproduced, included, or derived here.** That's the same boundary every
+  legitimate third-party study guide operates within.
+- **No copyrighted study materials are bundled.** Any reference PDF/book feature
+  stores files **only on your own device** (in-browser IndexedDB) and never in
+  this repository — `.gitignore` blocks `*.pdf`, `*.epub`, `*.docx`, etc.
+- **Code license:** [MIT](LICENSE). The code is free to use, fork, and modify.
+- **No warranty / not exam advice.** Provided "as is", with no guarantee of
+  accuracy or completeness, and no guarantee you'll pass any exam. Always verify
+  against current official CompTIA materials.
+
+If you are a rights holder and believe something here is mistaken, please open an
+issue and it will be addressed promptly.
 

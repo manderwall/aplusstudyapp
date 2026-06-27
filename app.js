@@ -1291,8 +1291,15 @@ function renderStudy() {
   const edited = !!state.overrides[q.id];
   const sources = q.sources || [{ pretest: q.pretest, qnum: q.qnum }];
   // Only animate the card on question change, not on reveal-toggle rerenders
-  let cardClass = state._lastRenderedCard === q.id ? 'card' : 'card card-fresh';
+  const sameCard = state._lastRenderedCard === q.id;
+  let cardClass = sameCard ? 'card' : 'card card-fresh';
   state._lastRenderedCard = q.id;
+  // Preserve the scroll position across SAME-CARD re-renders. Picking an
+  // option and revealing both rebuild #main via innerHTML, which resets
+  // scrollTop to 0 — that mid-card jump-to-top is the "the screen resizes
+  // when I tap an answer" report. We restore it after the swap. On a real
+  // card *change* we intentionally start at the top (prevScroll stays 0).
+  const prevScroll = sameCard ? ($('#main')?.scrollTop || 0) : 0;
   // If we're in the first 500ms after reveal, paint the whole card with
   // pointer-events: none. Every other guard (rate-row arming, JS timestamp
   // checks in nextQuestion/prevQuestion, swipe target check) catches a
@@ -1384,6 +1391,9 @@ function renderStudy() {
   renderFilterBar();
   updateHUD();
   attachStudyEvents(q);
+  // Restore pre-render scroll on same-card rerenders (see prevScroll above)
+  // so tapping an option / revealing doesn't snap the card to the top.
+  if (sameCard && prevScroll) { const m = $('#main'); if (m) m.scrollTop = prevScroll; }
   $('#edit-btn')?.addEventListener('click', () => { state.editing = true; renderStudy(); });
   // Keyboard / SR users would otherwise lose focus to <body> on every
   // innerHTML swap. Restore focus to the primary action (Reveal pre-
@@ -3243,10 +3253,21 @@ function renderYourPickHTML(q) {
 function renderRatingButtonsHTML(q) {
   const p = state.progress[q.id] || {};
   const now = Date.now();
-  // Mirror recordRating's exam-aware schedule so the interval labels
-  // shown under each rate button match what'll actually happen.
+  // Interval previews under each rate button. These intentionally do NOT
+  // apply recordRating's exam-date interval cap. The cap clamps every
+  // interval down to "days until exam", which — within a week of the exam —
+  // collapses Hard/Good/Easy to the SAME label (e.g. all "1 day"), making
+  // the four buttons useless for telling the choices apart. That collapse
+  // is the "all the difficulty buttons show the same time / 10h on every
+  // answer" report. The preview's job is to show how each rating spaces the
+  // card *relative to the others*, so we show the card's natural FSRS
+  // interval (matching the documented "first-Good ≈ 5 days, first-Easy ≈ 12
+  // days"). The exam cap still governs the ACTUAL next-due date in
+  // recordRating — only the preview label is uncapped. We keep the
+  // exam-aware retention escalation, which tightens the spacing as the exam
+  // nears without flattening the four buttons into one value.
   const days = daysUntilExam(state.exam);
-  const previewCap = days !== null && days > 0 ? days : undefined;
+  const previewCap = undefined;
   const previewRetention = days === null || days > 14 ? 0.90
                          : days >  7 ? 0.93
                          : 0.95;
@@ -4571,6 +4592,13 @@ function installSwipe() {
     if (e.target.closest('button, input, a, canvas, .filter-bar, .scratchpad-wrap, .q-options')) return;
     const dx = e.clientX - sx;
     const dy = e.clientY - sy;
+    // Ghost-tap guard (5-layer stack, layer 2): a swipe that lands within
+    // 800ms of a reveal/answer-record is almost always the tail of the same
+    // gesture that revealed the card, not a deliberate skip. The rate-btn and
+    // quiz Next click handlers already carry this guard; the swipe pointerup
+    // was the one navigation path missing it — which is the "it advanced on
+    // its own" / "Reveal skipped the card" report. Bail before navigating.
+    if (Date.now() - (state._revealedAt || 0) < 800) return;
     // Require a cleaner horizontal gesture (100px, less diagonal tolerance).
     // Left swipe = next; right swipe = prev (Study only — Quiz answers are
     // recorded and going back would un-record without un-grading).
@@ -5343,6 +5371,14 @@ function showHelp() {
           <button type="button" class="welcome-btn primary" id="help-open-welcome">
             <span class="wbtn-title">← Back to "Pick a starting point"</span>
           </button>
+          <p class="help-disclaimer">
+            Unofficial, independent study aid — <strong>not affiliated with,
+            authorized, or endorsed by CompTIA</strong>. “CompTIA” and “A+” are
+            trademarks of CompTIA, used here only to describe the exam this app
+            helps you study for. All questions are original, written to the
+            publicly available exam objectives; no actual exam content is
+            reproduced. A free, open-source personal project (MIT-licensed).
+          </p>
         </div>
       </div>
     </div>

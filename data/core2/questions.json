@@ -7056,7 +7056,6 @@
       "Protected Internal Inventory"
     ],
     "correct_short": "Personally Identifiable Information",
-    "wrong_pick": "Non-Disclosure Agreement",
     "explanation": "OBJ 4.6 (Operational Procedures): PII stands for Personally Identifiable Information. Data identifying individuals.",
     "sources": [
       {
@@ -7073,13 +7072,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Data identifying individuals?",
     "options": [
-      "GFS",
-      "MSDS",
+      "DRM",
+      "EULA",
       "PII",
-      "SSH"
+      "EOL"
     ],
     "correct_short": "PII",
-    "wrong_pick": "MSDS",
     "explanation": "OBJ 4.6 (Operational Procedures): Data identifying individuals. PII stands for Personally Identifiable Information.",
     "sources": [
       {
@@ -7102,7 +7100,6 @@
       "Temporary Key Issuance Procedure"
     ],
     "correct_short": "Temporal Key Integrity Protocol",
-    "wrong_pick": "Multifactor Authentication",
     "explanation": "OBJ 2.3 (Security): TKIP stands for Temporal Key Integrity Protocol. Older wireless encryption standard.",
     "sources": [
       {
@@ -7119,13 +7116,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Older wireless encryption standard?",
     "options": [
-      "RSR",
+      "WPA",
+      "RADIUS",
       "TKIP",
-      "EDR",
-      "BYOD"
+      "SSID"
     ],
     "correct_short": "TKIP",
-    "wrong_pick": "EDR",
     "explanation": "OBJ 2.3 (Security): Older wireless encryption standard. TKIP stands for Temporal Key Integrity Protocol.",
     "sources": [
       {
@@ -7148,7 +7144,6 @@
       "Logical Directory Addressing Protocol"
     ],
     "correct_short": "Lightweight Directory Access Protocol",
-    "wrong_pick": "Encrypting File System",
     "explanation": "OBJ 2.1 (Security): LDAP stands for Lightweight Directory Access Protocol. Access protocol for directory services.",
     "sources": [
       {
@@ -7165,13 +7160,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Access protocol for directory services?",
     "options": [
+      "RADIUS",
       "SAML",
-      "XSS",
       "LDAP",
-      "EFS"
+      "AAA"
     ],
     "correct_short": "LDAP",
-    "wrong_pick": "SAML",
     "explanation": "OBJ 2.1 (Security): Access protocol for directory services. LDAP stands for Lightweight Directory Access Protocol.",
     "sources": [
       {
@@ -7194,7 +7188,6 @@
       "Patching as a Service"
     ],
     "correct_short": "Platform as a Service",
-    "wrong_pick": "Storage Area Network",
     "explanation": "OBJ 1.11 (Operating Systems): PaaS stands for Platform as a Service. Cloud-hosted development platform.",
     "sources": [
       {
@@ -7211,13 +7204,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Cloud-hosted development platform?",
     "options": [
-      "UEFI",
-      "FTP",
-      "SAN",
-      "PaaS"
+      "SaaS",
+      "IaaS",
+      "PaaS",
+      "DaaS"
     ],
     "correct_short": "PaaS",
-    "wrong_pick": "FTP",
     "explanation": "OBJ 1.11 (Operating Systems): Cloud-hosted development platform. PaaS stands for Platform as a Service.",
     "sources": [
       {
@@ -7240,7 +7232,6 @@
       "Cipher Security System"
     ],
     "correct_short": "Cross-site Scripting",
-    "wrong_pick": "Wireless Access Point",
     "explanation": "OBJ 2.5 (Security): XSS stands for Cross-site Scripting. Script injection web attack.",
     "sources": [
       {
@@ -7257,13 +7248,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Script injection web attack?",
     "options": [
-      "DDoS",
+      "CSRF",
       "MITM",
       "XSS",
-      "AES"
+      "DDoS"
     ],
     "correct_short": "XSS",
-    "wrong_pick": "MITM",
     "explanation": "OBJ 2.5 (Security): Script injection web attack. XSS stands for Cross-site Scripting.",
     "sources": [
       {
@@ -7286,7 +7276,6 @@
       "Identity Distribution Service"
     ],
     "correct_short": "Intrusion Detection System",
-    "wrong_pick": "Business Email Compromise",
     "explanation": "OBJ 2.1 (Security): IDS stands for Intrusion Detection System. Detects suspicious activity.",
     "sources": [
       {
@@ -7303,13 +7292,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Detects suspicious activity?",
     "options": [
-      "RADIUS",
+      "ACL",
+      "PAM",
       "IDS",
-      "HSM",
-      "MDR"
+      "VPN"
     ],
     "correct_short": "IDS",
-    "wrong_pick": "RADIUS",
     "explanation": "OBJ 2.1 (Security): Detects suspicious activity. IDS stands for Intrusion Detection System.",
     "sources": [
       {
@@ -7332,7 +7320,6 @@
       "Dynamic Resource Mapping"
     ],
     "correct_short": "Digital Rights Management",
-    "wrong_pick": "Grandfather-Father-Son",
     "explanation": "OBJ 4.6 (Operational Procedures): DRM stands for Digital Rights Management. Restricts digital media usage/copying.",
     "sources": [
       {
@@ -7349,13 +7336,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Restricts digital media usage/copying?",
     "options": [
-      "WinRM",
-      "GFS",
-      "PCI DSS",
-      "DRM"
+      "EULA",
+      "DMCA",
+      "DRM",
+      "EOL"
     ],
     "correct_short": "DRM",
-    "wrong_pick": "GFS",
     "explanation": "OBJ 4.6 (Operational Procedures): Restricts digital media usage/copying. DRM stands for Digital Rights Management.",
     "sources": [
       {
@@ -7378,7 +7364,6 @@
       "Unified Application Configuration"
     ],
     "correct_short": "User Account Control",
-    "wrong_pick": "Encrypting File System",
     "explanation": "OBJ 2.2 (Security): UAC stands for User Account Control. Windows permission elevation system.",
     "sources": [
       {
@@ -7395,13 +7380,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Windows permission elevation system?",
     "options": [
-      "MFA",
-      "SSL",
+      "EFS",
+      "TPM",
       "UAC",
-      "SSO"
+      "MFA"
     ],
     "correct_short": "UAC",
-    "wrong_pick": "MFA",
     "explanation": "OBJ 2.2 (Security): Windows permission elevation system. UAC stands for User Account Control.",
     "sources": [
       {
@@ -7424,7 +7408,6 @@
       "Shared Application Namespace"
     ],
     "correct_short": "Storage Area Network",
-    "wrong_pick": "New Technology File System",
     "explanation": "OBJ 1.7 (Operating Systems): SAN stands for Storage Area Network. High-speed storage network.",
     "sources": [
       {
@@ -7441,13 +7424,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: High-speed storage network?",
     "options": [
-      "UEFI",
-      "PaaS",
+      "NAS",
+      "RAID",
       "SAN",
-      "MBR"
+      "DAS"
     ],
     "correct_short": "SAN",
-    "wrong_pick": "MBR",
     "explanation": "OBJ 1.7 (Operating Systems): High-speed storage network. SAN stands for Storage Area Network.",
     "sources": [
       {
@@ -7470,7 +7452,6 @@
       "Uninterruptible Processing Server"
     ],
     "correct_short": "Uninterruptible Power Supply",
-    "wrong_pick": "Secure Shell",
     "explanation": "OBJ 4.5 (Operational Procedures): UPS stands for Uninterruptible Power Supply. Backup electrical power device.",
     "sources": [
       {
@@ -7487,13 +7468,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Backup electrical power device?",
     "options": [
-      "RDP",
+      "PDU",
+      "ESD",
       "UPS",
-      "WinRM",
-      "NDA"
+      "PSU"
     ],
     "correct_short": "UPS",
-    "wrong_pick": "NDA",
     "explanation": "OBJ 4.5 (Operational Procedures): Backup electrical power device. UPS stands for Uninterruptible Power Supply.",
     "sources": [
       {
@@ -7516,7 +7496,6 @@
       "Main Boot Routine"
     ],
     "correct_short": "Master Boot Record",
-    "wrong_pick": "Unified Extensible Firmware Interface",
     "explanation": "OBJ 1.2 (Operating Systems): MBR stands for Master Boot Record. Legacy boot partition structure.",
     "sources": [
       {
@@ -7533,13 +7512,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Legacy boot partition structure?",
     "options": [
-      "SAN",
-      "FTP",
+      "GPT",
+      "UEFI",
       "MBR",
-      "UEFI"
+      "BIOS"
     ],
     "correct_short": "MBR",
-    "wrong_pick": "UEFI",
     "explanation": "OBJ 1.2 (Operating Systems): Legacy boot partition structure. MBR stands for Master Boot Record.",
     "sources": [
       {
@@ -7562,7 +7540,6 @@
       "Folder Transport Pipeline"
     ],
     "correct_short": "File Transfer Protocol",
-    "wrong_pick": "Storage Area Network",
     "explanation": "OBJ 1.7 (Operating Systems): FTP stands for File Transfer Protocol. Legacy file transfer method.",
     "sources": [
       {
@@ -7579,13 +7556,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Legacy file transfer method?",
     "options": [
-      "NTFS",
-      "MMC",
-      "SAN",
-      "FTP"
+      "SFTP",
+      "SMB",
+      "FTP",
+      "NFS"
     ],
     "correct_short": "FTP",
-    "wrong_pick": "NTFS",
     "explanation": "OBJ 1.7 (Operating Systems): Legacy file transfer method. FTP stands for File Transfer Protocol.",
     "sources": [
       {
@@ -7608,7 +7584,6 @@
       "Bring Your Own Disk"
     ],
     "correct_short": "Bring Your Own Device",
-    "wrong_pick": "Hardware Security Module",
     "explanation": "OBJ 2.8 (Security): BYOD stands for Bring Your Own Device. Employees use personal devices for work.",
     "sources": [
       {
@@ -7625,13 +7600,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Employees use personal devices for work?",
     "options": [
-      "TLS",
-      "WAP",
+      "MDM",
+      "COPE",
       "BYOD",
-      "EDR"
+      "CYOD"
     ],
     "correct_short": "BYOD",
-    "wrong_pick": "TLS",
     "explanation": "OBJ 2.8 (Security): Employees use personal devices for work. BYOD stands for Bring Your Own Device.",
     "sources": [
       {
@@ -7654,7 +7628,6 @@
       "Information Asset Monitoring"
     ],
     "correct_short": "Identity Access Management",
-    "wrong_pick": "Distributed Denial of Service",
     "explanation": "OBJ 2.1 (Security): IAM stands for Identity Access Management. Framework managing identities and permissions.",
     "sources": [
       {
@@ -7671,13 +7644,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Framework managing identities and permissions?",
     "options": [
-      "MFA",
-      "PUP",
-      "DLP",
-      "IAM"
+      "SSO",
+      "PAM",
+      "IAM",
+      "RBAC"
     ],
     "correct_short": "IAM",
-    "wrong_pick": "PUP",
     "explanation": "OBJ 2.1 (Security): Framework managing identities and permissions. IAM stands for Identity Access Management.",
     "sources": [
       {
@@ -7700,7 +7672,6 @@
       "Volume Protection Network"
     ],
     "correct_short": "Virtual Private Network",
-    "wrong_pick": "Remote Monitoring and Management",
     "explanation": "OBJ 4.9 (Operational Procedures): VPN stands for Virtual Private Network. Encrypted remote connection tunnel.",
     "sources": [
       {
@@ -7717,13 +7688,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Encrypted remote connection tunnel?",
     "options": [
-      "SLA",
       "RDP",
-      "HIPAA",
-      "VPN"
+      "SSH",
+      "VPN",
+      "RAS"
     ],
     "correct_short": "VPN",
-    "wrong_pick": "HIPAA",
     "explanation": "OBJ 4.9 (Operational Procedures): Encrypted remote connection tunnel. VPN stands for Virtual Private Network.",
     "sources": [
       {
@@ -7746,7 +7716,6 @@
       "Unified Transport Mechanism"
     ],
     "correct_short": "Unified Threat Management",
-    "wrong_pick": "Wi-Fi Protected Access",
     "explanation": "OBJ 2.1 (Security): UTM stands for Unified Threat Management. Integrated network security system.",
     "sources": [
       {
@@ -7763,13 +7732,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Integrated network security system?",
     "options": [
-      "BYOD",
+      "IDS",
+      "DLP",
       "UTM",
-      "UAC",
-      "WPA"
+      "ACL"
     ],
     "correct_short": "UTM",
-    "wrong_pick": "UAC",
     "explanation": "OBJ 2.1 (Security): Integrated network security system. UTM stands for Unified Threat Management.",
     "sources": [
       {
@@ -7792,7 +7760,6 @@
       "Single Authentication Markup Listing"
     ],
     "correct_short": "Security Assertions Markup Language",
-    "wrong_pick": "Wi-Fi Protected Access",
     "explanation": "OBJ 2.1 (Security): SAML stands for Security Assertions Markup Language. Single sign-on authentication standard.",
     "sources": [
       {
@@ -7809,13 +7776,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Single sign-on authentication standard?",
     "options": [
-      "PAM",
-      "DMARC",
-      "PUP",
-      "SAML"
+      "OAuth",
+      "OIDC",
+      "SAML",
+      "LDAP"
     ],
     "correct_short": "SAML",
-    "wrong_pick": "PAM",
     "explanation": "OBJ 2.1 (Security): Single sign-on authentication standard. SAML stands for Security Assertions Markup Language.",
     "sources": [
       {
@@ -7838,7 +7804,6 @@
       "Managed Firewall Appliance"
     ],
     "correct_short": "Multifactor Authentication",
-    "wrong_pick": "Remote Authentication Dial-in User Server",
     "explanation": "OBJ 2.1 (Security): MFA stands for Multifactor Authentication. Multiple verification methods required.",
     "sources": [
       {
@@ -7855,13 +7820,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Multiple verification methods required?",
     "options": [
-      "BEC",
-      "DKIM",
+      "OTP",
+      "SSO",
       "MFA",
-      "IDS"
+      "PAM"
     ],
     "correct_short": "MFA",
-    "wrong_pick": "BEC",
     "explanation": "OBJ 2.1 (Security): Multiple verification methods required. MFA stands for Multifactor Authentication.",
     "sources": [
       {
@@ -7884,7 +7848,6 @@
       "Basic Endpoint Configuration"
     ],
     "correct_short": "Business Email Compromise",
-    "wrong_pick": "Hardware Security Module",
     "explanation": "OBJ 2.5 (Security): BEC stands for Business Email Compromise. Fraud attack impersonating trusted contacts.",
     "sources": [
       {
@@ -7901,13 +7864,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Fraud attack impersonating trusted contacts?",
     "options": [
-      "EFS",
-      "PAM",
+      "DDoS",
+      "XSS",
       "BEC",
-      "TKIP"
+      "MITM"
     ],
     "correct_short": "BEC",
-    "wrong_pick": "PAM",
     "explanation": "OBJ 2.5 (Security): Fraud attack impersonating trusted contacts. BEC stands for Business Email Compromise.",
     "sources": [
       {
@@ -7930,7 +7892,6 @@
       "Secure Server Link"
     ],
     "correct_short": "Secure Sockets Layer",
-    "wrong_pick": "Potentially Unwanted Program",
     "explanation": "OBJ 2.11 (Security): SSL stands for Secure Sockets Layer. Older encrypted communications protocol.",
     "sources": [
       {
@@ -7947,13 +7908,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Older encrypted communications protocol?",
     "options": [
-      "IAM",
-      "DKIM",
+      "TLS",
+      "HTTPS",
       "SSL",
-      "SSO"
+      "IPsec"
     ],
     "correct_short": "SSL",
-    "wrong_pick": "SSO",
     "explanation": "OBJ 2.11 (Security): Older encrypted communications protocol. SSL stands for Secure Sockets Layer.",
     "sources": [
       {
@@ -7976,7 +7936,6 @@
       "Adaptive Encryption System"
     ],
     "correct_short": "Advanced Encryption Standard",
-    "wrong_pick": "Single Sign-on",
     "explanation": "OBJ 2.1 (Security): AES stands for Advanced Encryption Standard. Modern symmetric encryption algorithm.",
     "sources": [
       {
@@ -7993,13 +7952,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Modern symmetric encryption algorithm?",
     "options": [
-      "SSL",
-      "RSR",
-      "PUP",
-      "AES"
+      "DES",
+      "RSA",
+      "AES",
+      "3DES"
     ],
     "correct_short": "AES",
-    "wrong_pick": "PUP",
     "explanation": "OBJ 2.1 (Security): Modern symmetric encryption algorithm. AES stands for Advanced Encryption Standard.",
     "sources": [
       {
@@ -8022,7 +7980,6 @@
       "Nested Table Format Standard"
     ],
     "correct_short": "New Technology File System",
-    "wrong_pick": "Platform as a Service",
     "explanation": "OBJ 1.4 (Operating Systems): NTFS stands for New Technology File System. Modern Windows file system.",
     "sources": [
       {
@@ -8039,13 +7996,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Modern Windows file system?",
     "options": [
+      "FAT32",
+      "exFAT",
       "NTFS",
-      "MBR",
-      "PaaS",
-      "MMC"
+      "ext4"
     ],
     "correct_short": "NTFS",
-    "wrong_pick": "MMC",
     "explanation": "OBJ 1.4 (Operating Systems): Modern Windows file system. NTFS stands for New Technology File System.",
     "sources": [
       {
@@ -8068,7 +8024,6 @@
       "Authentication, Approval, and Allocation"
     ],
     "correct_short": "Authentication, Authorization, and Accounting",
-    "wrong_pick": "Man-in-the-Middle",
     "explanation": "OBJ 2.1 (Security): AAA stands for Authentication, Authorization, and Accounting. Security framework controlling and tracking access.",
     "sources": [
       {
@@ -8085,13 +8040,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Security framework controlling and tracking access?",
     "options": [
-      "AES",
-      "TPM",
       "RADIUS",
-      "AAA"
+      "IAM",
+      "AAA",
+      "ACL"
     ],
     "correct_short": "AAA",
-    "wrong_pick": "AES",
     "explanation": "OBJ 2.1 (Security): Security framework controlling and tracking access. AAA stands for Authentication, Authorization, and Accounting.",
     "sources": [
       {
@@ -8114,7 +8068,6 @@
       "Software License Authorization"
     ],
     "correct_short": "Service-level Agreement",
-    "wrong_pick": "Virtual Private Network",
     "explanation": "OBJ 4.1 (Operational Procedures): SLA stands for Service-level Agreement. Contract defining service expectations.",
     "sources": [
       {
@@ -8131,13 +8084,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Contract defining service expectations?",
     "options": [
-      "MSDS",
+      "NDA",
+      "AUP",
       "SLA",
-      "VPN",
-      "RDP"
+      "MOU"
     ],
     "correct_short": "SLA",
-    "wrong_pick": "VPN",
     "explanation": "OBJ 4.1 (Operational Procedures): Contract defining service expectations. SLA stands for Service-level Agreement.",
     "sources": [
       {
@@ -8160,7 +8112,6 @@
       "Traffic Limiting Service"
     ],
     "correct_short": "Transport Layer Security",
-    "wrong_pick": "Wi-Fi Protected Access",
     "explanation": "OBJ 2.11 (Security): TLS stands for Transport Layer Security. Secure encrypted communications protocol.",
     "sources": [
       {
@@ -8177,13 +8128,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Secure encrypted communications protocol?",
     "options": [
-      "SSID",
+      "SSH",
+      "IPsec",
       "TLS",
-      "RSR",
-      "BEC"
+      "VPN"
     ],
     "correct_short": "TLS",
-    "wrong_pick": "BEC",
     "explanation": "OBJ 2.11 (Security): Secure encrypted communications protocol. TLS stands for Transport Layer Security.",
     "sources": [
       {
@@ -8206,7 +8156,6 @@
       "Grandfather-Forward-Sync"
     ],
     "correct_short": "Grandfather-Father-Son",
-    "wrong_pick": "Redundant Array of Independent Disks",
     "explanation": "OBJ 4.3 (Operational Procedures): GFS stands for Grandfather-Father-Son. Rotating backup schedule method.",
     "sources": [
       {
@@ -8223,13 +8172,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Rotating backup schedule method?",
     "options": [
-      "HIPAA",
-      "ESD",
       "RAID",
-      "GFS"
+      "RPO",
+      "GFS",
+      "RTO"
     ],
     "correct_short": "GFS",
-    "wrong_pick": "ESD",
     "explanation": "OBJ 4.3 (Operational Procedures): Rotating backup schedule method. GFS stands for Grandfather-Father-Son.",
     "sources": [
       {
@@ -8252,7 +8200,6 @@
       "Shared Storage Object"
     ],
     "correct_short": "Single Sign-on",
-    "wrong_pick": "Sender Policy Framework",
     "explanation": "OBJ 2.1 (Security): SSO stands for Single Sign-on. One login for multiple systems.",
     "sources": [
       {
@@ -8269,13 +8216,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: One login for multiple systems?",
     "options": [
-      "TLS",
-      "PAM",
+      "MFA",
+      "LDAP",
       "SSO",
-      "BYOD"
+      "PAM"
     ],
     "correct_short": "SSO",
-    "wrong_pick": "PAM",
     "explanation": "OBJ 2.1 (Security): One login for multiple systems. SSO stands for Single Sign-on.",
     "sources": [
       {
@@ -8298,7 +8244,6 @@
       "Edge-of-Load"
     ],
     "correct_short": "End-of-life",
-    "wrong_pick": "Material Safety Data Sheet",
     "explanation": "OBJ 4.6 (Operational Procedures): EOL stands for End-of-life. Product support termination.",
     "sources": [
       {
@@ -8315,13 +8260,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Product support termination?",
     "options": [
-      "UPS",
-      "NDA",
+      "EULA",
       "SLA",
-      "EOL"
+      "EOL",
+      "NDA"
     ],
     "correct_short": "EOL",
-    "wrong_pick": "NDA",
     "explanation": "OBJ 4.6 (Operational Procedures): Product support termination. EOL stands for End-of-life.",
     "sources": [
       {
@@ -8344,7 +8288,6 @@
       "Node Data Allocation"
     ],
     "correct_short": "Non-Disclosure Agreement",
-    "wrong_pick": "Windows Remote Management",
     "explanation": "OBJ 4.1 (Operational Procedures): NDA stands for Non-Disclosure Agreement. Confidentiality protection agreement.",
     "sources": [
       {
@@ -8361,13 +8304,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Confidentiality protection agreement?",
     "options": [
+      "SLA",
+      "AUP",
       "NDA",
-      "RAID",
-      "PCI DSS",
-      "HIPAA"
+      "MOU"
     ],
     "correct_short": "NDA",
-    "wrong_pick": "RAID",
     "explanation": "OBJ 4.1 (Operational Procedures): Confidentiality protection agreement. NDA stands for Non-Disclosure Agreement.",
     "sources": [
       {
@@ -8390,7 +8332,6 @@
       "Access Utilization Plan"
     ],
     "correct_short": "Acceptable Use Policy",
-    "wrong_pick": "Payment Card Industry Data Security Standard",
     "explanation": "OBJ 4.1 (Operational Procedures): AUP stands for Acceptable Use Policy. Rules for using company technology resources.",
     "sources": [
       {
@@ -8407,13 +8348,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Rules for using company technology resources?",
     "options": [
-      "SSH",
-      "HIPAA",
+      "NDA",
+      "SLA",
       "AUP",
-      "PII"
+      "SOP"
     ],
     "correct_short": "AUP",
-    "wrong_pick": "PII",
     "explanation": "OBJ 4.1 (Operational Procedures): Rules for using company technology resources. AUP stands for Acceptable Use Policy.",
     "sources": [
       {
@@ -8436,7 +8376,6 @@
       "External Format Standard"
     ],
     "correct_short": "Encrypting File System",
-    "wrong_pick": "Authentication, Authorization, and Accounting",
     "explanation": "OBJ 2.2 (Security): EFS stands for Encrypting File System. Windows file encryption feature.",
     "sources": [
       {
@@ -8453,13 +8392,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Windows file encryption feature?",
     "options": [
-      "MFA",
-      "DDoS",
-      "DLP",
-      "EFS"
+      "TPM",
+      "UAC",
+      "EFS",
+      "ACL"
     ],
     "correct_short": "EFS",
-    "wrong_pick": "DLP",
     "explanation": "OBJ 2.2 (Security): Windows file encryption feature. EFS stands for Encrypting File System.",
     "sources": [
       {
@@ -8482,7 +8420,6 @@
       "Policy Access Monitor"
     ],
     "correct_short": "Privileged Access Management",
-    "wrong_pick": "Rapid Security Response",
     "explanation": "OBJ 2.1 (Security): PAM stands for Privileged Access Management. Controls high-level administrative access.",
     "sources": [
       {
@@ -8499,13 +8436,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Controls high-level administrative access?",
     "options": [
+      "IAM",
+      "RBAC",
       "PAM",
-      "OTP",
-      "TKIP",
-      "BYOD"
+      "MFA"
     ],
     "correct_short": "PAM",
-    "wrong_pick": "BYOD",
     "explanation": "OBJ 2.1 (Security): Controls high-level administrative access. PAM stands for Privileged Access Management.",
     "sources": [
       {
@@ -8528,7 +8464,6 @@
       "Electrical Surge Damage"
     ],
     "correct_short": "Electrostatic Discharge",
-    "wrong_pick": "End-user License Agreement",
     "explanation": "OBJ 4.4 (Operational Procedures): ESD stands for Electrostatic Discharge. Static electricity damaging electronics.",
     "sources": [
       {
@@ -8545,13 +8480,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Static electricity damaging electronics?",
     "options": [
+      "EMI",
+      "RFI",
       "ESD",
-      "RDP",
-      "VPN",
-      "RMM"
+      "UPS"
     ],
     "correct_short": "ESD",
-    "wrong_pick": "RDP",
     "explanation": "OBJ 4.4 (Operational Procedures): Static electricity damaging electronics. ESD stands for Electrostatic Discharge.",
     "sources": [
       {
@@ -8574,7 +8508,6 @@
       "Protected Cardholder Information Disclosure Security Standard"
     ],
     "correct_short": "Payment Card Industry Data Security Standard",
-    "wrong_pick": "Remote Desktop Protocol",
     "explanation": "OBJ 4.6 (Operational Procedures): PCI DSS stands for Payment Card Industry Data Security Standard. Credit card security standard.",
     "sources": [
       {
@@ -8591,13 +8524,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Credit card security standard?",
     "options": [
-      "EULA",
-      "SOP",
+      "HIPAA",
+      "GDPR",
       "PCI DSS",
-      "GFS"
+      "SOX"
     ],
     "correct_short": "PCI DSS",
-    "wrong_pick": "GFS",
     "explanation": "OBJ 4.6 (Operational Procedures): Credit card security standard. PCI DSS stands for Payment Card Industry Data Security Standard.",
     "sources": [
       {
@@ -8616,11 +8548,10 @@
     "options": [
       "Remote Access Directory for Identity User Security",
       "Restricted Authorization Daemon for Internal User Systems",
-      "Remote Authentication Dial-in User Server",
+      "Remote Authentication Dial-In User Service",
       "Reliable Authentication Database for Identified User Sessions"
     ],
-    "correct_short": "Remote Authentication Dial-in User Server",
-    "wrong_pick": "Intrusion Detection System",
+    "correct_short": "Remote Authentication Dial-In User Service",
     "explanation": "OBJ 2.3 (Security): RADIUS stands for Remote Authentication Dial-in User Server. Centralized authentication protocol.",
     "sources": [
       {
@@ -8637,13 +8568,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Centralized authentication protocol?",
     "options": [
+      "LDAP",
+      "SAML",
       "RADIUS",
-      "SPF",
-      "XDR",
-      "BEC"
+      "SSO"
     ],
     "correct_short": "RADIUS",
-    "wrong_pick": "SPF",
     "explanation": "OBJ 2.3 (Security): Centralized authentication protocol. RADIUS stands for Remote Authentication Dial-in User Server.",
     "sources": [
       {
@@ -8666,7 +8596,6 @@
       "Memory Diagnostic Monitor"
     ],
     "correct_short": "Mobile Device Management",
-    "wrong_pick": "Personal Identity Verification",
     "explanation": "OBJ 2.8 (Security): MDM stands for Mobile Device Management. Centralized management of mobile devices.",
     "sources": [
       {
@@ -8683,13 +8612,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Centralized management of mobile devices?",
     "options": [
-      "MFA",
-      "TLS",
-      "DMARC",
-      "MDM"
+      "BYOD",
+      "MAM",
+      "MDM",
+      "UEM"
     ],
     "correct_short": "MDM",
-    "wrong_pick": "MFA",
     "explanation": "OBJ 2.8 (Security): Centralized management of mobile devices. MDM stands for Mobile Device Management.",
     "sources": [
       {
@@ -8712,7 +8640,6 @@
       "Malware-in-the-Memory"
     ],
     "correct_short": "Man-in-the-Middle",
-    "wrong_pick": "Privileged Access Management",
     "explanation": "OBJ 2.5 (Security): MITM stands for Man-in-the-Middle. Attack intercepting communications.",
     "sources": [
       {
@@ -8729,13 +8656,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Attack intercepting communications?",
     "options": [
-      "HSM",
-      "ACL",
+      "DDoS",
+      "XSS",
       "MITM",
-      "PIV"
+      "BEC"
     ],
     "correct_short": "MITM",
-    "wrong_pick": "PIV",
     "explanation": "OBJ 2.5 (Security): Attack intercepting communications. MITM stands for Man-in-the-Middle.",
     "sources": [
       {
@@ -8758,7 +8684,6 @@
       "Health Industry Practice and Auditing Act"
     ],
     "correct_short": "Health Insurance Portability and Accountability Act",
-    "wrong_pick": "Secure Shell",
     "explanation": "OBJ 4.6 (Operational Procedures): HIPAA stands for Health Insurance Portability and Accountability Act. US healthcare privacy law.",
     "sources": [
       {
@@ -8775,13 +8700,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: US healthcare privacy law?",
     "options": [
-      "WinRM",
-      "GFS",
+      "PCI DSS",
+      "GDPR",
       "HIPAA",
-      "RDP"
+      "FERPA"
     ],
     "correct_short": "HIPAA",
-    "wrong_pick": "WinRM",
     "explanation": "OBJ 4.6 (Operational Procedures): US healthcare privacy law. HIPAA stands for Health Insurance Portability and Accountability Act.",
     "sources": [
       {
@@ -8804,7 +8728,6 @@
       "Resilient Allocation of Internal Data"
     ],
     "correct_short": "Redundant Array of Independent Disks",
-    "wrong_pick": "Health Insurance Portability and Accountability Act",
     "explanation": "OBJ 4.3 (Operational Procedures): RAID stands for Redundant Array of Independent Disks. Multi-drive storage redundancy/performance setup.",
     "sources": [
       {
@@ -8821,13 +8744,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Multi-drive storage redundancy/performance setup?",
     "options": [
-      "SLA",
+      "JBOD",
+      "SAN",
       "RAID",
-      "RMM",
-      "NDA"
+      "NAS"
     ],
     "correct_short": "RAID",
-    "wrong_pick": "RMM",
     "explanation": "OBJ 4.3 (Operational Procedures): Multi-drive storage redundancy/performance setup. RAID stands for Redundant Array of Independent Disks.",
     "sources": [
       {
@@ -8850,7 +8772,6 @@
       "Hashed Session Mapping"
     ],
     "correct_short": "Hardware Security Module",
-    "wrong_pick": "One-time Password/Passcode",
     "explanation": "OBJ 2.1 (Security): HSM stands for Hardware Security Module. Dedicated cryptographic security hardware.",
     "sources": [
       {
@@ -8867,13 +8788,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Dedicated cryptographic security hardware?",
     "options": [
-      "MFA",
+      "TPM",
+      "KMS",
       "HSM",
-      "DMARC",
-      "WAP"
+      "CA"
     ],
     "correct_short": "HSM",
-    "wrong_pick": "MFA",
     "explanation": "OBJ 2.1 (Security): Dedicated cryptographic security hardware. HSM stands for Hardware Security Module.",
     "sources": [
       {
@@ -8896,7 +8816,6 @@
       "Session Protection Firewall"
     ],
     "correct_short": "Sender Policy Framework",
-    "wrong_pick": "Mobile Device Management",
     "explanation": "OBJ 2.5 (Security): SPF stands for Sender Policy Framework. Email anti-spoofing validation.",
     "sources": [
       {
@@ -8913,13 +8832,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Email anti-spoofing validation?",
     "options": [
-      "IAM",
-      "OTP",
-      "WAP",
-      "SPF"
+      "DKIM",
+      "DMARC",
+      "SPF",
+      "SMTP"
     ],
     "correct_short": "SPF",
-    "wrong_pick": "OTP",
     "explanation": "OBJ 2.5 (Security): Email anti-spoofing validation. SPF stands for Sender Policy Framework.",
     "sources": [
       {
@@ -8942,7 +8860,6 @@
       "Direct Denial of Sessions"
     ],
     "correct_short": "Distributed Denial of Service",
-    "wrong_pick": "Privileged Access Management",
     "explanation": "OBJ 2.5 (Security): DDoS stands for Distributed Denial of Service. Coordinated traffic flood attack.",
     "sources": [
       {
@@ -8959,13 +8876,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Coordinated traffic flood attack?",
     "options": [
+      "DoS",
+      "MITM",
       "DDoS",
-      "TPM",
-      "TLS",
-      "RADIUS"
+      "XSS"
     ],
     "correct_short": "DDoS",
-    "wrong_pick": "TPM",
     "explanation": "OBJ 2.5 (Security): Coordinated traffic flood attack. DDoS stands for Distributed Denial of Service.",
     "sources": [
       {
@@ -8988,7 +8904,6 @@
       "Service Onboarding Process"
     ],
     "correct_short": "Standard Operating Procedure",
-    "wrong_pick": "Virtual Private Network",
     "explanation": "OBJ 4.1 (Operational Procedures): SOP stands for Standard Operating Procedure. Step-by-step operational instructions.",
     "sources": [
       {
@@ -9005,13 +8920,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Step-by-step operational instructions?",
     "options": [
-      "MSDS",
-      "EULA",
+      "SLA",
+      "AUP",
       "SOP",
-      "SLA"
+      "NDA"
     ],
     "correct_short": "SOP",
-    "wrong_pick": "MSDS",
     "explanation": "OBJ 4.1 (Operational Procedures): Step-by-step operational instructions. SOP stands for Standard Operating Procedure.",
     "sources": [
       {
@@ -9034,7 +8948,6 @@
       "Transport Protocol Mapping"
     ],
     "correct_short": "Trusted Platform Module",
-    "wrong_pick": "Advanced Encryption Standard",
     "explanation": "OBJ 2.2 (Security): TPM stands for Trusted Platform Module. Secure cryptographic hardware chip.",
     "sources": [
       {
@@ -9051,13 +8964,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Secure cryptographic hardware chip?",
     "options": [
-      "SSO",
-      "SSL",
-      "ACL",
-      "TPM"
+      "HSM",
+      "UEFI",
+      "TPM",
+      "BIOS"
     ],
     "correct_short": "TPM",
-    "wrong_pick": "SSO",
     "explanation": "OBJ 2.2 (Security): Secure cryptographic hardware chip. TPM stands for Trusted Platform Module.",
     "sources": [
       {
@@ -9080,7 +8992,6 @@
       "Wired Protection Application"
     ],
     "correct_short": "Wi-Fi Protected Access",
-    "wrong_pick": "Managed Detection and Response",
     "explanation": "OBJ 2.3 (Security): WPA stands for Wi-Fi Protected Access. Current wireless network encryption standard.",
     "sources": [
       {
@@ -9097,13 +9008,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Current wireless network encryption standard?",
     "options": [
+      "WEP",
+      "WPS",
       "WPA",
-      "MITM",
-      "MDR",
-      "UAC"
+      "SSID"
     ],
     "correct_short": "WPA",
-    "wrong_pick": "MDR",
     "explanation": "OBJ 2.3 (Security): Current wireless network encryption standard. WPA stands for Wi-Fi Protected Access.",
     "sources": [
       {
@@ -9126,7 +9036,6 @@
       "Enterprise User Lifecycle Agreement"
     ],
     "correct_short": "End-user License Agreement",
-    "wrong_pick": "Electrostatic Discharge",
     "explanation": "OBJ 4.6 (Operational Procedures): EULA stands for End-user License Agreement. License agreement for using software.",
     "sources": [
       {
@@ -9143,13 +9052,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: License agreement for using software?",
     "options": [
-      "EOL",
-      "UPS",
-      "PII",
-      "EULA"
+      "NDA",
+      "DRM",
+      "EULA",
+      "SLA"
     ],
     "correct_short": "EULA",
-    "wrong_pick": "PII",
     "explanation": "OBJ 4.6 (Operational Procedures): License agreement for using software. EULA stands for End-user License Agreement.",
     "sources": [
       {
@@ -9172,7 +9080,6 @@
       "Dynamic Link Protocol"
     ],
     "correct_short": "Data Loss Prevention",
-    "wrong_pick": "Potentially Unwanted Program",
     "explanation": "OBJ 2.1 (Security): DLP stands for Data Loss Prevention. Stops sensitive data from leaving.",
     "sources": [
       {
@@ -9189,13 +9096,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Stops sensitive data from leaving?",
     "options": [
-      "XDR",
-      "TKIP",
+      "IDS",
+      "IAM",
       "DLP",
-      "AES"
+      "ACL"
     ],
     "correct_short": "DLP",
-    "wrong_pick": "TKIP",
     "explanation": "OBJ 2.1 (Security): Stops sensitive data from leaving. DLP stands for Data Loss Prevention.",
     "sources": [
       {
@@ -9218,7 +9124,6 @@
       "Persistent Update Package"
     ],
     "correct_short": "Potentially Unwanted Program",
-    "wrong_pick": "Cross-site Scripting",
     "explanation": "OBJ 2.4 (Security): PUP stands for Potentially Unwanted Program. Unwanted bundled software.",
     "sources": [
       {
@@ -9235,13 +9140,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Unwanted bundled software?",
     "options": [
-      "WPA",
-      "TPM",
-      "XDR",
-      "PUP"
+      "RAT",
+      "APT",
+      "PUP",
+      "TSR"
     ],
     "correct_short": "PUP",
-    "wrong_pick": "WPA",
     "explanation": "OBJ 2.4 (Security): Unwanted bundled software. PUP stands for Potentially Unwanted Program.",
     "sources": [
       {
@@ -9264,7 +9168,6 @@
       "Offline Token Provisioning"
     ],
     "correct_short": "One-time Password/Passcode",
-    "wrong_pick": "Unified Threat Management",
     "explanation": "OBJ 2.1 (Security): OTP stands for One-time Password/Passcode. Single-use temporary passcode.",
     "sources": [
       {
@@ -9281,13 +9184,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Single-use temporary passcode?",
     "options": [
-      "UAC",
-      "HSM",
       "MFA",
-      "OTP"
+      "SSO",
+      "OTP",
+      "PIV"
     ],
     "correct_short": "OTP",
-    "wrong_pick": "HSM",
     "explanation": "OBJ 2.1 (Security): Single-use temporary passcode. OTP stands for One-time Password/Passcode.",
     "sources": [
       {
@@ -9310,7 +9212,6 @@
       "Unified Extended Format Identifier"
     ],
     "correct_short": "Unified Extensible Firmware Interface",
-    "wrong_pick": "Platform as a Service",
     "explanation": "OBJ 1.2 (Operating Systems): UEFI stands for Unified Extensible Firmware Interface. Modern firmware interface replacing BIOS.",
     "sources": [
       {
@@ -9327,13 +9228,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Modern firmware interface replacing BIOS?",
     "options": [
-      "SAN",
+      "BIOS",
+      "MBR",
       "UEFI",
-      "MMC",
-      "FTP"
+      "POST"
     ],
     "correct_short": "UEFI",
-    "wrong_pick": "FTP",
     "explanation": "OBJ 1.2 (Operating Systems): Modern firmware interface replacing BIOS. UEFI stands for Unified Extensible Firmware Interface.",
     "sources": [
       {
@@ -9356,7 +9256,6 @@
       "Remote Diagnostic Port"
     ],
     "correct_short": "Remote Desktop Protocol",
-    "wrong_pick": "Remote Monitoring and Management",
     "explanation": "OBJ 4.9 (Operational Procedures): RDP stands for Remote Desktop Protocol. Microsoft remote desktop access.",
     "sources": [
       {
@@ -9373,13 +9272,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Microsoft remote desktop access?",
     "options": [
-      "RAID",
+      "VNC",
+      "SSH",
       "RDP",
-      "UPS",
-      "EOL"
+      "VPN"
     ],
     "correct_short": "RDP",
-    "wrong_pick": "EOL",
     "explanation": "OBJ 4.9 (Operational Procedures): Microsoft remote desktop access. RDP stands for Remote Desktop Protocol.",
     "sources": [
       {
@@ -9402,7 +9300,6 @@
       "Session Security Handler"
     ],
     "correct_short": "Secure Shell",
-    "wrong_pick": "End-of-life",
     "explanation": "OBJ 4.9 (Operational Procedures): SSH stands for Secure Shell. Encrypted remote command-line access.",
     "sources": [
       {
@@ -9419,13 +9316,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Encrypted remote command-line access?",
     "options": [
+      "Telnet",
+      "RDP",
       "SSH",
-      "NDA",
-      "GFS",
-      "VPN"
+      "VNC"
     ],
     "correct_short": "SSH",
-    "wrong_pick": "NDA",
     "explanation": "OBJ 4.9 (Operational Procedures): Encrypted remote command-line access. SSH stands for Secure Shell.",
     "sources": [
       {
@@ -9448,7 +9344,6 @@
       "Realtime Monitoring and Mitigation"
     ],
     "correct_short": "Remote Monitoring and Management",
-    "wrong_pick": "End-user License Agreement",
     "explanation": "OBJ 4.9 (Operational Procedures): RMM stands for Remote Monitoring and Management. Remote IT management software.",
     "sources": [
       {
@@ -9465,13 +9360,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Remote IT management software?",
     "options": [
+      "RDP",
+      "MDM",
       "RMM",
-      "DRM",
-      "GFS",
-      "RAID"
+      "VNC"
     ],
     "correct_short": "RMM",
-    "wrong_pick": "DRM",
     "explanation": "OBJ 4.9 (Operational Procedures): Remote IT management software. RMM stands for Remote Monitoring and Management.",
     "sources": [
       {
@@ -9494,7 +9388,6 @@
       "Endpoint Defense Resource"
     ],
     "correct_short": "Endpoint Detection and Response",
-    "wrong_pick": "Remote Authentication Dial-in User Server",
     "explanation": "OBJ 2.1 (Security): EDR stands for Endpoint Detection and Response. Endpoint threat detection and response tool.",
     "sources": [
       {
@@ -9511,13 +9404,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Endpoint threat detection and response tool?",
     "options": [
-      "PUP",
+      "XDR",
+      "MDR",
       "EDR",
-      "UAC",
-      "SSO"
+      "SIEM"
     ],
     "correct_short": "EDR",
-    "wrong_pick": "SSO",
     "explanation": "OBJ 2.1 (Security): Endpoint threat detection and response tool. EDR stands for Endpoint Detection and Response.",
     "sources": [
       {
@@ -9540,7 +9432,6 @@
       "Multi-Domain Routing"
     ],
     "correct_short": "Managed Detection and Response",
-    "wrong_pick": "Advanced Encryption Standard",
     "explanation": "OBJ 2.1 (Security): MDR stands for Managed Detection and Response. Outsourced/managed threat detection service.",
     "sources": [
       {
@@ -9557,13 +9448,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Outsourced/managed threat detection service?",
     "options": [
+      "EDR",
+      "XDR",
       "MDR",
-      "TLS",
-      "ACL",
-      "UAC"
+      "SOC"
     ],
     "correct_short": "MDR",
-    "wrong_pick": "TLS",
     "explanation": "OBJ 2.1 (Security): Outsourced/managed threat detection service. MDR stands for Managed Detection and Response.",
     "sources": [
       {
@@ -9586,7 +9476,6 @@
       "Endpoint Dispatch Response"
     ],
     "correct_short": "Extended Detection and Response",
-    "wrong_pick": "Single Sign-on",
     "explanation": "OBJ 2.1 (Security): XDR stands for Extended Detection and Response. Detection and response across multiple security layers.",
     "sources": [
       {
@@ -9603,13 +9492,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Detection and response across multiple security layers?",
     "options": [
-      "RSR",
-      "ACL",
+      "EDR",
+      "MDR",
       "XDR",
-      "WAP"
+      "SIEM"
     ],
     "correct_short": "XDR",
-    "wrong_pick": "ACL",
     "explanation": "OBJ 2.1 (Security): Detection and response across multiple security layers. XDR stands for Extended Detection and Response.",
     "sources": [
       {
@@ -9632,7 +9520,6 @@
       "Digital Key Identity Management"
     ],
     "correct_short": "DomainKeys Identified Mail",
-    "wrong_pick": "Temporal Key Integrity Protocol",
     "explanation": "OBJ 2.5 (Security): DKIM stands for DomainKeys Identified Mail. Email signing for sender authentication.",
     "sources": [
       {
@@ -9649,13 +9536,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Email signing for sender authentication?",
     "options": [
-      "WPA",
-      "XSS",
-      "RSR",
-      "DKIM"
+      "SPF",
+      "DMARC",
+      "DKIM",
+      "SMTP"
     ],
     "correct_short": "DKIM",
-    "wrong_pick": "XSS",
     "explanation": "OBJ 2.5 (Security): Email signing for sender authentication. DKIM stands for DomainKeys Identified Mail.",
     "sources": [
       {
@@ -9678,7 +9564,6 @@
       "Domain-based Mail Authorization and Reporting Compliance"
     ],
     "correct_short": "Domain-based Message Authentication, Reporting, and Conformance",
-    "wrong_pick": "Service Set Identifier",
     "explanation": "OBJ 2.5 (Security): DMARC stands for Domain-based Message Authentication, Reporting, and Conformance. Email policy building on SPF and DKIM.",
     "sources": [
       {
@@ -9695,13 +9580,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Email policy building on SPF and DKIM?",
     "options": [
-      "WAP",
-      "MDM",
-      "TPM",
-      "DMARC"
+      "SPF",
+      "DKIM",
+      "DMARC",
+      "SMTP"
     ],
     "correct_short": "DMARC",
-    "wrong_pick": "WAP",
     "explanation": "OBJ 2.5 (Security): Email policy building on SPF and DKIM. DMARC stands for Domain-based Message Authentication, Reporting, and Conformance.",
     "sources": [
       {
@@ -9724,7 +9608,6 @@
       "Temporal One-Time Protocol"
     ],
     "correct_short": "Time-based One-time Password",
-    "wrong_pick": "Wireless Access Point",
     "explanation": "OBJ 2.1 (Security): TOTP stands for Time-based One-time Password. Time-limited one-time code from an authenticator.",
     "sources": [
       {
@@ -9741,13 +9624,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Time-limited one-time code from an authenticator?",
     "options": [
-      "TKIP",
-      "WPA",
-      "BEC",
-      "TOTP"
+      "OTP",
+      "HOTP",
+      "TOTP",
+      "MFA"
     ],
     "correct_short": "TOTP",
-    "wrong_pick": "WPA",
     "explanation": "OBJ 2.1 (Security): Time-limited one-time code from an authenticator. TOTP stands for Time-based One-time Password.",
     "sources": [
       {
@@ -9770,7 +9652,6 @@
       "Packet Inspection Verifier"
     ],
     "correct_short": "Personal Identity Verification",
-    "wrong_pick": "Managed Detection and Response",
     "explanation": "OBJ 2.1 (Security): PIV stands for Personal Identity Verification. Government smart-card identity credential.",
     "sources": [
       {
@@ -9787,13 +9668,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Government smart-card identity credential?",
     "options": [
-      "UPnP",
+      "OTP",
+      "MFA",
       "PIV",
-      "SSL",
-      "TOTP"
+      "SSO"
     ],
     "correct_short": "PIV",
-    "wrong_pick": "UPnP",
     "explanation": "OBJ 2.1 (Security): Government smart-card identity credential. PIV stands for Personal Identity Verification.",
     "sources": [
       {
@@ -9816,7 +9696,6 @@
       "Multi-Monitor Configuration"
     ],
     "correct_short": "Microsoft Management Console",
-    "wrong_pick": "Storage Area Network",
     "explanation": "OBJ 1.4 (Operating Systems): MMC stands for Microsoft Management Console. Windows console hosting admin snap-ins.",
     "sources": [
       {
@@ -9833,13 +9712,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Windows console hosting admin snap-ins?",
     "options": [
-      "SAN",
-      "NTFS",
+      "GPO",
+      "CLI",
       "MMC",
-      "FTP"
+      "UAC"
     ],
     "correct_short": "MMC",
-    "wrong_pick": "NTFS",
     "explanation": "OBJ 1.4 (Operating Systems): Windows console hosting admin snap-ins. MMC stands for Microsoft Management Console.",
     "sources": [
       {
@@ -9862,7 +9740,6 @@
       "Mandatory Security Data Specification"
     ],
     "correct_short": "Material Safety Data Sheet",
-    "wrong_pick": "Standard Operating Procedure",
     "explanation": "OBJ 4.5 (Operational Procedures): MSDS stands for Material Safety Data Sheet. Safety document for handling materials.",
     "sources": [
       {
@@ -9879,13 +9756,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Safety document for handling materials?",
     "options": [
-      "SSH",
-      "AUP",
+      "PPE",
+      "OSHA",
       "MSDS",
-      "PCI DSS"
+      "EPA"
     ],
     "correct_short": "MSDS",
-    "wrong_pick": "PCI DSS",
     "explanation": "OBJ 4.5 (Operational Procedures): Safety document for handling materials. MSDS stands for Material Safety Data Sheet.",
     "sources": [
       {
@@ -9908,7 +9784,6 @@
       "Universal Port and Protocol"
     ],
     "correct_short": "Universal Plug and Play",
-    "wrong_pick": "Time-based One-time Password",
     "explanation": "OBJ 2.10 (Security): UPnP stands for Universal Plug and Play. Automatic device discovery and port-opening feature.",
     "sources": [
       {
@@ -9925,13 +9800,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Automatic device discovery and port-opening feature?",
     "options": [
-      "TLS",
+      "DHCP",
+      "DLNA",
       "UPnP",
-      "AES",
-      "TOTP"
+      "NAT"
     ],
     "correct_short": "UPnP",
-    "wrong_pick": "TLS",
     "explanation": "OBJ 2.10 (Security): Automatic device discovery and port-opening feature. UPnP stands for Universal Plug and Play.",
     "sources": [
       {
@@ -9954,7 +9828,6 @@
       "Resource Scheduling Routine"
     ],
     "correct_short": "Rapid Security Response",
-    "wrong_pick": "Hardware Security Module",
     "explanation": "OBJ 2.7 (Security): RSR stands for Rapid Security Response. Apple's fast out-of-band security patch.",
     "sources": [
       {
@@ -9971,13 +9844,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Apple's fast out-of-band security patch?",
     "options": [
+      "OTA",
+      "MDM",
       "RSR",
-      "DDoS",
-      "MFA",
-      "MDR"
+      "SDK"
     ],
     "correct_short": "RSR",
-    "wrong_pick": "MDR",
     "explanation": "OBJ 2.7 (Security): Apple's fast out-of-band security patch. RSR stands for Rapid Security Response.",
     "sources": [
       {
@@ -10000,7 +9872,6 @@
       "Automated Compliance Log"
     ],
     "correct_short": "Access Control List",
-    "wrong_pick": "Managed Detection and Response",
     "explanation": "OBJ 2.1 (Security): ACL stands for Access Control List. Rules listing permitted or denied access.",
     "sources": [
       {
@@ -10017,13 +9888,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Rules listing permitted or denied access?",
     "options": [
-      "TKIP",
-      "TPM",
-      "SSL",
-      "ACL"
+      "RBAC",
+      "MAC",
+      "ACL",
+      "NAC"
     ],
     "correct_short": "ACL",
-    "wrong_pick": "TKIP",
     "explanation": "OBJ 2.1 (Security): Rules listing permitted or denied access. ACL stands for Access Control List.",
     "sources": [
       {
@@ -10046,7 +9916,6 @@
       "Signal Strength Indicator Device"
     ],
     "correct_short": "Service Set Identifier",
-    "wrong_pick": "Distributed Denial of Service",
     "explanation": "OBJ 2.10 (Security): SSID stands for Service Set Identifier. Wireless network name.",
     "sources": [
       {
@@ -10063,13 +9932,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Wireless network name?",
     "options": [
-      "PUP",
-      "AES",
+      "WAP",
+      "WPA",
       "SSID",
-      "EDR"
+      "MAC"
     ],
     "correct_short": "SSID",
-    "wrong_pick": "PUP",
     "explanation": "OBJ 2.10 (Security): Wireless network name. SSID stands for Service Set Identifier.",
     "sources": [
       {
@@ -10092,7 +9960,6 @@
       "Workstation Access Policy"
     ],
     "correct_short": "Wireless Access Point",
-    "wrong_pick": "DomainKeys Identified Mail",
     "explanation": "OBJ 2.10 (Security): WAP stands for Wireless Access Point. Device broadcasting a Wi-Fi network.",
     "sources": [
       {
@@ -10109,13 +9976,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Device broadcasting a Wi-Fi network?",
     "options": [
+      "SSID",
+      "WLAN",
       "WAP",
-      "TPM",
-      "XSS",
-      "DKIM"
+      "NIC"
     ],
     "correct_short": "WAP",
-    "wrong_pick": "DKIM",
     "explanation": "OBJ 2.10 (Security): Device broadcasting a Wi-Fi network. WAP stands for Wireless Access Point.",
     "sources": [
       {
@@ -10138,7 +10004,6 @@
       "Workstation Remote Monitor"
     ],
     "correct_short": "Windows Remote Management",
-    "wrong_pick": "Uninterruptible Power Supply",
     "explanation": "OBJ 4.9 (Operational Procedures): WinRM stands for Windows Remote Management. Windows remote management protocol.",
     "sources": [
       {
@@ -10155,13 +10020,12 @@
     "qtype": "Multiple Choice",
     "question": "Which acronym matches this description: Windows remote management protocol?",
     "options": [
-      "MSDS",
-      "DRM",
-      "SSH",
-      "WinRM"
+      "RDP",
+      "RMM",
+      "WinRM",
+      "SSH"
     ],
     "correct_short": "WinRM",
-    "wrong_pick": "SSH",
     "explanation": "OBJ 4.9 (Operational Procedures): Windows remote management protocol. WinRM stands for Windows Remote Management.",
     "sources": [
       {

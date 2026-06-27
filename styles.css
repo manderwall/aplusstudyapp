@@ -2150,6 +2150,14 @@ button.obj-bar .obj-acc {
 .help-kbd-table td { padding: 4px 8px 4px 0; vertical-align: top; }
 .help-kbd-table td:first-child { white-space: nowrap; width: 1%; }
 .help-footer { margin-top: 16px; }
+.help-disclaimer {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
 
 /* Welcome dialog's "open setup & help" footer link */
 .welcome-help-link {
