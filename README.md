@@ -359,6 +359,30 @@ tests it — the same thing any third-party study guide does.
 - **Interactive (drag/order/match) PBQs aren't supported.** PBQ support is image + multiple-choice; drag-to-reorder interactions are out of scope.
 - **Cross-device sync is manual.** iPhone and iPad keep separate progress unless you wire up Supabase (see "Cloud sync" below) and tap Push/Pull. Stats → Export/Import works as a no-backend alternative.
 
+## Feedback / contact form
+
+The in-app **Send feedback** button (Help → Send feedback) collects the message
+plus optional diagnostics (current screen, app version, device). Where it goes
+depends on one config value in `app.js`:
+
+- **`FEEDBACK_FORM_KEY` is blank (default):** opens a prefilled **GitHub issue** —
+  works out of the box, no email exposed, but submitting needs a GitHub login.
+- **`FEEDBACK_FORM_KEY` is set:** posts the report to **[Web3Forms](https://web3forms.com)**,
+  which emails it straight to you — **no login required, and your email address
+  never appears in the source.**
+
+To turn on direct-to-inbox feedback (~1 minute):
+
+1. Go to [web3forms.com](https://web3forms.com), enter the email you want reports
+   sent to, and copy the **access key** they email you.
+2. Paste it into `const FEEDBACK_FORM_KEY = '...'` near the top of the feedback
+   section in `app.js`.
+
+The access key is a **public, submit-only token** — safe to commit. It can only
+post to your form and can't read anything, and your actual email stays on
+Web3Forms, not in this repository. (If a report is too long for a Web3Forms
+delivery it falls back to copy-to-clipboard.)
+
 ## Legal and disclaimer
 
 This is an **independent, unofficial** study aid shared as a personal portfolio

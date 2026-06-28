@@ -5364,7 +5364,7 @@ function showHelp() {
               <li><strong>Lost your progress after wipe:</strong> if you set up sync, tap the <strong>☁️ button → ⬇ Pull</strong> on this device.</li>
               <li>
                 <strong>Send feedback or report a bug:</strong>
-                <button type="button" class="action primary feedback-cta" id="help-feedback-btn">🐛 Report an issue</button>
+                <button type="button" class="action primary feedback-cta" id="help-feedback-btn">📨 Send feedback</button>
                 <span class="help-aux">(pre-fills the screen you're on + device info so you don't have to type it out)</span>
               </li>
             </ul>
@@ -5669,10 +5669,60 @@ function showSync() {
 //─── FEEDBACK / BUG-REPORT DIALOG ─────────────────────────────
 // Opens an in-app form that pre-fills the screen the user is on + device
 // info, so a classmate doesn't have to type "I was on Quiz card #7,
-// iPhone 15 Pro, Safari, app version v73" by hand. On submit, opens a
-// prefilled GitHub issue (no personal email or backend involved); falls
-// back to copy-to-clipboard if the report is too long for the URL.
+// iPhone 15 Pro, Safari, app version v73" by hand.
+//
+// Contact form: if FEEDBACK_FORM_KEY is set, the report is POSTed to the
+// Web3Forms relay, which emails it straight to Amanda's inbox — no GitHub
+// login required and her address never appears in this source. When the key
+// is blank it falls back to opening a prefilled GitHub issue, so the button
+// is never dead. Copy-to-clipboard is always available as a last resort.
 const FEEDBACK_ISSUES_URL = 'https://github.com/manderwall/aplusstudyapp/issues/new';
+// Web3Forms access key — a PUBLIC, submit-only token (safe to commit; it
+// can only post to this one form, can't read anything). It maps to the
+// owner's email ON Web3Forms, so the address itself stays out of the repo.
+// Get a free key in ~1 min at https://web3forms.com (enter your email; they
+// email you the key) and paste it here. Blank = GitHub-issue fallback.
+const FEEDBACK_FORM_KEY = '';
+const FEEDBACK_FORM_ENDPOINT = 'https://api.web3forms.com/submit';
+function contactFormReady() {
+  return typeof FEEDBACK_FORM_KEY === 'string' && FEEDBACK_FORM_KEY.length >= 16;
+}
+// POST the report to the Web3Forms relay. Resolves true on a confirmed
+// delivery, false otherwise (network error, CSP block, relay rejection).
+async function sendFeedbackToInbox(body) {
+  try {
+    const res = await fetch(FEEDBACK_FORM_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        access_key: FEEDBACK_FORM_KEY,
+        subject: 'A+ Study — feedback / bug report',
+        from_name: 'A+ Study app',
+        message: body,
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    return res.ok && data.success !== false;
+  } catch {
+    return false;
+  }
+}
+// Open a prefilled GitHub issue (the no-key fallback). Overflows to
+// copy-to-clipboard + a blank issue form when the report is too long.
+function openFeedbackIssue(body) {
+  const base = `${FEEDBACK_ISSUES_URL}?title=${encodeURIComponent('Bug report / feedback')}`;
+  const url = `${base}&body=${encodeURIComponent(body)}`;
+  if (url.length > 6000) {
+    navigator.clipboard?.writeText(body);
+    toast('Report copied — paste it into the GitHub issue that just opened.', 'info', 6000);
+    window.open(base, '_blank', 'noopener');
+    return;
+  }
+  try {
+    const w = window.open(url, '_blank', 'noopener');
+    if (!w) location.href = url;
+  } catch { location.href = url; }
+}
 async function getCacheVersion() {
   // The SW writes a constant `aplus-study-v<N>`; reading it out of the
   // active SW lets us tag reports with the version the user is actually
@@ -5725,7 +5775,7 @@ async function showFeedback() {
         <div id="fbk-error" class="pind-error" role="alert" hidden></div>
         <div class="pind-actions">
           <button type="button" class="action" id="fbk-copy">Copy report</button>
-          <button type="button" class="action primary" id="fbk-send">Open a GitHub issue →</button>
+          <button type="button" class="action primary" id="fbk-send">${contactFormReady() ? 'Send to Amanda →' : 'Open a GitHub issue →'}</button>
         </div>
       </div>
     </div>`;
@@ -5765,28 +5815,26 @@ async function showFeedback() {
     return parts.join('\n');
   };
 
-  $('#fbk-send').addEventListener('click', () => {
+  $('#fbk-send').addEventListener('click', async () => {
     const body = buildReport();
-    const title = 'Bug report / feedback';
-    // GitHub prefills a new issue from ?title=&body= on the new-issue URL.
-    // A very long body can exceed the server's URL limit, so if we'd
-    // overflow, copy the report and open a blank new-issue form instead.
-    const base = `${FEEDBACK_ISSUES_URL}?title=${encodeURIComponent(title)}`;
-    const url = `${base}&body=${encodeURIComponent(body)}`;
-    if (url.length > 6000) {
-      navigator.clipboard?.writeText(body);
-      toast('Report copied — paste it into the GitHub issue that just opened.', 'info', 6000);
-      window.open(base, '_blank', 'noopener');
-      close();
+    const errEl = $('#fbk-error');
+    errEl.hidden = true;
+    // Preferred path: relay straight to the owner's inbox via Web3Forms.
+    if (contactFormReady()) {
+      const btn = $('#fbk-send');
+      const orig = btn.textContent;
+      btn.disabled = true; btn.textContent = 'Sending…';
+      const ok = await sendFeedbackToInbox(body);
+      if (ok) { toast('Sent — thank you! 💛', 'info', 4000); close(); return; }
+      // Delivery failed (offline / blocked): keep the report safe + explain.
+      btn.disabled = false; btn.textContent = orig;
+      navigator.clipboard?.writeText(body).catch(() => {});
+      errEl.hidden = false;
+      errEl.textContent = "Couldn't send just now — your report is copied to the clipboard. Check your connection and try again, or use Copy report.";
       return;
     }
-    // Open the prefilled new-issue form (submitting requires a GitHub login;
-    // no personal email or backend involved). On iOS a blocked popup falls
-    // back to in-tab navigation.
-    try {
-      const w = window.open(url, '_blank', 'noopener');
-      if (!w) location.href = url;
-    } catch { location.href = url; }
+    // No key configured yet → prefilled GitHub issue (still works).
+    openFeedbackIssue(body);
     setTimeout(close, 200);
   });
 
