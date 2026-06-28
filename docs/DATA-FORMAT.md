@@ -27,22 +27,18 @@ uses the Stats → "Active exam" toggle.
 
 ```jsonc
 {
-  "id":           "p1q36",                    // REQUIRED. Unique. Convention for pretest-derived items: p<pretest>q<num>; NotebookLM batches use c2q<N>.
-  "pretest":      1,                          // optional metadata — set when ingested from a pretest source
-  "qnum":         36,                         // optional metadata — original question number in that pretest
+  "id":           "c2q36",                    // REQUIRED. Unique. Convention: c2q<N> for Core 2 items; topic drills use c2-<topic>-<N>.
   "obj":          "3.3",                      // REQUIRED. CompTIA objective number "N.M"
   "qtype":        "Multiple Choice",          // REQUIRED. "Multiple Choice" | "Multiple Answer" | "PBQ"
   "question":     "Which …?",                 // REQUIRED. MUST end with . ? or !
   "options":      ["A", "B", "C", "D"],       // REQUIRED for graded questions, ≥2 entries, no duplicates
   "correct_short":"B",                        // REQUIRED for Multiple Choice / PBQ. MUST be exactly one of the options.
   "correct_picks":["A", "C"],                 // REQUIRED for Multiple Answer. ≥2 entries, all in options.
-  "wrong_pick":   "D",                        // optional. The pretest-miss the user originally picked. Drives the "originally picked" footnote.
-  "wrong_picks":  ["A", "D"],                 // optional. Multiple miss history across reruns of the same pretest question.
   "explanation":  "OBJ 3.3: …",               // REQUIRED. Should start with "OBJ <obj>:" matching the obj field.
-  "image":        "images/p1q36_mobo.png",    // optional. REQUIRED for qtype=PBQ. Path must exist on disk.
+  "image":        "images/c2q36_mobo.png",    // optional. REQUIRED for qtype=PBQ. Path must exist on disk.
   "images":       ["images/x.png"],           // optional alternative — array of paths
   "learnMore":    "https://example.com/x",    // optional. URL or [{url, label}] for "Learn more →" link.
-  "sources":      [{"pretest":1,"qnum":36}]   // optional dedupe trace. Populated by scripts/dedupe.mjs when the same question appears on multiple pretests.
+  "sources":      [{"source":"avw-handcrafted","qnum":36}]  // optional provenance/dedupe trace, merged by scripts/dedupe.mjs
 }
 ```
 
@@ -50,7 +46,7 @@ uses the Stats → "Active exam" toggle.
 
 If you add a pack and any of these are wrong, the test suite fails and
 you'll see a clear message like
-`p4q55: question references a visual ("in this picture") but no image is bundled`:
+`c2q55: question references a visual ("in this picture") but no image is bundled`:
 
 | Problem | Why it matters |
 |---|---|
@@ -63,8 +59,8 @@ you'll see a clear message like
 | `qtype: PBQ` but no `image` | Falls back to "image not available" banner |
 | `correct_short` not present in `options` | Question is **unwinnable** — every pick grades as wrong (this was the [escapeHtml-quote bug](https://example.com) class) |
 | Any `correct_picks` value not in `options` | Same — partial unwinnability for MA |
-| `correct_short` equals `wrong_pick` | Logic conflict — the user's recorded pretest pick matches the correct answer |
-| `wrong_pick` not in `options` | Pretest-miss footnote points to a non-existent option |
+| `correct_short` equals `wrong_pick` | Logic conflict — the optional "originally picked" value matches the correct answer (legacy field) |
+| `wrong_pick` not in `options` | The optional "originally picked" footnote points to a non-existent option (legacy field) |
 | Duplicate `options` (after case-and-whitespace normalization) | Two of the four choices look the same |
 | Empty / non-string option | Renders as a blank tappable row |
 | Long option that's a substring of the question | Almost always an extraction artifact (the parser pulled a sentence into the options array) |

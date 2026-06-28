@@ -5,9 +5,9 @@
 /*
   # Strict CSP — backstops the one intentional raw-HTML render path
   # (concept-fixes content) so a malicious content PR can't execute
-  # script. Allows the pdf.js CDN we explicitly import, and the user's
-  # Supabase host for optional sync.
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; script-src-elem 'self' https://cdn.jsdelivr.net; worker-src 'self' blob:; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://cdn.jsdelivr.net https://*.supabase.co; frame-ancestors 'none'; base-uri 'none'; object-src 'none'; form-action 'none'; upgrade-insecure-requests
+  # script. Allows the pdf.js CDN we explicitly import, the user's
+  # Supabase host for optional sync, and the Web3Forms contact relay.
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; script-src-elem 'self' https://cdn.jsdelivr.net; worker-src 'self' blob:; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://cdn.jsdelivr.net https://*.supabase.co https://api.web3forms.com; frame-ancestors 'none'; base-uri 'none'; object-src 'none'; form-action 'none'; upgrade-insecure-requests
   # Stop MIME-sniff overrides on JSON/JS payloads.
   X-Content-Type-Options: nosniff
   # Don't leak the URL path to outbound requests.

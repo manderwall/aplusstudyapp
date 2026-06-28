@@ -1291,8 +1291,15 @@ function renderStudy() {
   const edited = !!state.overrides[q.id];
   const sources = q.sources || [{ pretest: q.pretest, qnum: q.qnum }];
   // Only animate the card on question change, not on reveal-toggle rerenders
-  let cardClass = state._lastRenderedCard === q.id ? 'card' : 'card card-fresh';
+  const sameCard = state._lastRenderedCard === q.id;
+  let cardClass = sameCard ? 'card' : 'card card-fresh';
   state._lastRenderedCard = q.id;
+  // Preserve the scroll position across SAME-CARD re-renders. Picking an
+  // option and revealing both rebuild #main via innerHTML, which resets
+  // scrollTop to 0 — that mid-card jump-to-top is the "the screen resizes
+  // when I tap an answer" report. We restore it after the swap. On a real
+  // card *change* we intentionally start at the top (prevScroll stays 0).
+  const prevScroll = sameCard ? ($('#main')?.scrollTop || 0) : 0;
   // If we're in the first 500ms after reveal, paint the whole card with
   // pointer-events: none. Every other guard (rate-row arming, JS timestamp
   // checks in nextQuestion/prevQuestion, swipe target check) catches a
@@ -1384,6 +1391,9 @@ function renderStudy() {
   renderFilterBar();
   updateHUD();
   attachStudyEvents(q);
+  // Restore pre-render scroll on same-card rerenders (see prevScroll above)
+  // so tapping an option / revealing doesn't snap the card to the top.
+  if (sameCard && prevScroll) { const m = $('#main'); if (m) m.scrollTop = prevScroll; }
   $('#edit-btn')?.addEventListener('click', () => { state.editing = true; renderStudy(); });
   // Keyboard / SR users would otherwise lose focus to <body> on every
   // innerHTML swap. Restore focus to the primary action (Reveal pre-
@@ -3243,10 +3253,21 @@ function renderYourPickHTML(q) {
 function renderRatingButtonsHTML(q) {
   const p = state.progress[q.id] || {};
   const now = Date.now();
-  // Mirror recordRating's exam-aware schedule so the interval labels
-  // shown under each rate button match what'll actually happen.
+  // Interval previews under each rate button. These intentionally do NOT
+  // apply recordRating's exam-date interval cap. The cap clamps every
+  // interval down to "days until exam", which — within a week of the exam —
+  // collapses Hard/Good/Easy to the SAME label (e.g. all "1 day"), making
+  // the four buttons useless for telling the choices apart. That collapse
+  // is the "all the difficulty buttons show the same time / 10h on every
+  // answer" report. The preview's job is to show how each rating spaces the
+  // card *relative to the others*, so we show the card's natural FSRS
+  // interval (matching the documented "first-Good ≈ 5 days, first-Easy ≈ 12
+  // days"). The exam cap still governs the ACTUAL next-due date in
+  // recordRating — only the preview label is uncapped. We keep the
+  // exam-aware retention escalation, which tightens the spacing as the exam
+  // nears without flattening the four buttons into one value.
   const days = daysUntilExam(state.exam);
-  const previewCap = days !== null && days > 0 ? days : undefined;
+  const previewCap = undefined;
   const previewRetention = days === null || days > 14 ? 0.90
                          : days >  7 ? 0.93
                          : 0.95;
@@ -4571,6 +4592,13 @@ function installSwipe() {
     if (e.target.closest('button, input, a, canvas, .filter-bar, .scratchpad-wrap, .q-options')) return;
     const dx = e.clientX - sx;
     const dy = e.clientY - sy;
+    // Ghost-tap guard (5-layer stack, layer 2): a swipe that lands within
+    // 800ms of a reveal/answer-record is almost always the tail of the same
+    // gesture that revealed the card, not a deliberate skip. The rate-btn and
+    // quiz Next click handlers already carry this guard; the swipe pointerup
+    // was the one navigation path missing it — which is the "it advanced on
+    // its own" / "Reveal skipped the card" report. Bail before navigating.
+    if (Date.now() - (state._revealedAt || 0) < 800) return;
     // Require a cleaner horizontal gesture (100px, less diagonal tolerance).
     // Left swipe = next; right swipe = prev (Study only — Quiz answers are
     // recorded and going back would un-record without un-grading).
@@ -5118,6 +5146,10 @@ function showWelcome() {
           New here, or need to install / sync between devices?
           <a href="#" id="welcome-open-help">Open setup &amp; help →</a>
         </p>
+        <p class="welcome-credit">
+          Built by <strong>Amanda Kondrat'yev</strong> · open-source (MIT) ·
+          <a href="https://github.com/manderwall/aplusstudyapp" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </p>
       </div>
     </div>
   `;
@@ -5332,7 +5364,7 @@ function showHelp() {
               <li><strong>Lost your progress after wipe:</strong> if you set up sync, tap the <strong>☁️ button → ⬇ Pull</strong> on this device.</li>
               <li>
                 <strong>Send feedback or report a bug:</strong>
-                <button type="button" class="action primary feedback-cta" id="help-feedback-btn">📨 Email a report</button>
+                <button type="button" class="action primary feedback-cta" id="help-feedback-btn">📨 Send feedback</button>
                 <span class="help-aux">(pre-fills the screen you're on + device info so you don't have to type it out)</span>
               </li>
             </ul>
@@ -5343,6 +5375,19 @@ function showHelp() {
           <button type="button" class="welcome-btn primary" id="help-open-welcome">
             <span class="wbtn-title">← Back to "Pick a starting point"</span>
           </button>
+          <p class="help-credit">
+            <strong>A+ Study</strong> — created by Amanda Kondrat'yev.
+            <a href="https://github.com/manderwall/aplusstudyapp" target="_blank" rel="noopener noreferrer">Source on GitHub</a> ·
+            <a href="https://github.com/manderwall/aplusstudyapp/issues" target="_blank" rel="noopener noreferrer">Report an issue</a>
+          </p>
+          <p class="help-disclaimer">
+            Unofficial, independent study aid — <strong>not affiliated with,
+            authorized, or endorsed by CompTIA</strong>. “CompTIA” and “A+” are
+            trademarks of CompTIA, used here only to describe the exam this app
+            helps you study for. All questions are original, written to the
+            publicly available exam objectives; no actual exam content is
+            reproduced. A free, open-source personal project (MIT-licensed).
+          </p>
         </div>
       </div>
     </div>
@@ -5624,10 +5669,60 @@ function showSync() {
 //─── FEEDBACK / BUG-REPORT DIALOG ─────────────────────────────
 // Opens an in-app form that pre-fills the screen the user is on + device
 // info, so a classmate doesn't have to type "I was on Quiz card #7,
-// iPhone 15 Pro, Safari, app version v73" by hand. On submit, opens a
-// mailto: link to amanda; falls back to a copy-to-clipboard if the
-// device has no mail client configured. No backend required.
-const FEEDBACK_EMAIL = 'hello@amandavanderwall.com';
+// iPhone 15 Pro, Safari, app version v73" by hand.
+//
+// Contact form: if FEEDBACK_FORM_KEY is set, the report is POSTed to the
+// Web3Forms relay, which emails it straight to Amanda's inbox — no GitHub
+// login required and her address never appears in this source. When the key
+// is blank it falls back to opening a prefilled GitHub issue, so the button
+// is never dead. Copy-to-clipboard is always available as a last resort.
+const FEEDBACK_ISSUES_URL = 'https://github.com/manderwall/aplusstudyapp/issues/new';
+// Web3Forms access key — a PUBLIC, submit-only token (safe to commit; it
+// can only post to this one form, can't read anything). It maps to the
+// owner's email ON Web3Forms, so the address itself stays out of the repo.
+// Get a free key in ~1 min at https://web3forms.com (enter your email; they
+// email you the key) and paste it here. Blank = GitHub-issue fallback.
+const FEEDBACK_FORM_KEY = '8a6675fd-1d3e-4a43-b621-dbb12f6a791b';
+const FEEDBACK_FORM_ENDPOINT = 'https://api.web3forms.com/submit';
+function contactFormReady() {
+  return typeof FEEDBACK_FORM_KEY === 'string' && FEEDBACK_FORM_KEY.length >= 16;
+}
+// POST the report to the Web3Forms relay. Resolves true on a confirmed
+// delivery, false otherwise (network error, CSP block, relay rejection).
+async function sendFeedbackToInbox(body) {
+  try {
+    const res = await fetch(FEEDBACK_FORM_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        access_key: FEEDBACK_FORM_KEY,
+        subject: 'A+ Study — feedback / bug report',
+        from_name: 'A+ Study app',
+        message: body,
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    return res.ok && data.success !== false;
+  } catch {
+    return false;
+  }
+}
+// Open a prefilled GitHub issue (the no-key fallback). Overflows to
+// copy-to-clipboard + a blank issue form when the report is too long.
+function openFeedbackIssue(body) {
+  const base = `${FEEDBACK_ISSUES_URL}?title=${encodeURIComponent('Bug report / feedback')}`;
+  const url = `${base}&body=${encodeURIComponent(body)}`;
+  if (url.length > 6000) {
+    navigator.clipboard?.writeText(body);
+    toast('Report copied — paste it into the GitHub issue that just opened.', 'info', 6000);
+    window.open(base, '_blank', 'noopener');
+    return;
+  }
+  try {
+    const w = window.open(url, '_blank', 'noopener');
+    if (!w) location.href = url;
+  } catch { location.href = url; }
+}
 async function getCacheVersion() {
   // The SW writes a constant `aplus-study-v<N>`; reading it out of the
   // active SW lets us tag reports with the version the user is actually
@@ -5680,7 +5775,7 @@ async function showFeedback() {
         <div id="fbk-error" class="pind-error" role="alert" hidden></div>
         <div class="pind-actions">
           <button type="button" class="action" id="fbk-copy">Copy report</button>
-          <button type="button" class="action primary" id="fbk-send">Send via email →</button>
+          <button type="button" class="action primary" id="fbk-send">${contactFormReady() ? 'Send to Amanda →' : 'Open a GitHub issue →'}</button>
         </div>
       </div>
     </div>`;
@@ -5720,31 +5815,33 @@ async function showFeedback() {
     return parts.join('\n');
   };
 
-  $('#fbk-send').addEventListener('click', () => {
+  $('#fbk-send').addEventListener('click', async () => {
     const body = buildReport();
-    const subject = 'A+ Study — bug report / feedback';
-    // mailto: max URL length is ~2000 chars; if we overflow, fall back to
-    // copying and tell the user.
-    const url = `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    if (url.length > 1900) {
-      navigator.clipboard?.writeText(body);
-      toast('Report too long for email — copied to clipboard. Paste it into a new email to ' + FEEDBACK_EMAIL, 'info', 6000);
-      close();
+    const errEl = $('#fbk-error');
+    errEl.hidden = true;
+    // Preferred path: relay straight to the owner's inbox via Web3Forms.
+    if (contactFormReady()) {
+      const btn = $('#fbk-send');
+      const orig = btn.textContent;
+      btn.disabled = true; btn.textContent = 'Sending…';
+      const ok = await sendFeedbackToInbox(body);
+      if (ok) { toast('Sent — thank you! 💛', 'info', 4000); close(); return; }
+      // Delivery failed (offline / blocked): keep the report safe + explain.
+      btn.disabled = false; btn.textContent = orig;
+      navigator.clipboard?.writeText(body).catch(() => {});
+      errEl.hidden = false;
+      errEl.textContent = "Couldn't send just now — your report is copied to the clipboard. Check your connection and try again, or use Copy report.";
       return;
     }
-    // Open the mail client. On iOS this may navigate the current tab;
-    // restore by opening in a new window where possible.
-    try {
-      const w = window.open(url, '_blank');
-      if (!w) location.href = url;  // popup blocked → in-tab navigation
-    } catch { location.href = url; }
+    // No key configured yet → prefilled GitHub issue (still works).
+    openFeedbackIssue(body);
     setTimeout(close, 200);
   });
 
   $('#fbk-copy').addEventListener('click', async () => {
     const body = buildReport();
     try {
-      await navigator.clipboard.writeText(`To: ${FEEDBACK_EMAIL}\nSubject: A+ Study — bug report / feedback\n\n${body}`);
+      await navigator.clipboard.writeText(body);
       const btn = $('#fbk-copy');
       const orig = btn.textContent;
       btn.textContent = 'Copied ✓';
@@ -5754,7 +5851,7 @@ async function showFeedback() {
       // Clipboard blocked — show the text so user can long-press select it
       const errEl = $('#fbk-error');
       errEl.hidden = false;
-      errEl.textContent = `Couldn't copy automatically. Email ${FEEDBACK_EMAIL} with: ${body.slice(0, 200)}…`;
+      errEl.textContent = `Couldn't copy automatically. Select and copy this, then paste it into a GitHub issue: ${body.slice(0, 200)}…`;
     }
   });
 

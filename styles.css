@@ -44,10 +44,8 @@
   --text: #e8e5df;
   --text-dim: #9e9b95;
   --accent: #74a8cf;
-  /* Text/iconography that sits ON an --accent fill. Mirrors the shared
-     smartiasis design-system token --color-accent-fg (#fff light, navy
-     #0e1117 dark — see amandavanderwall-portfolio/docs/DESIGN-SYSTEM.md)
-     so the app family reads as one practice. Theme-aware so it clears
+  /* Text/iconography that sits ON an --accent fill (#fff light, navy
+     #0e1117 dark). Theme-aware so it clears
      WCAG-AA on both accents: navy on the light-blue dark accent (7.6:1),
      white on the darkened light accent (6.5:1). A single static color
      can't pass on both. */
@@ -2150,6 +2148,30 @@ button.obj-bar .obj-acc {
 .help-kbd-table td { padding: 4px 8px 4px 0; vertical-align: top; }
 .help-kbd-table td:first-child { white-space: nowrap; width: 1%; }
 .help-footer { margin-top: 16px; }
+.help-credit {
+  margin-top: 16px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.help-credit a { color: var(--accent); text-decoration: none; font-weight: 500; }
+.help-credit a:hover { text-decoration: underline; }
+.help-disclaimer {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+/* Welcome dialog author credit */
+.welcome-credit {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+.welcome-credit a { color: var(--accent); text-decoration: none; font-weight: 500; }
+.welcome-credit a:hover { text-decoration: underline; }
 
 /* Welcome dialog's "open setup & help" footer link */
 .welcome-help-link {
@@ -2337,6 +2359,17 @@ button.share-copy.share-copied { background: var(--good); color: #000; border-co
 /* Very small phones (iPhone SE portrait) */
 @media (max-width: 360px) {
   button.action { flex-basis: 100%; }
+}
+
+/* Very narrow phones (≤360px, e.g. iPhone SE 1st-gen at 320px): the header
+   row — title + "N / M" counter + five icon buttons — overran the viewport
+   by a few px, causing a whole-page horizontal scroll. Tighten the gaps and
+   button padding so it fits without wrapping. */
+@media (max-width: 360px) {
+  header { padding: 10px 12px; }
+  .header-right { gap: 6px; }
+  .header-right button { padding: 5px 7px; }
+  #progress-hud { font-size: 11px; }
 }
 
 /* Landscape phone (≤500px tall): the header + filter row + card meta

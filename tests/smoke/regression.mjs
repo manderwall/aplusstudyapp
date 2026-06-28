@@ -81,6 +81,17 @@ async function run() {
     const revealed = await page.evaluate(() => !!document.querySelector('.rate-btn'));
     revealed ? r.ok('rating buttons appear after Reveal') : r.ng('no rating buttons after Reveal');
 
+    // ── Rate-button intervals stay distinct (the "all four buttons show
+    // the same time / 10h on every answer" bug). The exam-date cap used to
+    // squash Hard/Good/Easy to one value in the preview; the preview is now
+    // uncapped so the four ratings space the card differently. ──────────
+    const intervals = await page.evaluate(() =>
+      [...document.querySelectorAll('.rate-btn .rate-interval')].map(e => e.textContent.trim()));
+    if (intervals.length === 4 && new Set(intervals).size >= 3)
+      r.ok(`rate intervals are differentiated (${intervals.join(' / ')})`);
+    else
+      r.ng(`rate intervals collapsed: ${JSON.stringify(intervals)}`);
+
     // ── Keyboard bail under modal (PR #37) ──────────────────────
     r.head('keyboard shortcuts bail under open modal');
     // Advance to a fresh card first (rate the revealed one)

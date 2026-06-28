@@ -70,10 +70,13 @@ both. `aria-live` announcer (`announce(msg, assertive)`) speaks
 reveal/grade outcomes for SR users.
 
 ### Data conventions
-- Pretest-derived question IDs follow `p<pretest>q<num>` (e.g. `p1q36`).
-  When a pretest re-uses a number with different content, append `_2`
-  (e.g. `p3q18_2`). This is intentional, not a typo. NotebookLM-generated
-  batches use `c2q<N>` instead.
+- All questions are ORIGINAL, written from CompTIA's publicly published exam
+  objectives — no real exam content or third-party question banks. Keep it that
+  way (see `DISCLAIMER.md` / README "Legal" section).
+- Question IDs are stable, source-tagged slugs: `c2q<N>` for Core 2 items,
+  `c2-<topic>-<N>` for topic drills (e.g. `c2-acr-12-r`), `yt<N>` / `avw<N>`
+  for other authored batches. A few legacy `p<n>q<n>` migration paths still
+  exist in `app.js` for backward-compat but no shipped question uses them.
 - `correct_short` (single-answer) MUST appear in `options` exactly,
   case-and-whitespace-insensitive. Otherwise the question is unwinnable.
 - `correct_picks` (multi-answer) — each entry MUST appear in `options`.
