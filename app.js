@@ -5682,7 +5682,7 @@ const FEEDBACK_ISSUES_URL = 'https://github.com/manderwall/aplusstudyapp/issues/
 // owner's email ON Web3Forms, so the address itself stays out of the repo.
 // Get a free key in ~1 min at https://web3forms.com (enter your email; they
 // email you the key) and paste it here. Blank = GitHub-issue fallback.
-const FEEDBACK_FORM_KEY = '';
+const FEEDBACK_FORM_KEY = '8a6675fd-1d3e-4a43-b621-dbb12f6a791b';
 const FEEDBACK_FORM_ENDPOINT = 'https://api.web3forms.com/submit';
 function contactFormReady() {
   return typeof FEEDBACK_FORM_KEY === 'string' && FEEDBACK_FORM_KEY.length >= 16;
