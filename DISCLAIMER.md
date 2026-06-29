@@ -3,10 +3,12 @@
 **This project is unofficial and independent. It is not affiliated with,
 sponsored, authorized, or endorsed by CompTIA.**
 
-- "CompTIA" and "A+" are trademarks (or registered trademarks) of the Computing
-  Technology Industry Association (CompTIA). They are used here only to
-  truthfully describe the certification exam this app helps you study for
-  (nominative fair use). No affiliation or endorsement is implied.
+- "CompTIA" and "CompTIA A+" are trademarks (or registered trademarks) of the
+  Computing Technology Industry Association (CompTIA). They are used here only to
+  truthfully describe the certification exam this app's starting question bank
+  helps you study for (nominative fair use). No affiliation or endorsement is
+  implied. ("A+" in the app's own name refers to the academic grade you're aiming
+  for — the app is a general study tool, with more exams planned.)
 - All practice questions in this repository are **original**, authored from
   CompTIA's **publicly published exam objectives**. **No actual exam questions,
   official practice-test items, or third-party copyrighted question banks are

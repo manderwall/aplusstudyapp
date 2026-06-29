@@ -1,17 +1,22 @@
-# A+ Study — a CompTIA A+ study PWA
+# A+ Study — aim for an A+ on any certification exam
 
-A Progressive Web App (PWA) for studying the CompTIA A+ Core 2 (220-1202) exam —
-spaced repetition, practice quizzes, and concept review. It runs in any modern
-browser, works fully offline, and installs to the home screen on desktop,
-Android, iPhone, and iPad. It's built neurodivergent-first, with extra polish on
-iPad (an Apple-Pencil scratch pad) and iPhone (a thumb-friendly layout with
-swipe-to-advance). All questions are original, and it's open to fork.
+A spaced-repetition study PWA built to help you earn an **A+** on any
+certification exam — flashcards, practice quizzes, and concept review. It ships
+with a complete **CompTIA A+ Core 2 (220-1202)** question bank, and its
+multi-exam architecture means the next course (Network+, Security+, or anything
+else) is just another dataset to drop in. Runs in any modern browser, works
+fully offline, and installs to the home screen on desktop, Android, iPhone, and
+iPad. Built neurodivergent-first, with extra polish on iPad (an Apple-Pencil
+scratch pad) and iPhone (a thumb-friendly layout with swipe-to-advance). All
+questions are original, and it's open to fork.
 
 > ⚠️ **Unofficial, independent project — not affiliated with, authorized, or
 > endorsed by CompTIA.** All questions are original, written from the publicly
 > published exam objectives; no real exam content is reproduced. See [Legal and
-> disclaimer](#legal-and-disclaimer). “CompTIA” and “A+” are trademarks of
-> CompTIA.
+> disclaimer](#legal-and-disclaimer). “CompTIA” and “CompTIA A+” are trademarks
+> of CompTIA, used here only to name the exam this app currently includes a
+> question bank for. (“A+” in the app's own name refers to the grade you're
+> aiming for.)
 
 ![PWA](https://img.shields.io/badge/PWA-installable-5aa6ff)
 ![Build](https://img.shields.io/badge/build_step-none-4ade80)
@@ -538,11 +543,13 @@ This is an **independent, unofficial** study aid shared as a personal portfolio
 project. It is **not affiliated with, sponsored, authorized, or endorsed by
 CompTIA**, and it is not an official CompTIA product.
 
-- **Trademarks.** "CompTIA" and "A+" are trademarks (or registered trademarks)
-of the Computing Technology Industry Association (CompTIA). They are used here
-only nominatively — i.e. to truthfully describe the certification exam this app
-is designed to help you study for. No claim is made to any CompTIA mark, and no
-affiliation or endorsement is implied.
+- **Trademarks.** "CompTIA" and "CompTIA A+" are trademarks (or registered
+trademarks) of the Computing Technology Industry Association (CompTIA). They are
+used here only nominatively — i.e. to truthfully name the certification exam this
+app currently includes a question bank for. "A+" in the app's own name refers to
+the academic grade you're aiming for (the app is a general study tool, with more
+exams planned). No claim is made to any CompTIA mark, and no affiliation or
+endorsement is implied.
 - **Questions are original.** Every question in `data/` was written from scratch
 against CompTIA's **publicly published exam objectives**, which list the topics
 the exam covers. Exam objectives are facts about the test; the questions that
