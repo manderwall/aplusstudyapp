@@ -16,6 +16,8 @@ import {
   state, $, $$, PREF_DEFAULTS, pref, setPref, applyPrefs, ensureFontLoaded,
   isDue, haptic, toast, lsSet, announce,
 } from './core.mjs';
+import { celebrate } from './confetti.mjs';
+import { setSound } from './focus-sound.mjs';
 
 // PINs set before the iteration count was raised to 600k stored (or implied)
 // 310k. Derive existing setups at their recorded count so a bump never locks
@@ -55,41 +57,6 @@ function daysUntilExam(examId = state?.exam) {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   return Math.round((target - today) / (24 * 60 * 60 * 1000));
-}
-
-//─── CONFETTI (celebration bursts) ───────────────────────────
-// Tiny DOM-based confetti so it works offline without canvas bookkeeping.
-// Honors reduce-motion (OS setting + the app's own toggle).
-const CONFETTI_COLORS = ['#ffd700', '#ff80ab', '#80d8ff', '#4ade80', '#fbbf24', '#c084fc', '#ff87b2'];
-function celebrate({ sourceEl = null, intensity = 30, duration = 1400 } = {}) {
-  if (pref('motion') === 'reduced') return;
-  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-  const host = document.createElement('div');
-  host.className = 'confetti-host';
-  host.setAttribute('aria-hidden', 'true');
-  let x = window.innerWidth / 2, y = 100;
-  if (sourceEl) {
-    const r = sourceEl.getBoundingClientRect();
-    x = r.left + r.width / 2;
-    y = r.top + r.height / 2;
-  }
-  host.style.left = `${x}px`;
-  host.style.top  = `${y}px`;
-  document.body.appendChild(host);
-  for (let i = 0; i < intensity; i++) {
-    const p = document.createElement('div');
-    p.className = 'confetti-piece';
-    const angle = Math.random() * Math.PI * 2;
-    const dist = 60 + Math.random() * 120;
-    p.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
-    p.style.setProperty('--dx', `${Math.cos(angle) * dist}px`);
-    p.style.setProperty('--dy', `${Math.sin(angle) * dist}px`);
-    p.style.setProperty('--rot', `${(Math.random() - 0.5) * 720}deg`);
-    p.style.animationDuration = `${duration + Math.random() * 400}ms`;
-    p.style.animationDelay = `${Math.random() * 80}ms`;
-    host.appendChild(p);
-  }
-  setTimeout(() => host.remove(), duration + 800);
 }
 
 //─── DAILY ACTIVITY (heatmap source) ─────────────────────────
@@ -3399,64 +3366,6 @@ function setMode(mode) {
   }
 }
 
-//─── FOCUS SOUND (Web Audio, no downloads) ───────────────────
-let _audioCtx = null;
-let _audioSrc = null;
-let _audioGain = null;
-
-function generateNoiseBuffer(ctx, type) {
-  const size = 2 * ctx.sampleRate;  // 2 seconds, looped
-  const buf = ctx.createBuffer(1, size, ctx.sampleRate);
-  const d = buf.getChannelData(0);
-  if (type === 'white') {
-    for (let i = 0; i < size; i++) d[i] = Math.random() * 2 - 1;
-  } else if (type === 'pink') {
-    // Voss-McCartney approximation — cheap, good enough
-    let b0=0, b1=0, b2=0, b3=0, b4=0, b5=0, b6=0;
-    for (let i = 0; i < size; i++) {
-      const w = Math.random() * 2 - 1;
-      b0 = 0.99886 * b0 + w * 0.0555179;
-      b1 = 0.99332 * b1 + w * 0.0750759;
-      b2 = 0.96900 * b2 + w * 0.1538520;
-      b3 = 0.86650 * b3 + w * 0.3104856;
-      b4 = 0.55000 * b4 + w * 0.5329522;
-      b5 = -0.7616 * b5 - w * 0.0168980;
-      d[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.11;
-      b6 = w * 0.115926;
-    }
-  } else if (type === 'brown') {
-    let last = 0;
-    for (let i = 0; i < size; i++) {
-      const w = Math.random() * 2 - 1;
-      last = (last + 0.02 * w) / 1.02;
-      d[i] = last * 3.5;
-    }
-  }
-  return buf;
-}
-
-function setSound(type) {
-  if (_audioSrc) { try { _audioSrc.stop(); } catch {} _audioSrc = null; }
-  if (type === 'off') return;
-  if (!_audioCtx) {
-    const Ctor = window.AudioContext || window.webkitAudioContext;
-    if (!Ctor) return;
-    _audioCtx = new Ctor();
-  }
-  _audioCtx.resume();
-  if (!_audioGain) {
-    _audioGain = _audioCtx.createGain();
-    _audioGain.gain.value = 0.15;
-    _audioGain.connect(_audioCtx.destination);
-  }
-  const src = _audioCtx.createBufferSource();
-  src.buffer = generateNoiseBuffer(_audioCtx, type);
-  src.loop = true;
-  src.connect(_audioGain);
-  src.start();
-  _audioSrc = src;
-}
-
 //─── SHAKE TO SHUFFLE (DeviceMotion, iOS-permission-aware) ───
 let _shakeInstalled = false;
 let _shakeLastFire = 0;
@@ -4258,6 +4167,10 @@ async function hydrateReferenceBookPanel() {
   const clearBtn = document.getElementById('ref-clear');
   const indexBtn = document.getElementById('ref-index');
   const suggestRow = document.getElementById('ref-suggest-row');
+  // The Stats panel can be re-rendered or navigated away from while the
+  // `await getReferenceBook()` above is pending, leaving these elements
+  // detached/null. Bail rather than throw on the .onclick wiring below.
+  if (!pickBtn || !upload || !clearBtn || !indexBtn || !suggestRow) return;
 
   if (rec) {
     const sizeMB = (rec.size / 1024 / 1024).toFixed(1);

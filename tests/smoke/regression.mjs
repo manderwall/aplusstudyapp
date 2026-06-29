@@ -228,6 +228,19 @@ async function run() {
     });
     expandWorks ? r.ok('expanding the collapse reveals the settings controls') : r.ng('controls missing after expand');
 
+    // ── Focus-sound (Web Audio noise; extracted to focus-sound.mjs) ──
+    // Toggling a noise option calls setSound(); any breakage surfaces in the
+    // console-error check below. Turn it off again so the AudioContext stops.
+    const soundResult = await page.evaluate(() => {
+      const white = document.querySelector('.settings-collapse [data-pref="sound"] button[data-val="white"]');
+      if (!white) return 'missing';
+      white.click();
+      const applied = document.documentElement.getAttribute('data-sound');
+      document.querySelector('.settings-collapse [data-pref="sound"] button[data-val="off"]')?.click();
+      return applied === 'white' ? 'applied' : 'clicked';
+    });
+    soundResult !== 'missing' ? r.ok(`focus-sound toggle runs without error (${soundResult})`) : r.ng('sound control not found');
+
     // ── Reading TOC live filter ─────────────────────────────────
     r.head('reading section filter');
     await page.evaluate(() => document.querySelector('.tab[data-mode="reading"]')?.click());
