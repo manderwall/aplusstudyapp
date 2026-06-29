@@ -1,10 +1,11 @@
-# A+ Study — iPad + iPhone Study App
+# A+ Study — a CompTIA A+ study PWA
 
-A Progressive Web App (PWA) for studying the CompTIA A+ Core 2 (220-1202) exam.
-Built for my own studying — neurodivergent-first, offline-capable,
-Apple-Pencil-aware — and open for anyone to fork. Installs to home screen on
-**iPad** (full Pencil support) **or iPhone** (thumb-friendly layout, swipe to
-advance).
+A Progressive Web App (PWA) for studying the CompTIA A+ Core 2 (220-1202) exam —
+spaced repetition, practice quizzes, and concept review. It runs in any modern
+browser, works fully offline, and installs to the home screen on desktop,
+Android, iPhone, and iPad. It's built neurodivergent-first, with extra polish on
+iPad (an Apple-Pencil scratch pad) and iPhone (a thumb-friendly layout with
+swipe-to-advance). All questions are original, and it's open to fork.
 
 > ⚠️ **Unofficial, independent project — not affiliated with, authorized, or
 > endorsed by CompTIA.** All questions are original, written from the publicly
@@ -39,8 +40,8 @@ look:
   helpers), `crypto.mjs` (encryption). No framework, no bundler, no
   `node_modules` at runtime. Clone and open `index.html`.
 - **Offline-first PWA.** A service worker precaches the shell + question bank,
-  so after the first load it runs in airplane mode and installs to the
-  iOS/iPadOS home screen like a native app.
+  so after the first load it runs in airplane mode and installs to the home
+  screen like a native app — on desktop, Android, and iOS/iPadOS alike.
 - **Real client-side encryption.** Optional PIN lock derives an AES-GCM-256 key
   via PBKDF2 (SHA-256, 310,000 iterations, random salt) and re-encrypts
   everything in IndexedDB at rest. The PIN and derived key are never stored —
@@ -298,7 +299,7 @@ question at render time, so an in-app edit overrides the JSON for that question.
 
 ## Cloud sync (Supabase)
 
-Optional. Lets iPad + iPhone share progress and edits without exporting JSON
+Optional. Lets your devices share progress and edits without exporting JSON
 manually.
 
 ### One-time Supabase setup
