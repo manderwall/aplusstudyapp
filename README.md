@@ -44,9 +44,10 @@ look:
   JavaScript, split into focused modules with a one-way dependency graph:
   `core.mjs` (shared state + DOM/dialog primitives), `lib.mjs` (pure, tested
   SRS/formatting/URL-safety helpers), `crypto.mjs` (encryption), `storage.mjs`
-  (IndexedDB + at-rest encryption), and self-contained feature modules
-  (`read-aloud`, `scratchpad`, `shake`, `image-zoom`, `wake-lock`,
-  `confetti`, `focus-sound`) that the `app.js` view layer wires together —
+  (IndexedDB + at-rest encryption), `sync.mjs` (optional Supabase push/pull),
+  and self-contained feature modules (`read-aloud`, `scratchpad`, `shake`,
+  `image-zoom`, `wake-lock`, `confetti`, `focus-sound`) that the `app.js`
+  view layer wires together —
   no framework, no bundler, no `node_modules` at runtime. Clone and open
   `index.html`.
 - **Offline-first PWA.** A service worker precaches the shell + question bank,
@@ -178,8 +179,10 @@ calm, minimal UI). Everything here is togglable from **Stats → Accessibility**
   mid-study (with a haptic confirmation).
 - **Text size** — S / M / L / XL. Scales the whole app.
 - **Font** — System default, **Atkinson Hyperlegible** (open-source, designed
-  for low vision, loaded from Google Fonts), or **OpenDyslexic** (weighted
-  letter bottoms to resist letter-swapping).
+  for low vision), or **OpenDyslexic** (weighted letter bottoms to resist
+  letter-swapping). The two opt-in fonts load on demand from their web-font
+  CDNs (Google Fonts and cdnfonts); the default path makes no external
+  requests.
 - **High contrast** — pure-black background + brighter text/borders. Reduces
   visual clutter.
 - **Reduce motion** — kills transitions and animations. The OS-level
@@ -521,21 +524,18 @@ The in-app **Send feedback** button (Help → Send feedback) collects the messag
 plus optional diagnostics (current screen, app version, device). Where it goes
 depends on one config value in `app.js`:
 
-- **`FEEDBACK_FORM_KEY` is blank (default):** opens a prefilled **GitHub issue**
-  —
-works out of the box, no email exposed, but submitting needs a GitHub login.
+- **`FEEDBACK_FORM_KEY` is blank:** opens a prefilled **GitHub issue** — works
+  out of the box, no email exposed, but submitting needs a GitHub login.
 - **`FEEDBACK_FORM_KEY` is set:** posts the report to
-  **[Web3Forms](https://web3forms.com)**,
-which emails it straight to you — **no login required, and your email address
-never appears in the source.**
+  **[Web3Forms](https://web3forms.com)**, which emails it straight to you — no
+  login required, and your email address never appears in the source.
 
 To turn on direct-to-inbox feedback (~1 minute):
 
-1. Go to [web3forms.com](https://web3forms.com), enter the email you want
-   reports
-sent to, and copy the **access key** they email you.
+1. Go to [web3forms.com](https://web3forms.com), enter the email you want reports
+   sent to, and copy the **access key** they email you.
 2. Paste it into `const FEEDBACK_FORM_KEY = '...'` near the top of the feedback
-section in `app.js`.
+   section in `app.js`.
 
 The access key is a **public, submit-only token** — safe to commit. It can only
 post to your form and can't read anything, and your actual email stays on

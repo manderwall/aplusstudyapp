@@ -42,8 +42,8 @@ export const FSRS_W = [
   0.94, 2.18, 0.05, 0.34, 1.26, 0.29, 2.61,
 ];
 // Target retention used when solving for the next interval. The caller
-// (recordRating in app.js) can override this per-rate based on how
-// close the exam is — see EXAM_RETENTION_SCHEDULE in app.js.
+// (recordRating in app.js) can override this per-rate based on how close
+// the exam is — intervals contract as the exam date approaches.
 export const FSRS_TARGET_RETENTION = 0.9;
 // Forgetting curve: R(t) = (1 + t/(9·S))^DECAY.
 //

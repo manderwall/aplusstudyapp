@@ -2,7 +2,7 @@
 // Modules: State, DB, Study, Quiz, Reading, Stats, ScratchPad, Router
 
 import {
-  MIN, DAY, MAX_INTERVAL_DAYS,
+  MIN,
   defaultProgress, migrateProgress, schedule,
   escapeHtml, normalizeOption, formatExplanation, formatQuestion,
   orderDeck, nextIntervalLabel, /* recommendedRating no longer used in UI; kept in lib.mjs + tests */
@@ -13,7 +13,7 @@ import {
   makeVerificationBlob, verifyPin, CRYPTO_DEFAULTS,
 } from './crypto.mjs';
 import {
-  state, $, $$, PREF_DEFAULTS, pref, setPref, applyPrefs, ensureFontLoaded,
+  state, $, $$, pref, setPref, applyPrefs,
   isDue, haptic, toast, lsSet, announce,
   trapFocus, setAppInert, restoreFocusAfterRender,
 } from './core.mjs';
@@ -1076,10 +1076,16 @@ function renderStudy() {
         ` : ''}`;
       })()}
     </div>
+    ${renderScratchpadHTML(q)}
   `;
   renderFilterBar();
   updateHUD();
   attachStudyEvents(q);
+  // Wire the per-question scratch pad (Apple-Pencil annotation / fidget
+  // space). The markup is hidden by CSS on narrow screens (≤600px); on
+  // wider screens it sits beneath the card. attachScratchpadEvents no-ops
+  // if the canvas isn't present, so this is safe in every layout.
+  attachScratchpadEvents(q);
   // Restore pre-render scroll on same-card rerenders (see prevScroll above)
   // so tapping an option / revealing doesn't snap the card to the top.
   if (sameCard && prevScroll) { const m = $('#main'); if (m) m.scrollTop = prevScroll; }

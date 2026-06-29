@@ -19,7 +19,7 @@ it **non-commercial** (no ads, paywall, or "buy me a coffee") — that, plus the
 > proud of.
 >
 > A few things under the hood:
-> • **Zero dependencies, no build step** — ~6,500 lines of vanilla ES-module
+> • **Zero dependencies, no build step** — ~6,600 lines of vanilla ES-module
 >   JavaScript. Clone and open `index.html`.
 > • **FSRS-4 spaced repetition** — the scheduling algorithm Anki adopted as its
 >   default, implemented from scratch and unit-tested.

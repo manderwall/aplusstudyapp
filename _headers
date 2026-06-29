@@ -7,7 +7,11 @@
   # (concept-fixes content) so a malicious content PR can't execute
   # script. Allows the pdf.js CDN we explicitly import, the user's
   # Supabase host for optional sync, and the Web3Forms contact relay.
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; script-src-elem 'self' https://cdn.jsdelivr.net; worker-src 'self' blob:; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://cdn.jsdelivr.net https://*.supabase.co https://api.web3forms.com; frame-ancestors 'none'; base-uri 'none'; object-src 'none'; form-action 'none'; upgrade-insecure-requests
+  # style-src/font-src include the two web-font CDNs the dyslexia-friendly
+  # font options load on demand: Atkinson Hyperlegible (CSS from
+  # fonts.googleapis.com, files from fonts.gstatic.com) and OpenDyslexic
+  # (CSS + files from fonts.cdnfonts.com). Only fetched when a user opts in.
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; script-src-elem 'self' https://cdn.jsdelivr.net; worker-src 'self' blob:; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.cdnfonts.com; font-src 'self' data: https://fonts.gstatic.com https://fonts.cdnfonts.com; connect-src 'self' https://cdn.jsdelivr.net https://*.supabase.co https://api.web3forms.com; frame-ancestors 'none'; base-uri 'none'; object-src 'none'; form-action 'none'; upgrade-insecure-requests
   # Stop MIME-sniff overrides on JSON/JS payloads.
   X-Content-Type-Options: nosniff
   # Don't leak the URL path to outbound requests.

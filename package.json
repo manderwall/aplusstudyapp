@@ -1,8 +1,8 @@
 {
   "name": "aplusstudyapp",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "private": true,
-  "description": "Offline-first PWA for the CompTIA A+ Core 2 (220-1202) exam — vanilla JS, zero runtime deps.",
+  "description": "Offline-first study PWA — aim for an A+ on any certification exam. Ships with a CompTIA A+ Core 2 (220-1202) question bank. Vanilla JS, zero runtime deps.",
   "license": "MIT",
   "repository": {
     "type": "git",

@@ -9,7 +9,9 @@ Spaced-repetition flashcards + practice quizzes + reading sheets + stats.
   Read this first if you're being asked to build a new study/learning PWA.
 - **`docs/DATA-FORMAT.md`** — schema + workflow for adding question packs.
   Read this before touching `data/**/*.json`.
-- **`app.js`** — all UI + state + handlers. ~5000 lines, no framework.
+- **`app.js`** — the view core: render + state + handlers + router. ~4,800
+  lines, no framework. Feature subsystems live in their own `.mjs` modules
+  (see `sw.js` ASSETS for the full list); `app.js` wires them together.
 - **`lib.mjs`** — pure helpers (FSRS-4 scheduling, formatting, shuffling).
   Side-effect-free; tested by `tests/pure.test.mjs`.
 - **`scripts/validate-questions.mjs`** — content data validator. Exports
@@ -104,7 +106,7 @@ reveal/grade outcomes for SR users.
 
 ### Service worker
 - Bump `CACHE` in `sw.js` on every release. Currently at `aplus-study-vNN`
-  (v86 at time of writing; check `sw.js` for current).
+  (check `sw.js` for the current version).
 - iOS PWAs are sticky; users may need to delete + reinstall the
   home-screen icon for major updates to take effect.
 - As of PR #38 the SW caches **same-origin basic responses only**.
@@ -122,7 +124,7 @@ reveal/grade outcomes for SR users.
 ## Test commands
 
 ```bash
-# Unit + data tests (fast, no browser). 62 tests as of PR #45.
+# Unit + data tests (fast, no browser). 77 tests (see README for current count).
 # Includes pure scheduler tests (FSRS invariants + SM-2 migration),
 # escapeHtml, formatExplanation, orderDeck, content-fixes validator.
 node --test tests/*.test.mjs
@@ -149,10 +151,11 @@ npm run smoke:mobile   # 6-viewport responsive sweep + screenshots
 
 When you fix a browser-observable bug, add an assertion to
 `tests/smoke/regression.mjs` so it can't silently regress. The suite
-runs LOCALLY only — wiring it into CI failed twice on puppeteer's
-Chromium launch on the runner (couldn't read Actions logs to debug);
-see the TODO in `.github/workflows/ci.yml`. Local `npm run smoke` is
-the source of truth.
+now runs in CI and gates the PR (the earlier puppeteer-on-runner
+launch failure was fixed by installing a runner Chrome with its system
+deps via `browser-actions/setup-chrome` and pointing puppeteer at it —
+see the `smoke` job in `.github/workflows/ci.yml`). `npm run smoke`
+reproduces it locally.
 
 ## When the user reports a "skip" bug they can't reproduce
 

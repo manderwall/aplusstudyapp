@@ -35,6 +35,17 @@ async function run() {
     await wait(400);
     const cardShown = await page.evaluate(() => !!document.querySelector('.card-question'));
     cardShown ? r.ok('study card renders after welcome dismissed') : r.ng('no study card after welcome');
+    // Scratch-pad must be wired into the study render (it was dead code —
+    // defined but never called — until restored). At this 390px viewport the
+    // CSS hides it (display:none ≤600px), but the markup + canvas must exist
+    // in the DOM, which only happens if renderScratchpadHTML/attach are called.
+    const padWired = await page.evaluate(() => ({
+      wrap: !!document.querySelector('.scratchpad-wrap'),
+      canvas: !!document.getElementById('scratchpad'),
+    }));
+    padWired.wrap && padWired.canvas
+      ? r.ok('scratch pad is wired into the study card (markup + canvas present)')
+      : r.ng(`scratch pad not rendered: ${JSON.stringify(padWired)}`);
 
     // ── Require-answer gate (single-answer) ─────────────────────
     r.head('require-answer-before-Reveal gate');
