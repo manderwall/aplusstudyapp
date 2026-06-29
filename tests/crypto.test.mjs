@@ -8,7 +8,7 @@ import {
   makeVerificationBlob, verifyPin,
 } from '../crypto.mjs';
 
-// 1k iterations for fast tests — production uses 310k
+// 1k iterations for fast tests — production uses 600k
 const ITERS = 1000;
 
 test('randomSaltB64 returns 16-byte base64 salts that differ', () => {

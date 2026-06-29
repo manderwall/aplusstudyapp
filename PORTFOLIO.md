@@ -19,12 +19,12 @@ it **non-commercial** (no ads, paywall, or "buy me a coffee") — that, plus the
 > proud of.
 >
 > A few things under the hood:
-> • **Zero dependencies, no build step** — ~5k lines of vanilla ES-module
+> • **Zero dependencies, no build step** — ~6,500 lines of vanilla ES-module
 >   JavaScript. Clone and open `index.html`.
 > • **FSRS-4 spaced repetition** — the scheduling algorithm Anki adopted as its
 >   default, implemented from scratch and unit-tested.
 > • **Real client-side encryption** — an optional PIN derives an AES-GCM-256 key
->   (PBKDF2, 310k iterations) and encrypts everything at rest. The PIN is never
+>   (PBKDF2, 600k iterations) and encrypts everything at rest. The PIN is never
 >   stored.
 > • **Offline-first PWA** — a service worker precaches the shell + question bank,
 >   so it runs in airplane mode and installs to the home screen like a native app.

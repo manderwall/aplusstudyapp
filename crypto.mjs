@@ -1,9 +1,9 @@
 // WebCrypto helpers for at-rest encryption of progress/overrides/drawings.
-// PIN → PBKDF2(SHA-256, 310k iters) → AES-GCM 256 key → encrypt/decrypt blobs.
+// PIN → PBKDF2(SHA-256, 600k iters) → AES-GCM 256 key → encrypt/decrypt blobs.
 // No plaintext PIN or derived key is ever persisted; the key lives in memory
 // only for the current app session.
 
-const PBKDF2_ITERATIONS = 310_000;  // OWASP 2023 baseline for SHA-256
+const PBKDF2_ITERATIONS = 600_000;  // OWASP minimum for PBKDF2-HMAC-SHA256
 const KEY_LENGTH_BITS = 256;
 const SALT_BYTES = 16;
 const IV_BYTES = 12;

@@ -43,7 +43,7 @@ look:
   so after the first load it runs in airplane mode and installs to the home
   screen like a native app — on desktop, Android, and iOS/iPadOS alike.
 - **Real client-side encryption.** Optional PIN lock derives an AES-GCM-256 key
-  via PBKDF2 (SHA-256, 310,000 iterations, random salt) and re-encrypts
+  via PBKDF2 (SHA-256, 600,000 iterations, random salt) and re-encrypts
   everything in IndexedDB at rest. The PIN and derived key are never stored —
   only a salt and a verification blob (`crypto.mjs`).
 - **A genuine touch-safety problem, solved.** iPad "ghost taps" after revealing
@@ -358,7 +358,7 @@ and reading your progress.
 
 1. **Stats → App lock → Set PIN**. Pick a PIN of 4+ characters, re-enter to
    confirm.
-2. The app derives an AES-GCM 256 key from the PIN via PBKDF2 (SHA-256, 310,000
+2. The app derives an AES-GCM 256 key from the PIN via PBKDF2 (SHA-256, 600,000
    iterations, random salt) and immediately re-encrypts your existing progress,
    question edits, and scratchpad drawings under that key.
 3. The salt + a "can you decrypt this sentinel?" verification blob are saved to

@@ -10,8 +10,13 @@ import {
 } from './lib.mjs';
 import {
   randomSaltB64, deriveKey, encryptJSON, decryptJSON, isEncryptedBlob,
-  makeVerificationBlob, verifyPin,
+  makeVerificationBlob, verifyPin, CRYPTO_DEFAULTS,
 } from './crypto.mjs';
+
+// PINs set before the iteration count was raised to 600k stored (or implied)
+// 310k. Derive existing setups at their recorded count so a bump never locks
+// anyone out; new setups below are saved at the current default.
+const LEGACY_PBKDF2_ITERATIONS = 310_000;
 
 //─── EXAMS (multi-dataset support) ──────────────────────────
 // Each exam has its own questions + concept-fixes file, and its own
@@ -4728,7 +4733,7 @@ function showLockScreen() {
       submit.disabled = true;
       submit.textContent = 'Unlocking…';
       try {
-        const key = await deriveKey(pin, setup.salt, setup.iterations);
+        const key = await deriveKey(pin, setup.salt, setup.iterations || LEGACY_PBKDF2_ITERATIONS);
         if (!(await verifyPin(key, setup.verification))) {
           setError('Wrong PIN. Try again.');
           haptic([30, 60, 30]);
@@ -4908,7 +4913,7 @@ async function pinSetupFlow() {
   await saveProgress();
   await saveOverrides();
   await rekeyAllDrawings(key, null);
-  savePinSetup({ v: 1, salt, iterations: 310_000, verification });
+  savePinSetup({ v: 1, salt, iterations: CRYPTO_DEFAULTS.PBKDF2_ITERATIONS, verification });
   toast('PIN set. Data is now encrypted on this device.', 'success', 4500);
   renderStats();
 }
@@ -4927,7 +4932,7 @@ async function pinChangeFlow() {
   });
   if (!v) return;
   const setup = getPinSetup();
-  const testKey = await deriveKey(v.current, setup.salt, setup.iterations);
+  const testKey = await deriveKey(v.current, setup.salt, setup.iterations || LEGACY_PBKDF2_ITERATIONS);
   if (!(await verifyPin(testKey, setup.verification))) {
     toast('Current PIN is wrong.', 'error'); return;
   }
@@ -4943,7 +4948,7 @@ async function pinChangeFlow() {
   await saveProgress();
   await saveOverrides();
   await rekeyAllDrawings(newKey, oldKey);
-  savePinSetup({ v: 1, salt, iterations: 310_000, verification });
+  savePinSetup({ v: 1, salt, iterations: CRYPTO_DEFAULTS.PBKDF2_ITERATIONS, verification });
   toast('PIN changed.', 'success');
   renderStats();
 }
