@@ -22,7 +22,7 @@ A spaced-repetition study app is a common project. The parts I think are worth a
 - **Real client-side encryption.** Optional PIN lock derives an AES-GCM-256 key via PBKDF2 (SHA-256, 310,000 iterations, random salt) and re-encrypts everything in IndexedDB at rest. The PIN and derived key are never stored — only a salt and a verification blob (`crypto.mjs`).
 - **A genuine touch-safety problem, solved.** iPad "ghost taps" after revealing an answer would skip cards. The fix is a deliberate 5-layer stack (CSS `pointer-events` lockout, JS timestamp guards, swipe-target checks, scoped sticky positioning, ID-based history) — documented in `CLAUDE.md` so it doesn't regress.
 - **Accessibility as a design driver, not a checkbox.** Focus traps, skip links, `prefers-reduced-motion` support, dyslexia-friendly fonts (Atkinson Hyperlegible, OpenDyslexic), high-contrast mode, full text-scaling, and an "anxiety mode" that hides judgemental metrics. See the [AuDHD-friendly features](#audhd-friendly-features) section.
-- **Tested + CI-gated.** 48 unit/data tests via Node's built-in test runner, plus a content validator (`scripts/validate-questions.mjs`) that catches unwinnable questions, mismatched objectives, and broken image refs. Both run in GitHub Actions on every push.
+- **Tested + CI-gated.** 75 unit/data tests via Node's built-in test runner, plus a content validator (`scripts/validate-questions.mjs`) that catches unwinnable questions, mismatched objectives, and broken image refs. Both run in GitHub Actions on every push.
 
 ## Tech stack
 
@@ -33,18 +33,22 @@ A spaced-repetition study app is a common project. The parts I think are worth a
 | **Offline** | Service Worker (cache-first precache) + Web App Manifest |
 | **Crypto** | Web Crypto API — PBKDF2 → AES-GCM-256 |
 | **Optional sync** | Supabase (anon key + user-chosen sync key) |
-| **Tests** | `node --test` (48 tests) + a custom JSON content validator |
+| **Tests** | `node --test` (75 tests) + a custom JSON content validator |
 | **CI / hosting** | GitHub Actions → Cloudflare Pages |
 
 ## Screenshots
 
-<!-- Drop screenshots into docs/screenshots/ — these <img> tags will pick them up.
-     GitHub gracefully shows a "image not found" placeholder until they exist. -->
+<p>
+  <img src="docs/screenshots/study.png"   alt="Study view — a flashcard mid-session, revealed, with spaced-repetition rating buttons" width="320">
+  <img src="docs/screenshots/reading.png" alt="Reading view — a concept-fix sheet with a table-of-contents sidebar" width="320">
+  <img src="docs/screenshots/welcome.png" alt="Welcome dialog — greeting, exam countdown, and a 'pick a starting point' task list" width="320">
+</p>
+
+**Calm / low-stimulation modes** — for the overstimulated (autism-side) days: a dark theme, and **Focus Mode**, which strips away the tab bar, filter chips, progress counters, and card meta to leave just the question and answers.
 
 <p>
-  <img src="docs/screenshots/study.png"   alt="Study view — a flashcard mid-session on iPad" width="320">
-  <img src="docs/screenshots/reading.png" alt="Reading view — a concept-fix sheet with a table-of-contents sidebar" width="320">
-  <img src="docs/screenshots/welcome.png" alt="Welcome dialog — greeting, exam countdown, and Today's plan task list" width="320">
+  <img src="docs/screenshots/study-dark.png" alt="Study view in dark mode" width="320">
+  <img src="docs/screenshots/focus-dark.png" alt="Focus Mode (dark) — all chrome hidden, showing only the question and answer options" width="320">
 </p>
 
 ## What's in it
@@ -104,64 +108,41 @@ Design principles that shaped this:
 
 None of this is medical advice — it's just options that map to patterns in the neurodivergent design literature. Use what helps, ignore what doesn't.
 
-## Installing to home screen (iPad or iPhone)
+## Use it
 
-### 1. Host the files somewhere HTTPS
+**Just open [aplusstudyapp.pages.dev](https://aplusstudyapp.pages.dev).** No account, no install, nothing to download — it runs in any modern browser and works fully offline after the first load.
 
-PWAs need HTTPS for the service worker (offline mode) to work. Three easy options:
+**Add it to your home screen (optional):**
 
-**Easiest — Netlify drop:**
+- **iPhone / iPad:** open the link in **Safari** → **Share** → **Add to Home Screen**. Opens full-screen like a native app, with full Apple-Pencil support on iPad.
+- **Android / desktop (Chrome or Edge):** tap the **install** icon in the address bar.
 
-1. Go to [app.netlify.com/drop](https://app.netlify.com/drop) in Safari or any browser
-2. Drag the entire `studyapp/` folder onto the page
-3. You get a URL like `https://random-name-123.netlify.app` — instant HTTPS
-4. Done. No account required for the initial drop, but sign up (free) to keep it long-term.
+**First run:** tap **Start studying** → read the card → **Reveal** → rate how it felt (Again / Hard / Good / Easy). It schedules each card's next review from there. Come back any time and tap the green **Due** chip to review just what's scheduled.
 
-**Alternative — GitHub Pages (free, needs a GitHub account):**
+Progress is saved on your device. To move it elsewhere, use **Stats → Export / Import**, or set up optional [cloud sync](#cloud-sync-supabase).
 
-1. Create a new public repo
-2. Upload the contents of `studyapp/` to the root
-3. Settings → Pages → Source: `main` branch, root folder
-4. Wait ~1 min, you'll get `https://<username>.github.io/<repo>/`
+---
 
-**Local testing on your Mac only:**
+# For developers & power users
+
+Everything below is for forking, self-hosting, or tweaking the app — **you don't need any of it to just use it at [aplusstudyapp.pages.dev](https://aplusstudyapp.pages.dev).**
+
+## Run it locally
+
+The app is a static site with **no build step and zero runtime dependencies** — clone the repo and open `index.html`, or serve it for full offline / service-worker behavior:
 
 ```bash
-npm run serve            # python3 -m http.server 8000 under the hood
+npm run serve     # python3 -m http.server 8000  →  http://localhost:8000
+npm test          # 75 unit + data + crypto tests (node --test)
+npm run validate  # validate data/core2/questions.json
+npm run check     # syntax-check the JS sources
 ```
 
-Then visit `http://localhost:8000` in Safari on your Mac. Note: Service worker won't fully register on `http://` — that's fine for local testing, but **install on iPad requires HTTPS** (Netlify/GitHub).
+No `npm install` is needed to run the app (zero runtime deps); the browser smoke suite uses `puppeteer`, a dev-only dependency. The live site deploys to Cloudflare Pages from `main` via GitHub Actions — but any static host works.
 
-Other dev scripts (no `npm install` needed — there are no deps):
+## Editing questions + adding PBQ images
 
-| Command | What it does |
-|---|---|
-| `npm test` | Run the 48 unit + data + crypto tests (`node --test tests/*.test.mjs`). |
-| `npm run validate` | Validate `data/core2/questions.json` for unwinnable / mismatched / broken entries. |
-| `npm run check` | Syntax-check the four JS sources. |
-
-### 2. Install to home screen
-
-Works the same way on iPad and iPhone:
-
-1. Open the HTTPS URL in **Safari** (not Chrome — iOS restricts PWA install to Safari)
-2. Tap the **Share** button (square with up arrow)
-3. Scroll down, tap **"Add to Home Screen"**
-4. Name it "A+ Study" (or whatever) → Add
-5. App icon appears on home screen. Tap it — opens full-screen, no Safari UI.
-
-Progress is stored per-device. If you install to both iPad and iPhone, they don't sync — each keeps its own study history (see "Cross-device sync" below for a fix).
-
-### 3. First launch
-
-- Wait a second for the service worker to register. Once it has, you can go fully offline.
-- Go to the **Study** tab, pick an OBJ filter or work through all questions.
-- Tap **Reveal answer** → rate how you did → next question. Progress saves automatically.
-- Come back later and tap the green **Due** chip to drill only cards scheduled for review.
-
-## Adding multiple-choice options + PBQ images
-
-Two ways to fill in the data the original extraction missed:
+Two ways to fill in or fix a card's options/image:
 
 ### Option A — In-app editor (no source files needed)
 
