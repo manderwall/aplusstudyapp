@@ -1,10 +1,11 @@
 // Service worker — cache shell + content for offline use
-const CACHE = 'aplus-study-v113';
+const CACHE = 'aplus-study-v114';
 const ASSETS = [
   './',
   './index.html',
   './styles.css',
   './app.js',
+  './core.mjs',
   './lib.mjs',
   './crypto.mjs',
   './manifest.json',
