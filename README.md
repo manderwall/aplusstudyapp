@@ -21,7 +21,7 @@ questions are original, and it's open to fork.
 ![PWA](https://img.shields.io/badge/PWA-installable-5aa6ff)
 ![Build](https://img.shields.io/badge/build_step-none-4ade80)
 ![Dependencies](https://img.shields.io/badge/runtime_deps-0-4ade80)
-![Tests](https://img.shields.io/badge/tests-75_passing-4ade80)
+![Tests](https://img.shields.io/badge/tests-77_passing-4ade80)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Unofficial](https://img.shields.io/badge/CompTIA-unofficial-orange)
 
@@ -40,10 +40,15 @@ look:
   card's memory as a *stability* + *difficulty* pair and schedules the next
   review to hit a target retention, and it's **exam-aware** — intervals contract
   as the test date approaches. Pure and unit-tested, in `lib.mjs`.
-- **Zero dependencies, no build step.** ~6,500 lines of vanilla ES-module
-  JavaScript — `app.js` (UI + state), `lib.mjs` (pure, tested SRS/formatting
-  helpers), `crypto.mjs` (encryption). No framework, no bundler, no
-  `node_modules` at runtime. Clone and open `index.html`.
+- **Zero dependencies, no build step.** ~6,600 lines of vanilla ES-module
+  JavaScript, split into focused modules with a one-way dependency graph:
+  `core.mjs` (shared state + DOM/dialog primitives), `lib.mjs` (pure, tested
+  SRS/formatting/URL-safety helpers), `crypto.mjs` (encryption), `storage.mjs`
+  (IndexedDB + at-rest encryption), and self-contained feature modules
+  (`read-aloud`, `scratchpad`, `shake`, `image-zoom`, `wake-lock`,
+  `confetti`, `focus-sound`) that the `app.js` view layer wires together —
+  no framework, no bundler, no `node_modules` at runtime. Clone and open
+  `index.html`.
 - **Offline-first PWA.** A service worker precaches the shell + question bank,
   so after the first load it runs in airplane mode and installs to the home
   screen like a native app — on desktop, Android, and iOS/iPadOS alike.
@@ -61,7 +66,7 @@ look:
   Hyperlegible, OpenDyslexic), high-contrast mode, full text-scaling, and an
   "anxiety mode" that hides judgemental metrics. See the [AuDHD-friendly
   features](#audhd-friendly-features) section.
-- **Tested + CI-gated.** 75 unit/data tests via Node's built-in test runner,
+- **Tested + CI-gated.** 77 unit/data tests via Node's built-in test runner,
   plus a content validator (`scripts/validate-questions.mjs`) that catches
   unwinnable questions, mismatched objectives, and broken image refs. Both run
   in GitHub Actions on every push.
@@ -76,7 +81,7 @@ look:
 | **Offline** | Service Worker (cache-first precache) + Web App Manifest |
 | **Crypto** | Web Crypto API — PBKDF2 → AES-GCM-256 |
 | **Optional sync** | Supabase (anon key + user-chosen sync key) |
-| **Tests** | `node --test` (75 tests) + a custom JSON content validator |
+| **Tests** | `node --test` (77 tests) + a custom JSON content validator |
 | **CI / hosting** | GitHub Actions → Cloudflare Pages |
 
 ## Screenshots
@@ -241,7 +246,7 @@ service-worker behavior:
 
 ```bash
 npm run serve     # python3 -m http.server 8000  →  http://localhost:8000
-npm test          # 75 unit + data + crypto tests (node --test)
+npm test          # 77 unit + data + crypto tests (node --test)
 npm run validate  # validate data/core2/questions.json
 npm run check     # syntax-check the JS sources
 ```

@@ -7,7 +7,7 @@ import {
   defaultProgress, migrateProgress, schedule,
   escapeHtml, normalizeOption, formatExplanation, formatQuestion,
   orderDeck, nextIntervalLabel, recommendedRating,
-  shuffleOptionsForCard,
+  shuffleOptionsForCard, isSafeImageSrc, isSafeLearnMoreUrl,
   FSRS_W, FSRS_TARGET_RETENTION, fsrsRetrievability, fsrsNextIntervalDays,
 } from '../lib.mjs';
 
@@ -504,4 +504,35 @@ test('escapeHtml coerces non-string inputs defensively', () => {
   assert.equal(escapeHtml(undefined), '');
   assert.equal(escapeHtml(''), '');
   assert.equal(escapeHtml(false), '');
+});
+
+test('isSafeImageSrc allows local paths + https + data:image, rejects the rest', () => {
+  // Local relative paths (resolve under self) — allowed.
+  assert.equal(isSafeImageSrc('icons/cpu.png'), true);
+  assert.equal(isSafeImageSrc('/data/core2/fig1.svg'), true);
+  // https — allowed; http — rejected (IP-leak tracking-pixel vector).
+  assert.equal(isSafeImageSrc('https://example.com/a.png'), true);
+  assert.equal(isSafeImageSrc('http://evil/track.gif'), false);
+  // data:image/* of an allowed type — allowed; other data: — rejected.
+  assert.equal(isSafeImageSrc('data:image/png;base64,iVBORw0KGgo='), true);
+  assert.equal(isSafeImageSrc('data:image/webp;base64,UklGRg=='), true);
+  assert.equal(isSafeImageSrc('data:text/html;base64,PHNjcmlwdD4='), false);
+  // javascript: and garbage — rejected; non-strings/empty — rejected.
+  assert.equal(isSafeImageSrc('javascript:alert(1)'), false);
+  assert.equal(isSafeImageSrc(''), false);
+  assert.equal(isSafeImageSrc(null), false);
+  assert.equal(isSafeImageSrc(42), false);
+});
+
+test('isSafeLearnMoreUrl allows only absolute http(s) links', () => {
+  assert.equal(isSafeLearnMoreUrl('https://learn.microsoft.com/x'), true);
+  assert.equal(isSafeLearnMoreUrl('http://example.com'), true);
+  // No protocol / relative → not a valid absolute URL → rejected (anchors
+  // need an absolute href; a bare path could be mis-resolved).
+  assert.equal(isSafeLearnMoreUrl('example.com/x'), false);
+  // javascript: would execute on click — rejected. escapeHtml can't stop it.
+  assert.equal(isSafeLearnMoreUrl('javascript:alert(1)'), false);
+  assert.equal(isSafeLearnMoreUrl('data:text/html,<script>'), false);
+  assert.equal(isSafeLearnMoreUrl(''), false);
+  assert.equal(isSafeLearnMoreUrl(undefined), false);
 });

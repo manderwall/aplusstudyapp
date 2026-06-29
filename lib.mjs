@@ -249,6 +249,29 @@ export function normalizeOption(s) {
   return (s || '').toLowerCase().trim().replace(/\s+/g, ' ');
 }
 
+//─── URL SAFETY ──────────────────────────────────────────────
+// Pure predicates that gate where the app will load remote content from —
+// defense in depth against a content PR smuggling an http:// tracking pixel
+// or a javascript: "learn more" link. Kept here (pure, no DOM) so any module
+// that renders question content can import them and they stay unit-testable.
+export function isSafeLearnMoreUrl(u) {
+  if (typeof u !== 'string' || !u.trim()) return false;
+  try { return /^https?:$/i.test(new URL(u).protocol); }
+  catch { return false; }
+}
+export function isSafeImageSrc(u) {
+  if (typeof u !== 'string' || !u.trim()) return false;
+  const s = u.trim();
+  // Local relative paths (no protocol) are fine — they resolve under self.
+  if (!/^[a-z][a-z0-9+.-]*:/i.test(s)) return true;
+  try {
+    const p = new URL(s).protocol.toLowerCase();
+    if (p === 'https:') return true;
+    if (p === 'data:') return /^data:image\/(png|jpe?g|gif|svg\+xml|webp);/i.test(s);
+    return false;
+  } catch { return false; }
+}
+
 // Return a stable shuffled copy of options for a given question ID.
 // Using the ID as a seed means the order is always the same for the same
 // card (so Prev → card looks the same as the first visit), but differs
