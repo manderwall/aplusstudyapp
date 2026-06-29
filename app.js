@@ -15,9 +15,12 @@ import {
 import {
   state, $, $$, PREF_DEFAULTS, pref, setPref, applyPrefs, ensureFontLoaded,
   isDue, haptic, toast, lsSet, announce,
+  trapFocus, setAppInert, restoreFocusAfterRender,
 } from './core.mjs';
 import { celebrate } from './confetti.mjs';
 import { setSound } from './focus-sound.mjs';
+import { installImageZoom } from './image-zoom.mjs';
+import { acquireWakeLock, releaseWakeLock, installWakeLock } from './wake-lock.mjs';
 
 // PINs set before the iteration count was raised to 600k stored (or implied)
 // 310k. Derive existing setups at their recorded count so a bump never locks
@@ -4208,88 +4211,6 @@ async function hydrateReferenceBookPanel() {
   };
 }
 
-function installImageZoom() {
-  document.addEventListener('click', (e) => {
-    const btn = e.target.closest('.q-image-zoom');
-    if (!btn) return;
-    e.preventDefault();
-    const img = btn.querySelector('img');
-    if (!img) return;
-    openImageZoom(img.src, img.alt);
-  });
-}
-function openImageZoom(src, alt) {
-  // Bail if one is already open (rapid double-tap)
-  if (document.getElementById('img-zoom-overlay')) return;
-  const overlay = document.createElement('div');
-  overlay.id = 'img-zoom-overlay';
-  overlay.className = 'img-zoom-overlay';
-  overlay.setAttribute('role', 'dialog');
-  overlay.setAttribute('aria-modal', 'true');
-  overlay.setAttribute('aria-label', 'Enlarged figure — tap or press Escape to close');
-  // src comes from a live img.src DOM property (already normalized to an
-  // absolute URL by the browser), so an attribute breakout can't survive
-  // today. Escape it anyway for defense in depth — a future refactor
-  // passing a raw string shouldn't regress this.
-  overlay.innerHTML = `
-    <button type="button" class="img-zoom-close" aria-label="Close enlarged figure">✕</button>
-    <img src="${escapeHtml(src)}" alt="${escapeHtml(alt || '')}">
-  `;
-  document.body.appendChild(overlay);
-  // Match the dialog a11y pattern from PR #39: inert background +
-  // focus trap + focus restoration on close.
-  const previouslyFocused = document.activeElement;
-  setAppInert(true);
-  const releaseTrap = trapFocus(overlay);
-  const close = () => {
-    releaseTrap();
-    setAppInert(false);
-    document.removeEventListener('keydown', onKey);
-    overlay.remove();
-    if (previouslyFocused && typeof previouslyFocused.focus === 'function') previouslyFocused.focus();
-  };
-  const onKey = (e) => { if (e.key === 'Escape') close(); };
-  overlay.addEventListener('click', close);
-  document.addEventListener('keydown', onKey);
-  overlay.querySelector('.img-zoom-close')?.focus();
-}
-
-//─── SCREEN WAKE LOCK ────────────────────────────────────────
-// Keeps the screen on during study/quiz/read-aloud. Browsers auto-release
-// the wake lock when the tab goes hidden, so we re-acquire on visibility
-// change. No-op on browsers without the API (Safari < 16.4, etc.).
-const wake = { lock: null, wanted: false };
-async function acquireWakeLock() {
-  if (!('wakeLock' in navigator)) return;
-  wake.wanted = true;
-  if (wake.lock) return;
-  try {
-    wake.lock = await navigator.wakeLock.request('screen');
-    wake.lock.addEventListener('release', () => { wake.lock = null; });
-  } catch {
-    // Permission denied or NotAllowed (Safari requires a user gesture for
-    // the first request); we'll retry next time the user does something.
-  }
-}
-function releaseWakeLock() {
-  wake.wanted = false;
-  if (wake.lock) wake.lock.release().catch(() => {});
-  wake.lock = null;
-}
-function installWakeLock() {
-  if (!('wakeLock' in navigator)) return;
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && wake.wanted) acquireWakeLock();
-  });
-  // Acquire on first user interaction in study/quiz so we satisfy the
-  // user-gesture requirement on browsers that need one.
-  const onFirst = () => {
-    if (state.mode === 'study' || state.mode === 'quiz') acquireWakeLock();
-  };
-  document.addEventListener('pointerdown', onFirst, { once: true, passive: true });
-  document.addEventListener('keydown', onFirst, { once: true });
-}
-
 //─── INPUT MODE DETECTION ────────────────────────────────────
 // Mark <html> with .is-touch the first time we see a touch event so CSS
 // can hide keyboard-hint chips on touch-only devices. We don't toggle it
@@ -4383,41 +4304,6 @@ function installSwipe() {
 // users that means every reveal/rate/advance dumps them back to the top
 // of the document. This restores focus to the most sensible new target:
 // the primary action button if visible, otherwise the main landmark.
-function restoreFocusAfterRender(prefer = '#reveal-btn, #quiz-next-btn, .rate-btn, .quiz-size-btn[data-size]:not([disabled])') {
-  if (document.activeElement && document.activeElement !== document.body) return;
-  const target = document.querySelector(prefer) || document.getElementById('main');
-  target?.focus?.({ preventScroll: true });
-}
-
-//─── DIALOG A11Y HELPERS ─────────────────────────────────────
-// trapFocus: cycles Tab/Shift+Tab inside `overlay`, returns a cleanup
-// function that detaches the listener. Used by every modal so keyboard
-// users can't tab into the (visually dimmed) background content.
-function trapFocus(overlay) {
-  const focusablesFor = () => [...overlay.querySelectorAll(
-    'button, [href], input, textarea, select, summary, [tabindex]:not([tabindex="-1"])'
-  )].filter(el => !el.disabled && (el.offsetParent !== null || getComputedStyle(el).position === 'fixed'));
-  const onKey = (e) => {
-    if (e.key !== 'Tab') return;
-    if (!overlay.isConnected) return;
-    const f = focusablesFor();
-    if (f.length === 0) return;
-    const first = f[0], last = f[f.length - 1];
-    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-  };
-  document.addEventListener('keydown', onKey);
-  return () => document.removeEventListener('keydown', onKey);
-}
-// setAppInert: marks the main app shell as inert + aria-hidden while a
-// modal is open, so screen readers don't read background content and Tab
-// can't walk into it. Mirrors what `<dialog>` would do natively.
-function setAppInert(inert) {
-  const app = document.getElementById('app');
-  if (!app) return;
-  if (inert) { app.setAttribute('inert', ''); app.setAttribute('aria-hidden', 'true'); }
-  else       { app.removeAttribute('inert');   app.removeAttribute('aria-hidden'); }
-}
 //─── LOCK SCREEN (PIN unlock) ────────────────────────────────
 // Shown on boot when pin.setup is present. Resolves with an AES-GCM key on
 // success, or null if the user used "Forgot PIN" to wipe local data.

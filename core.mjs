@@ -165,6 +165,51 @@ export function lsSet(key, value) {
   }
 }
 
+//─── DIALOG A11Y HELPERS ─────────────────────────────────────
+// Shared by every modal/overlay (lock screen, PIN dialogs, help, sync,
+// feedback, welcome, image zoom, reference viewer). Pure DOM — no app
+// dependencies — so they live in core where any feature module can import
+// them without a circular dependency back into app.js.
+
+// restoreFocusAfterRender: after a re-render blows away the focused element,
+// move focus to the most useful control (reveal/next/rate) or the main region
+// so keyboard + screen-reader users aren't dumped at <body>.
+export function restoreFocusAfterRender(prefer = '#reveal-btn, #quiz-next-btn, .rate-btn, .quiz-size-btn[data-size]:not([disabled])') {
+  if (document.activeElement && document.activeElement !== document.body) return;
+  const target = document.querySelector(prefer) || document.getElementById('main');
+  target?.focus?.({ preventScroll: true });
+}
+
+// trapFocus: cycles Tab/Shift+Tab inside `overlay`, returns a cleanup
+// function that detaches the listener. Used by every modal so keyboard
+// users can't tab into the (visually dimmed) background content.
+export function trapFocus(overlay) {
+  const focusablesFor = () => [...overlay.querySelectorAll(
+    'button, [href], input, textarea, select, summary, [tabindex]:not([tabindex="-1"])'
+  )].filter(el => !el.disabled && (el.offsetParent !== null || getComputedStyle(el).position === 'fixed'));
+  const onKey = (e) => {
+    if (e.key !== 'Tab') return;
+    if (!overlay.isConnected) return;
+    const f = focusablesFor();
+    if (f.length === 0) return;
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  };
+  document.addEventListener('keydown', onKey);
+  return () => document.removeEventListener('keydown', onKey);
+}
+
+// setAppInert: marks the main app shell as inert + aria-hidden while a
+// modal is open, so screen readers don't read background content and Tab
+// can't walk into it. Mirrors what `<dialog>` would do natively.
+export function setAppInert(inert) {
+  const app = document.getElementById('app');
+  if (!app) return;
+  if (inert) { app.setAttribute('inert', ''); app.setAttribute('aria-hidden', 'true'); }
+  else       { app.removeAttribute('inert');   app.removeAttribute('aria-hidden'); }
+}
+
 //─── ARIA ANNOUNCE (screen-reader live region) ───────────────
 // Created lazily so we don't touch the DOM until something needs to be spoken.
 export function announce(msg, assertive = false) {
