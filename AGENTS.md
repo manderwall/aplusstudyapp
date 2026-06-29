@@ -1,4 +1,4 @@
-# A+ Study app — orientation for future Claude sessions
+# A+ Study app — orientation for AI coding agents & contributors
 
 This is a CompTIA A+ exam study PWA. Single-file JS modules, no build step.
 Spaced-repetition flashcards + practice quizzes + reading sheets + stats.
@@ -115,7 +115,7 @@ reveal/grade outcomes for SR users.
   Pairs with the SW's `SKIP_WAITING` message handler.
 
 ### Branching
-- Feature work: `claude/<short-name>-<random>` branches
+- Feature work: short-lived `feat/<short-name>` branches
 - Always test + ask before pushing to `main`
 - Never force-push without explicit user approval
 

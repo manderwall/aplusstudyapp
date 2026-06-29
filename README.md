@@ -41,7 +41,7 @@ look:
 - **A genuine touch-safety problem, solved.** iPad "ghost taps" after revealing
   an answer would skip cards. The fix is a deliberate 5-layer stack (CSS
   `pointer-events` lockout, JS timestamp guards, swipe-target checks, scoped
-  sticky positioning, ID-based history) — documented in `CLAUDE.md` so it
+  sticky positioning, ID-based history) — documented in `AGENTS.md` so it
   doesn't regress.
 - **Accessibility as a design driver, not a checkbox.** Focus traps, skip links,
   `prefers-reduced-motion` support, dyslexia-friendly fonts (Atkinson
