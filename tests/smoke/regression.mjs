@@ -293,6 +293,96 @@ async function run() {
       ? r.ok('Listen reads the current card (injected card lookup works)')
       : r.ng(`Listen did not engage: ${JSON.stringify(listen)}`);
 
+    // ── Cloud sync: push → pull round-trip ──────────────────────
+    // Drives the real Sync dialog handlers with window.fetch stubbed to
+    // emulate the progress_push / progress_pull RPCs. Proves a card rated
+    // locally survives a push, and a pull replays it back through the merge
+    // logic + IDB without error. This is the safety net for sync.mjs.
+    r.head('cloud sync push/pull round-trip');
+    // Make sure we have at least one rated card so the bundle isn't empty.
+    await page.evaluate(() => document.querySelector('.tab[data-mode="study"]')?.click());
+    await wait(200);
+    await page.evaluate(() => {
+      const opt = document.querySelector('.q-options li.q-option');
+      if (opt) opt.click();
+      const rev = document.getElementById('reveal-btn');
+      if (rev && !rev.disabled) rev.click();
+    });
+    await wait(150);
+    await page.evaluate(() => { document.querySelector('[data-rate]')?.click(); });
+    await wait(200);
+    // Install the backend stub: capture the pushed payload, replay it on pull.
+    await page.evaluate(() => {
+      window.__sync = { pushed: null, pushCalls: 0, pullCalls: 0 };
+      window.confirm = () => true;  // pull asks before overwriting local
+      const realFetch = window.fetch;
+      window.fetch = (url, opts = {}) => {
+        const u = String(url);
+        if (u.includes('/rpc/progress_push')) {
+          window.__sync.pushCalls++;
+          const body = JSON.parse(opts.body || '{}');
+          window.__sync.pushed = body.p_data;
+          return Promise.resolve(new Response('{}', { status: 200 }));
+        }
+        if (u.includes('/rpc/progress_pull')) {
+          window.__sync.pullCalls++;
+          return Promise.resolve(new Response(
+            JSON.stringify([{ data: window.__sync.pushed }]), { status: 200 }));
+        }
+        return realFetch(url, opts);
+      };
+    });
+    // Open dialog, configure, push.
+    await page.evaluate(() => document.getElementById('sync-btn')?.click());
+    await wait(250);
+    await page.evaluate(() => {
+      const ov = document.getElementById('sync-overlay');
+      ov.querySelector('#cloud-url').value = 'https://example.supabase.co';
+      ov.querySelector('#cloud-key').value = 'anon-test-key';
+      ov.querySelector('#cloud-sync').value = 'smoke-sync-key';
+      ov.querySelector('#cloud-save').click();
+      ov.querySelector('#cloud-push').click();
+    });
+    await wait(300);
+    const pushed = await page.evaluate(() => {
+      const exams = window.__sync.pushed?.progress || {};
+      const cardCount = Object.values(exams).reduce((n, e) => n + Object.keys(e || {}).length, 0);
+      return {
+        calls: window.__sync.pushCalls,
+        version: window.__sync.pushed?.version,
+        cardCount,
+        status: document.getElementById('cloud-status')?.textContent || '',
+      };
+    });
+    pushed.calls === 1 && pushed.version === 2 && pushed.cardCount > 0 && /pushed/i.test(pushed.status)
+      ? r.ok(`Push sends a v2 bundle with progress (${pushed.cardCount} card(s))`)
+      : r.ng(`push round-trip wrong: ${JSON.stringify(pushed)}`);
+    // Pull replays the captured bundle back through the merge logic.
+    await page.evaluate(() => document.getElementById('cloud-pull')?.click());
+    await wait(300);
+    // Push a second time — the card must still be present, proving the pull
+    // wrote it back into state + IDB (true round-trip, not just a no-op).
+    await page.evaluate(() => document.getElementById('cloud-push')?.click());
+    await wait(300);
+    const roundTrip = await page.evaluate(() => {
+      const exams = window.__sync.pushed?.progress || {};
+      const cardCount = Object.values(exams).reduce((n, e) => n + Object.keys(e || {}).length, 0);
+      return {
+        pullCalls: window.__sync.pullCalls,
+        cardCountAfter: cardCount,
+        status: document.getElementById('cloud-status')?.textContent || '',
+      };
+    });
+    roundTrip.pullCalls === 1 && roundTrip.cardCountAfter > 0 && /pushed/i.test(roundTrip.status)
+      ? r.ok('Pull restores progress through merge + IDB (survives re-push)')
+      : r.ng(`pull round-trip wrong: ${JSON.stringify(roundTrip)}`);
+    // Restore real fetch + clean up the config so later state stays neutral.
+    await page.evaluate(() => {
+      document.getElementById('sync-close')?.click();
+      ['supabase.url','supabase.key','supabase.syncKey','supabase.lastSync'].forEach(k => localStorage.removeItem(k));
+    });
+    await wait(150);
+
     // ── Console-error scoreboard ────────────────────────────────
     r.head('console errors');
     errors.length === 0 ? r.ok('zero uncaught console errors across the walk') : r.ng(`${errors.length} console error(s): ${errors.slice(0, 3).join(' | ')}`);
