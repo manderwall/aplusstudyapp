@@ -22,6 +22,7 @@ import { setSound } from './focus-sound.mjs';
 import { installImageZoom } from './image-zoom.mjs';
 import { acquireWakeLock, releaseWakeLock, installWakeLock } from './wake-lock.mjs';
 import { initReadAloud, stopSpeaking, installListenButton } from './read-aloud.mjs';
+import { initShake, enableShake, disableShake } from './shake.mjs';
 
 // PINs set before the iteration count was raised to 600k stored (or implied)
 // 310k. Derive existing setups at their recorded count so a bump never locks
@@ -3370,48 +3371,6 @@ function setMode(mode) {
   }
 }
 
-//─── SHAKE TO SHUFFLE (DeviceMotion, iOS-permission-aware) ───
-let _shakeInstalled = false;
-let _shakeLastFire = 0;
-
-function onShakeMotion(e) {
-  const a = e.accelerationIncludingGravity;
-  if (!a) return;
-  const mag = Math.sqrt((a.x||0)**2 + (a.y||0)**2 + (a.z||0)**2);
-  const now = Date.now();
-  if (mag > 25 && now - _shakeLastFire > 1200) {
-    _shakeLastFire = now;
-    haptic([20, 40, 20]);
-    // Shake reshuffles the current view (new seed) instead of flipping a boolean.
-    state._orderSeed = (Date.now() & 0x7fffffff) || 1;
-    state._orderCache = null;
-    state.currentIndex = 0;
-    if (state.mode === 'study') renderStudy();
-    else if (state.mode === 'quiz') renderQuiz();
-  }
-}
-
-async function enableShake() {
-  if (_shakeInstalled) return true;
-  // iOS 13+ requires explicit permission for motion events
-  if (typeof DeviceMotionEvent !== 'undefined'
-      && typeof DeviceMotionEvent.requestPermission === 'function') {
-    try {
-      const result = await DeviceMotionEvent.requestPermission();
-      if (result !== 'granted') { alert('Motion permission denied — shake disabled.'); return false; }
-    } catch (e) { alert('Couldn\'t request motion permission: ' + e.message); return false; }
-  }
-  window.addEventListener('devicemotion', onShakeMotion);
-  _shakeInstalled = true;
-  return true;
-}
-
-function disableShake() {
-  if (!_shakeInstalled) return;
-  window.removeEventListener('devicemotion', onShakeMotion);
-  _shakeInstalled = false;
-}
-
 //─── FOCUS MODE ──────────────────────────────────────────────
 function toggleFocus() {
   state.focus = !state.focus;
@@ -5468,6 +5427,8 @@ async function init() {
   // Inject the app-side lookups the read-aloud module needs to find the
   // current card, then wire the Listen button.
   initReadAloud({ filteredQuestions, getQuestion });
+  // Inject the re-render hooks the shake-to-shuffle module calls on a shake.
+  initShake({ renderStudy, renderQuiz });
   deferIdle(() => {
     installListenButton();
     installInputModeDetection();
