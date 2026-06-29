@@ -270,6 +270,29 @@ async function run() {
       readingFilter.allVisible ? r.ok('clearing the filter restores all sections') : r.ng('filter did not restore sections');
     }
 
+    // ── Read-aloud (Listen button) ─────────────────────────────
+    // Guards the read-aloud.mjs extraction: the Listen button only reaches
+    // the "speaking" state if currentSpeakableCard() resolves a real card
+    // via the filteredQuestions()/getQuestion() lookups injected into the
+    // module at init. A broken injection => null card => no aria-pressed flip.
+    r.head('read-aloud Listen button');
+    await page.evaluate(() => document.querySelector('.tab[data-mode="study"]')?.click());
+    await wait(200);
+    const listen = await page.evaluate(() => {
+      const btn = document.getElementById('listen-btn');
+      if (!btn) return { state: 'missing' };
+      if (btn.hidden) return { state: 'unsupported' };  // no speechSynthesis in this engine
+      // Stub speak so we don't actually queue audio in CI.
+      try { window.speechSynthesis.speak = () => {}; window.speechSynthesis.cancel = () => {}; } catch {}
+      btn.click();
+      return { state: 'clicked', pressed: btn.getAttribute('aria-pressed'), glyph: btn.textContent };
+    });
+    if (listen.state === 'unsupported') r.info('read-aloud not exercised (no speechSynthesis in this engine)');
+    else if (listen.state === 'missing') r.ng('Listen button not found');
+    else listen.pressed === 'true'
+      ? r.ok('Listen reads the current card (injected card lookup works)')
+      : r.ng(`Listen did not engage: ${JSON.stringify(listen)}`);
+
     // ── Console-error scoreboard ────────────────────────────────
     r.head('console errors');
     errors.length === 0 ? r.ok('zero uncaught console errors across the walk') : r.ng(`${errors.length} console error(s): ${errors.slice(0, 3).join(' | ')}`);
