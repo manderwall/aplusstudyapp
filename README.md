@@ -27,7 +27,14 @@ installable; works fully offline once loaded.
 A spaced-repetition study app is a common project. The parts I think are worth a
 look:
 
-- **Zero dependencies, no build step.** ~4,000 lines of vanilla ES-module
+- **A real spaced-repetition engine, built from scratch.** The scheduler is a
+  hand-written implementation of **FSRS-4** (Free Spaced Repetition Scheduler —
+  the algorithm [Anki adopted as its
+  default](https://github.com/open-spaced-repetition/fsrs4anki)). It models each
+  card's memory as a *stability* + *difficulty* pair and schedules the next
+  review to hit a target retention, and it's **exam-aware** — intervals contract
+  as the test date approaches. Pure and unit-tested, in `lib.mjs`.
+- **Zero dependencies, no build step.** ~6,500 lines of vanilla ES-module
   JavaScript — `app.js` (UI + state), `lib.mjs` (pure, tested SRS/formatting
   helpers), `crypto.mjs` (encryption). No framework, no bundler, no
   `node_modules` at runtime. Clone and open `index.html`.
@@ -58,6 +65,7 @@ look:
 | Layer | Choice |
 |---|---|
 | **Language** | Vanilla JavaScript (ES modules), HTML, CSS — no framework |
+| **Scheduling** | FSRS-4 spaced-repetition algorithm — custom implementation (`lib.mjs`) |
 | **Storage** | IndexedDB (progress, per-question overrides, scratchpad drawings, reference PDFs) + `localStorage` for prefs |
 | **Offline** | Service Worker (cache-first precache) + Web App Manifest |
 | **Crypto** | Web Crypto API — PBKDF2 → AES-GCM-256 |
@@ -84,9 +92,10 @@ progress counters, and card meta to leave just the question and answers.
 
 ## What's in it
 
-- **Study mode** — flashcards with spaced repetition (again / hard / good /
-  easy). Cards come back at increasing intervals based on how well you did;
-  "again" brings it back in a minute, "easy" pushes it out days.
+- **Study mode** — flashcards (474 questions across the Core 2 220-1202
+  objectives) with spaced repetition (again / hard / good / easy). Cards come
+  back at increasing intervals based on how well you did; "again" brings it back
+  in a minute, "easy" pushes it out days.
 - **Quiz mode** — same questions but tracked as right/wrong for accuracy stats.
   Wrong answers are scheduled for quick review; right answers graduate out.
 - **Reading mode** — 37 concept-fix sheets, one per Core 2 sub-objective, plus a
@@ -115,8 +124,8 @@ progress counters, and card meta to leave just the question and answers.
   import it on another device or after a browser wipe.
 - **Offline** — service worker caches everything. Once installed, works in
   airplane mode.
-- **Progress persists** — IndexedDB stores ratings, ease, and next-due
-  timestamps between sessions.
+- **Progress persists** — IndexedDB stores ratings, FSRS stability/difficulty,
+  and next-due timestamps between sessions.
 
 ## Keyboard shortcuts (desktop study)
 
@@ -474,11 +483,11 @@ it — the same thing any third-party study guide does.
 ### Things to know about iOS PWAs
 
 - Storage is sandboxed per-origin. If you re-deploy to a new URL, you lose
-  progress. **Keep the same Netlify/GitHub Pages URL for a given exam cycle.**
+  progress. **Keep the same deployment URL for a given study cycle.**
 - Safari may evict PWA storage if the app hasn't been opened in ~30 days and the
-  device is low on space. Low risk for you this week.
+  device is low on space. Low risk in normal use.
 - Push notifications require iOS 16.4+ AND the app must be installed to home
-  screen first. Not wired up in this scaffold.
+  screen first. Not currently wired up.
 - No `localStorage`/`sessionStorage` quota issues — this app uses IndexedDB
   which has much higher limits (~500 MB).
 
@@ -488,12 +497,12 @@ it — the same thing any third-party study guide does.
   few image / simulation PBQs (motherboard diagrams, router admin screens,
   etc.). The renderer is image-ready (drop a question with `qtype: "PBQ"` and
   `image:` / `images:` path and it just works), but the current bank doesn't
-  include any. Tracked in the project handoff.
+  include any yet.
 - **Interactive (drag/order/match) PBQs aren't supported.** PBQ support is image
   + multiple-choice; drag-to-reorder interactions are out of scope.
 - **Cross-device sync is manual.** iPhone and iPad keep separate progress unless
-  you wire up Supabase (see "Cloud sync" below) and tap Push/Pull. Stats →
-  Export/Import works as a no-backend alternative.
+  you wire up Supabase cloud sync (see the developer section) and tap Push/Pull.
+  Stats → Export/Import works as a no-backend alternative.
 
 ## Feedback / contact form
 
