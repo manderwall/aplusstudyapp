@@ -1009,7 +1009,7 @@ function renderStudy() {
           // showing the question id, since pretest/qnum aren't defined.
           // Both wrap in .tag-source-id — hidden by default in styles.css
           // to keep the beginner card clear of internal IDs. The Edit
-          // button still works; Amanda can recover the id from the editor.
+          // button still works; you can recover the id from the editor.
           const isPretest = typeof q.pretest === 'number' && typeof q.qnum === 'number';
           if (isPretest) {
             return `<span class="tag tag-source-id" title="Appeared on: ${sources.map(s => `P${s.pretest}Q${s.qnum}`).join(', ')}">P${q.pretest} Q${q.qnum}</span>`;
@@ -4429,8 +4429,8 @@ function showHelp() {
 // iPhone 15 Pro, Safari, app version v73" by hand.
 //
 // Contact form: if FEEDBACK_FORM_KEY is set, the report is POSTed to the
-// Web3Forms relay, which emails it straight to Amanda's inbox — no GitHub
-// login required and her address never appears in this source. When the key
+// Web3Forms relay, which emails it straight to the owner's inbox — no GitHub
+// login required and their address never appears in this source. When the key
 // is blank it falls back to opening a prefilled GitHub issue, so the button
 // is never dead. Copy-to-clipboard is always available as a last resort.
 const FEEDBACK_ISSUES_URL = 'https://github.com/manderwall/aplusstudyapp/issues/new';
@@ -4532,7 +4532,7 @@ async function showFeedback() {
         <div id="fbk-error" class="pind-error" role="alert" hidden></div>
         <div class="pind-actions">
           <button type="button" class="action" id="fbk-copy">Copy report</button>
-          <button type="button" class="action primary" id="fbk-send">${contactFormReady() ? 'Send to Amanda →' : 'Open a GitHub issue →'}</button>
+          <button type="button" class="action primary" id="fbk-send">${contactFormReady() ? 'Send feedback →' : 'Open a GitHub issue →'}</button>
         </div>
       </div>
     </div>`;
