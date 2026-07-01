@@ -40,7 +40,7 @@ look:
   card's memory as a *stability* + *difficulty* pair and schedules the next
   review to hit a target retention, and it's **exam-aware** — intervals contract
   as the test date approaches. Pure and unit-tested, in `lib.mjs`.
-- **Zero dependencies, no build step.** ~6,600 lines of vanilla ES-module
+- **Zero runtime dependencies, no build step.** ~6,600 lines of vanilla ES-module
   JavaScript, split into focused modules with a one-way dependency graph:
   `core.mjs` (shared state + DOM/dialog primitives), `lib.mjs` (pure, tested
   SRS/formatting/URL-safety helpers), `crypto.mjs` (encryption), `storage.mjs`
