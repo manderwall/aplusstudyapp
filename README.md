@@ -318,21 +318,42 @@ manually.
 ### One-time Supabase setup
 
 1. Create a free Supabase project at https://supabase.com.
-2. In the SQL editor, run:
+2. In the SQL editor, run the script below (it's also in
+   `docs/supabase-sync-hardening.sql`, and the app's **Sync & backup** dialog
+   shows the same script with a copy button). The table has **no anon policies**
+   — it's reachable only through two `SECURITY DEFINER` functions that each
+   require your sync key, so the public anon key can't read or overwrite anyone
+   else's row:
 
 ```sql
-create table if not exists progress (
-  sync_key text primary key,
-  data jsonb not null,
+create table if not exists public.progress (
+  sync_key   text primary key,
+  data       jsonb not null,
   updated_at timestamptz default now()
 );
+alter table public.progress enable row level security;
+-- No anon policies on purpose: the table is reachable ONLY through the
+-- two functions below, and each one requires your sync key.
 
--- Allow the anon key to read/write rows (anyone with the URL + sync_key can sync,
--- which is fine for a personal study app — keep your sync_key secret-ish).
-alter table progress enable row level security;
-create policy "anon read"  on progress for select using (true);
-create policy "anon write" on progress for insert with check (true);
-create policy "anon update" on progress for update using (true);
+create or replace function public.progress_pull(p_sync_key text)
+returns table (data jsonb, updated_at timestamptz)
+language sql security definer set search_path = public as $$
+  select p.data, p.updated_at
+  from public.progress p
+  where p.sync_key = p_sync_key;
+$$;
+
+create or replace function public.progress_push(p_sync_key text, p_data jsonb)
+returns void
+language sql security definer set search_path = public as $$
+  insert into public.progress (sync_key, data, updated_at)
+  values (p_sync_key, p_data, now())
+  on conflict (sync_key) do update
+    set data = excluded.data, updated_at = excluded.updated_at;
+$$;
+
+grant execute on function public.progress_pull(text)        to anon;
+grant execute on function public.progress_push(text, jsonb) to anon;
 ```
 
 3. In **Settings → API**, copy:
@@ -348,19 +369,22 @@ create policy "anon update" on progress for update using (true);
 
 ### Use it
 
-- **⬆ Push** — write your local progress + question edits to the cloud,
-  replacing whatever was there for your sync_key.
-- **⬇ Pull** — overwrite local progress + edits with what's in the cloud.
+- **⬆ Push** — sends your local progress + question edits to the cloud through
+  the `progress_push` RPC, replacing whatever was stored for your sync key.
+- **⬇ Pull** — fetches the cloud copy through `progress_pull` and merges it in,
+  **per-card last-write-wins** (whichever side has the newer `updated_at`).
 
-Workflow: study on iPad → Push. Open iPhone → Pull. Study on iPhone → Push. Last
-write wins; there's no auto-merge.
+Workflow: study on iPad → Push. Open iPhone → Pull. Study on iPhone → Push.
 
 ### Privacy
 
-Your sync_key is the only "auth" — anyone who knows your project URL, anon key,
-and sync_key can read/write your row. The anon key is meant to be embedded in
-clients, but it's still worth not committing it to a public repo and using a
-non-obvious sync_key.
+The table is locked down — **no anon policies** — and reachable only through the
+two `SECURITY DEFINER` functions, each of which requires your **sync key**, so
+the public anon key alone can't read the table or overwrite anyone's row. That
+makes your sync key the real secret: anyone who has your project URL, anon key,
+*and* sync key can read/write your row, so pick a long, non-obvious sync key and
+keep it private. (It's still good practice not to commit your anon key to a
+public repo.)
 
 ## PIN lock (encrypt local data at rest)
 
@@ -446,7 +470,14 @@ The structure, if you want to fork and add to it:
 studyapp/
 ├── index.html           # Three-tab shell
 ├── styles.css           # iPad-first dark/light auto
-├── app.js               # All logic, ES modules
+├── app.js               # View layer — render, state, router; wires the modules below
+├── core.mjs             # Shared state + DOM/dialog primitives (imports nothing)
+├── lib.mjs              # Pure, tested SRS + formatting + URL-safety helpers
+├── crypto.mjs           # PBKDF2 → AES-GCM-256
+├── storage.mjs          # IndexedDB + at-rest encryption
+├── sync.mjs             # Optional Supabase push/pull
+├── read-aloud.mjs, scratchpad.mjs, shake.mjs, image-zoom.mjs,
+│   wake-lock.mjs, confetti.mjs, focus-sound.mjs   # self-contained features
 ├── manifest.json        # PWA install config
 ├── sw.js                # Service worker (offline cache)
 ├── data/
@@ -490,9 +521,9 @@ it — the same thing any third-party study guide does.
   Python library.
 - **Auto-sync:** the current Supabase integration is manual push/pull. Could
   call `cloudPush()` on every save (debounced) for true auto-sync.
-- **Tune the SRS:** defaults live in `schedule()` in `app.js` — cap is 30 days
-  so exam-prep doesn't schedule past the exam. Change `MAX_INTERVAL_DAYS` if you
-  want longer intervals after the test.
+- **Tune the SRS:** the scheduler lives in `schedule()` in `lib.mjs` — cap is 30
+  days so exam-prep doesn't schedule past the exam. Change `MAX_INTERVAL_DAYS`
+  (also in `lib.mjs`) if you want longer intervals after the test.
 
 ### Things to know about iOS PWAs
 
