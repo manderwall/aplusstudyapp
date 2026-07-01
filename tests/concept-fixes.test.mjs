@@ -52,11 +52,9 @@ test('validator allows benign HTML (tables, code, em, strong, lists)', () => {
   assert.deepEqual(validate(safe), []);
 });
 
-// ── Adversarial corpus added in PR after #56 (response to "is there ──
-// anything else though"). When I first wrote this validator I tested
-// the obvious patterns I designed it for, which is exactly the failure
-// mode the question was probing. Trying to BREAK the validator with
-// real-world XSS bypasses surfaced 4 misses; each is now caught.
+// ── Adversarial corpus: real-world XSS bypasses that the first version of
+// the validator missed (it only caught the obvious patterns it was written
+// for). Each of the 4 below initially slipped through and is now blocked.
 test('validator catches SVG self-closing event handler', () => {
   // <svg/onload=...> is valid HTML5 — the / between tag and attr
   // satisfies the "must have separator" requirement.

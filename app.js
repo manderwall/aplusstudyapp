@@ -1038,14 +1038,14 @@ function renderStudy() {
       ` : (() => {
         // Reveal is gated on a real retrieval attempt: the user must either
         // pick an answer or explicitly tap "I don't know" (free-recall
-        // commit). The audit's biggest pedagogy gain — converts a recognition
+        // commit). This is the biggest pedagogy gain — it converts a recognition
         // task (seeing the answer with options visible) into actual
         // retrieval. The "I don't know" affordance prevents getting stuck
         // when the user genuinely doesn't have a guess.
         const hasOptions = Array.isArray(q.options) && q.options.length > 0;
         const ma = isMultipleAnswer(q);
-        // For multi-answer questions, the audit's retrieval principle says:
-        // pick the FULL answer set, not just one. Match Quiz mode's needCount
+        // For multi-answer questions, the retrieval principle says: pick the
+        // FULL answer set, not just one. Match Quiz mode's needCount
         // logic: default to q.correct_picks.length, fall back to 2 if
         // correct_picks isn't an array. Single-answer keeps needCount=1.
         const needCount = ma
@@ -1239,8 +1239,8 @@ function recordRating(qid, rate) {
   // the exam itself — testing a card 5 days after the exam wastes effort
   // and inflates the readiness "covered" count.
   const days = daysUntilExam(state.exam);
-  // Exam-aware retention escalation (deep-research / FSRS community consensus
-  // for short-horizon high-stakes prep). Sits on top of the canonical
+  // Exam-aware retention escalation (per spaced-practice research + FSRS
+  // community consensus for short-horizon high-stakes prep). Sits on top of the canonical
   // FSRS-4 curve (PR #65) so the constant actually means what it says:
   //   - no exam date / >14 days:  0.90 (canonical default)
   //   - 8-14 days out:            0.93 (~half the canonical interval)
@@ -1329,9 +1329,9 @@ function renderQuizStart() {
     return `<button class="action quiz-size-btn" data-size="${count}" ${disabled}>${label}${note}</button>`;
   }).join('');
   // Mock-exam mode — separate CTA so it can't be picked accidentally
-  // while looking for a practice quiz. Deep-research Q3 specifically
-  // called out timed mocks under exam conditions as the highest-leverage
-  // study activity the app was missing. Available only when there are
+  // while looking for a practice quiz. Timed mocks under exam conditions
+  // are among the highest-leverage study activities, and were the main
+  // thing the app was missing. Available only when there are
   // enough Qs for a full 90-card simulation.
   const mockEnabled = total >= 90;
   const mockBtn = `
@@ -1381,9 +1381,9 @@ function startQuiz(n, available) {
 }
 
 // Mock-exam mode: 90 random questions, 90-minute countdown, NO per-
-// question feedback (matches real CompTIA A+ Core 2 conditions). The
-// deep-research recommended 2-3 of these under exam conditions before
-// the real test. Stored in quizHistory with mock:true so the readiness
+// question feedback (matches real CompTIA A+ Core 2 conditions). Doing
+// 2-3 of these under exam conditions before the real test is a
+// well-supported prep strategy. Stored in quizHistory with mock:true so the readiness
 // banner can weight mock results more heavily than open-book practice
 // in a future PR.
 const MOCK_EXAM_DURATION_MIN = 90;

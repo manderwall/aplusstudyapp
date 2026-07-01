@@ -18,7 +18,7 @@ The threats this app tries to defend against are deliberately scoped:
 When PIN lock is enabled (`Stats → App lock → Set PIN`):
 
 - A random 16-byte **salt** is generated per device.
-- The PIN is run through **PBKDF2-SHA256, 310,000 iterations**, producing a 256-bit key. (Iteration count matches the OWASP 2023 recommendation.)
+- The PIN is run through **PBKDF2-SHA256, 600,000 iterations**, producing a 256-bit key. (Meets the OWASP minimum for PBKDF2-HMAC-SHA256.)
 - Every IndexedDB blob (progress, question overrides, scratchpad drawings) is **AES-GCM-256** encrypted with that key under a per-write random 12-byte IV.
 - A small **verification blob** (a known plaintext encrypted under the key) is stored in `localStorage`. On unlock, the entered PIN derives a candidate key; if it decrypts the verification blob, the PIN was correct.
 - The PIN and the derived key are **never persisted** — only the salt and verification blob are. The derived key lives in memory and is dropped on app close.

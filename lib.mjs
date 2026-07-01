@@ -51,8 +51,8 @@ export const FSRS_TARGET_RETENTION = 0.9;
 // 0.9 is exactly S (stability days). Prior to PR #65 this was an
 // accidental hybrid (-0.5 exponent / 9S denominator) that produced
 // ~2.11·S intervals — effective retention ~0.81, not the 0.9 the
-// constant implied. Fixed per the deep-research synthesis (Cepeda 2008
-// ratio rule + FSRS community consensus for short-horizon exam prep).
+// constant implied. Corrected to the canonical curve, informed by spacing
+// research (Cepeda 2008) + FSRS community consensus for short-horizon exam prep.
 const FSRS_DECAY = -1;
 
 // Helpers
