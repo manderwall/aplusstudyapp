@@ -4375,7 +4375,7 @@ function showHelp() {
             authorized, or endorsed by CompTIA</strong>. “CompTIA” and “CompTIA
             A+” are trademarks of CompTIA, used here only to name the exam this
             app currently includes a question bank for (“A+” in the app's own
-            name refers to the grade you're aiming for). All questions are
+            name is about acing the exam, not a literal grade). All questions are
             original, written to the publicly available exam objectives; no
             actual exam content is reproduced. A free, open-source personal
             project (MIT-licensed).

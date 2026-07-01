@@ -1,7 +1,7 @@
-# A+ Study — aim for an A+ on any certification exam
+# A+ Study — study to ace any certification exam
 
-A spaced-repetition study PWA built to help you earn an **A+** on any
-certification exam — flashcards, practice quizzes, and concept review. It ships
+A spaced-repetition study PWA built to help you **ace** any certification
+exam — flashcards, practice quizzes, and concept review. It ships
 with a complete **CompTIA A+ Core 2 (220-1202)** question bank, and its
 multi-exam architecture means the next course (Network+, Security+, or anything
 else) is just another dataset to drop in. Runs in any modern browser, works
@@ -15,8 +15,8 @@ questions are original, and it's open to fork.
 > published exam objectives; no real exam content is reproduced. See [Legal and
 > disclaimer](#legal-and-disclaimer). “CompTIA” and “CompTIA A+” are trademarks
 > of CompTIA, used here only to name the exam this app currently includes a
-> question bank for. (“A+” in the app's own name refers to the grade you're
-> aiming for.)
+> question bank for. (“A+” in the app's name is about acing the exam —
+> bringing your A-game — not a literal grade.)
 
 ![PWA](https://img.shields.io/badge/PWA-installable-5aa6ff)
 ![Build](https://img.shields.io/badge/build_step-none-4ade80)
@@ -551,9 +551,9 @@ CompTIA**, and it is not an official CompTIA product.
 - **Trademarks.** "CompTIA" and "CompTIA A+" are trademarks (or registered
 trademarks) of the Computing Technology Industry Association (CompTIA). They are
 used here only nominatively — i.e. to truthfully name the certification exam this
-app currently includes a question bank for. "A+" in the app's own name refers to
-the academic grade you're aiming for (the app is a general study tool, with more
-exams planned). No claim is made to any CompTIA mark, and no affiliation or
+app currently includes a question bank for. "A+" in the app's own name is about
+acing the exam — bringing your A-game — not a literal grade (the app is a general
+study tool, with more exams planned). No claim is made to any CompTIA mark, and no affiliation or
 endorsement is implied.
 - **Questions are original.** Every question in `data/` was written from scratch
 against CompTIA's **publicly published exam objectives**, which list the topics
