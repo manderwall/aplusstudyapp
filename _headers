@@ -12,6 +12,10 @@
   # fonts.googleapis.com, files from fonts.gstatic.com) and OpenDyslexic
   # (CSS + files from fonts.cdnfonts.com). Only fetched when a user opts in.
   Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; script-src-elem 'self' https://cdn.jsdelivr.net; worker-src 'self' blob:; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.cdnfonts.com; font-src 'self' data: https://fonts.gstatic.com https://fonts.cdnfonts.com; connect-src 'self' https://cdn.jsdelivr.net https://*.supabase.co https://api.web3forms.com; frame-ancestors 'none'; base-uri 'none'; object-src 'none'; form-action 'none'; upgrade-insecure-requests
+  # Force HTTPS for a year, cover subdomains, and allow preloading — matches
+  # the fleet baseline used by the sibling companion apps. Cloudflare Pages
+  # already serves HTTPS-only; this makes the browser refuse any downgrade.
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
   # Stop MIME-sniff overrides on JSON/JS payloads.
   X-Content-Type-Options: nosniff
   # Don't leak the URL path to outbound requests.
