@@ -1760,7 +1760,7 @@ function renderQuizResults() {
 
   const wrongHTML = wrong.length === 0 ? '' : `
     <div class="quiz-missed">
-      <h3 class="quiz-missed-title">Missed (${wrong.length})</h3>
+      <h2 class="quiz-missed-title">Missed (${wrong.length})</h2>
       <ul class="quiz-missed-list">
         ${wrong.map(bq => {
           const q = getQuestion(bq);
@@ -1778,7 +1778,7 @@ function renderQuizResults() {
   // report style so the user knows which domain to focus next pass.
   const objHTML = !mock || objBreakdown.length === 0 ? '' : `
     <div class="mock-obj-breakdown">
-      <h3 class="mock-obj-title">By objective</h3>
+      <h2 class="mock-obj-title">By objective</h2>
       <ul class="mock-obj-list">
         ${objBreakdown.map(([obj, b]) => {
           const pct = Math.round((b.correct / b.total) * 100);
@@ -3284,8 +3284,8 @@ async function loadPdfJs() {
   if (_pdfjsModule) return _pdfjsModule;
   // Fixed pinned version, ESM build. The first load lands in the SW
   // cache so subsequent loads are offline.
-  const url = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/build/pdf.min.mjs';
-  const workerUrl = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/build/pdf.worker.min.mjs';
+  const url = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.2.67/build/pdf.min.mjs';
+  const workerUrl = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.2.67/build/pdf.worker.min.mjs';
   const mod = await import(/* @vite-ignore */ url);
   mod.GlobalWorkerOptions.workerSrc = workerUrl;
   _pdfjsModule = mod;
