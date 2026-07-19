@@ -1341,7 +1341,7 @@ function renderQuizStart() {
       </button>
       <p class="mock-start-desc">
         ${mockEnabled
-          ? `No per-question feedback until the end. Hard pass mark: 700/900 (77.8%) — matches CompTIA A+ Core 2 scoring.`
+          ? `No per-question feedback until the end. Hard pass mark: 700/900 — CompTIA's Core 2 cut score (approximated here as ~78% correct).`
           : `Clear the filter so all ${state.questions.length} questions are available, then come back.`}
       </p>
     </div>`;
@@ -2108,7 +2108,7 @@ function renderStats() {
                 <div class="readiness-meta">
                   Readiness is now based on cold-test quizzes, not self-rated study.
                   ${totalQ === 0 ? 'Tap Quiz → 40 questions to start.' :
-                    `${need} more quiz question${need === 1 ? '' : 's'} until we can show a calibrated score (${totalQ} of ${QUIZ_MIN_QUESTIONS} so far).`}
+                    `${need} more quiz question${need === 1 ? '' : 's'} until a calibrated score is available (${totalQ} of ${QUIZ_MIN_QUESTIONS} so far).`}
                   ${examNote}
                 </div>
               </div>
