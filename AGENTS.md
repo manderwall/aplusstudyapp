@@ -89,7 +89,7 @@ reveal/grade outcomes for SR users.
 
 ### State / storage
 - IndexedDB stores: `progress`, `overrides`, `drawings`, `reference` (PDF).
-  DB version 4. Bump on schema change.
+  DB version 5. Bump on schema change.
 - localStorage for prefs, streak, quiz history, exam dates, sync config.
 - `state.overrides[qid]` merges with source data via `getQuestion(q)`.
   Never mutate the source data array.
