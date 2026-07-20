@@ -42,7 +42,12 @@
   --surface-2: #1e2433;
   --border: #2c3040;
   --text: #e8e5df;
-  --text-dim: #9e9b95;
+  /* Lifted from #9e9b95 for dark-mode readability (secondary/muted text).
+     #9e9b95 passed AA only marginally on --surface-2 (5.59:1); #b4b0a8
+     reads 7.2–8.7:1 across bg/surface/surface-2 and stays clearly dimmer
+     than --text so the hierarchy holds. Dark-only: the light-mode media
+     query below overrides --text-dim to #5c5850. */
+  --text-dim: #b4b0a8;
   --accent: #74a8cf;
   /* Text/iconography that sits ON an --accent fill (#fff light, navy
      #0e1117 dark). Theme-aware so it clears
@@ -181,7 +186,7 @@ html[data-theme="dark"] {
   --surface-2: #1e2433;
   --border: #2c3040;
   --text: #e8e5df;
-  --text-dim: #9e9b95;
+  --text-dim: #b4b0a8;
 }
 html[data-theme="light"] {
   --bg: #f8f6f2;
@@ -701,7 +706,9 @@ html[data-motion="reduced"] .card.card-fresh { animation: none; }
 .card-meta .tag.tag-source-id { display: none; }
 .card-meta .tag.repeats {
   background: var(--bad);
-  color: #fff;
+  /* Was #fff on --bad = 2.77:1 (failed AA — the tag text "blocked out").
+     #000 on --bad reads 7.6:1 and matches the .tag.pbq/.tag.edited pattern. */
+  color: #000;
   font-weight: 700;
 }
 
@@ -1338,7 +1345,10 @@ html[data-motion="reduced"] #main.mode-entering { animation: none; }
 .q-option.wrong .q-letter {
   background: var(--bad);
   border-color: var(--bad);
-  color: #fff;
+  /* Was #fff on --bad = 2.77:1 (failed AA — the letter badge was unreadable).
+     Dark red #2a0808 reads 6.7:1 and mirrors the .correct badge's dark-tint
+     (#08210f on --good) for a consistent, calm look. */
+  color: #2a0808;
 }
 .q-option.wrong .q-status { opacity: 1; color: var(--bad); }
 .q-option.wrong .q-status::before { content: '✕'; }
