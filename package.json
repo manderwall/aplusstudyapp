@@ -24,6 +24,6 @@
     "smoke:cross-device": "node tests/smoke/cross-device.mjs"
   },
   "devDependencies": {
-    "puppeteer": "^25.3.0"
+    "puppeteer": "^25.5.0"
   }
 }
